@@ -78,7 +78,31 @@ class Rules:
             return ChestPush(False, reason='tree')
         if coffre_arrivee in state.chests:
             return ChestPush(False, reason='another_chest')
+        if state.machine_at(coffre_arrivee) is not None:
+            return ChestPush(False, reason='machine_behind_chest')
         return ChestPush(True, chest_from=coffre_depart, chest_to=coffre_arrivee, hero_to=coffre_depart)
+
+    @staticmethod
+    def hero_chest_push_safe_this_tick(state: GameState, push: ChestPush) -> bool:
+        if not push.valid or push.chest_from is None or push.chest_to is None:
+            return False
+        for machine in state.machines.values():
+            if machine.is_hacked:
+                prete = machine.pending_move
+            else:
+                prete = machine.resume_delay == 0 and machine.auto_move_pending
+            if not prete:
+                continue
+            cible = Rules.machine_forward(machine)
+            if cible == push.chest_to:
+                return False
+            if cible == push.chest_from and cible in state.chests:
+                delta_ligne = cible.row - machine.position.row
+                delta_col = cible.col - machine.position.col
+                destination_machine = cible.moved(delta_ligne, delta_col)
+                if destination_machine != push.chest_to:
+                    return False
+        return True
 
     @staticmethod
     def compatible_machine(hero: HeroState, machine: MachineState) -> bool:
@@ -91,25 +115,41 @@ class Rules:
         return machine.position.moved(delta_ligne, delta_col)
 
     @staticmethod
-    def machine_forward_clear(state: GameState, machine: MachineState) -> bool:
-        cible = Rules.machine_forward(machine)
+    def machine_cell_passable(state: GameState, machine: MachineState, cible: Position) -> bool:
         if not state.game_map.in_bounds(cible):
             return False
         if cible in state.game_map.rocks:
             return False
-        for autre in state.machines.values():
-            if autre.id != machine.id and autre.position == cible:
-                return False
         if machine.kind == MachineKind.EXCAVATOR and cible in state.trees:
             return False
         if machine.kind == MachineKind.GRAPPLER and cible in state.holes:
             return False
-        if cible in state.chests:
-            return Rules.machine_can_push_chest(state, machine, cible)
         return True
 
     @staticmethod
-    def machine_can_push_chest(state: GameState, machine: MachineState, chest_pos: Position) -> bool:
+    def machine_forward_queueable(state: GameState, machine: MachineState) -> bool:
+        cible = Rules.machine_forward(machine)
+        if not Rules.machine_cell_passable(state, machine, cible):
+            return False
+        if cible in state.chests:
+            return Rules.machine_can_push_chest(state, machine, cible, ignore_machines=False)
+        return True
+
+    @staticmethod
+    def machine_forward_clear(state: GameState, machine: MachineState, *, ignore_machines: bool=False) -> bool:
+        cible = Rules.machine_forward(machine)
+        if not Rules.machine_cell_passable(state, machine, cible):
+            return False
+        if not ignore_machines:
+            for autre in state.machines.values():
+                if autre.id != machine.id and autre.position == cible:
+                    return False
+        if cible in state.chests:
+            return Rules.machine_can_push_chest(state, machine, cible, ignore_machines=ignore_machines)
+        return True
+
+    @staticmethod
+    def machine_can_push_chest(state: GameState, machine: MachineState, chest_pos: Position, *, ignore_machines: bool=False) -> bool:
         direction = ORIENTATION_TO_DIRECTION[machine.orientation]
         delta_ligne, delta_col = DIRECTION_VECTORS[direction]
         destination = chest_pos.moved(delta_ligne, delta_col)
@@ -120,6 +160,8 @@ class Rules:
         if destination in state.trees:
             return False
         if destination in state.chests:
+            return False
+        if not ignore_machines and state.machine_at(destination) is not None:
             return False
         return True
 

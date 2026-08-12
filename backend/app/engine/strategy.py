@@ -175,7 +175,7 @@ class HeuristicStrategy:
                     return Candidate(action, 5.0, ('hole', trou.row, trou.col), 'orienter Excavator vers trou')
                 souhaite = direction_between(chemin[0], chemin[1])
                 action = self._rotation_action(machine.orientation, souhaite)
-                if action == HeroAction.HACK_MOVE and (not Rules.machine_forward_clear(state, machine)):
+                if action == HeroAction.HACK_MOVE and (not Rules.machine_forward_queueable(state, machine)):
                     return Candidate(HeroAction.WAIT, 0.2, ('machine', machine.id), 'chemin machine momentanément bloqué')
                 return Candidate(action, 4.0, ('machine', machine.id), 'déplacer Excavator vers trou')
         else:
@@ -187,7 +187,7 @@ class HeuristicStrategy:
                     return Candidate(HeroAction.WAIT, 5.0, ('tree', machine.position.row, machine.position.col), 'couper arbre')
                 souhaite = direction_between(chemin[0], chemin[1])
                 action = self._rotation_action(machine.orientation, souhaite)
-                if action == HeroAction.HACK_MOVE and (not Rules.machine_forward_clear(state, machine)):
+                if action == HeroAction.HACK_MOVE and (not Rules.machine_forward_queueable(state, machine)):
                     return Candidate(HeroAction.WAIT, 0.2, ('machine', machine.id), 'chemin machine momentanément bloqué')
                 return Candidate(action, 4.0, ('machine', machine.id), 'déplacer Grappler vers arbre')
         return Candidate(self._exit_machine(state, hero_id), 0.1, None, 'quitter machine sans objectif')

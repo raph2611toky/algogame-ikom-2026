@@ -603,7 +603,8 @@ class AdaptiveScoreStrategy:
             if not Rules.hero_move(state, heros, candidate.action).valid:
                 return HeroAction.WAIT
         elif candidate.action in PUSH_ACTIONS:
-            if not Rules.chest_push(state, heros, candidate.action).valid:
+            poussee = Rules.chest_push(state, heros, candidate.action)
+            if not poussee.valid or not Rules.hero_chest_push_safe_this_tick(state, poussee):
                 return HeroAction.WAIT
         return candidate.action
 
