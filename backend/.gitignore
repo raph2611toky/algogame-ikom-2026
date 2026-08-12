@@ -5,4 +5,3 @@ __pycache__/
 .env
 output/*.txt
 !output/.gitkeep
-*.md

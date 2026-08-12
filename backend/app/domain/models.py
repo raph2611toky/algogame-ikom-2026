@@ -1,22 +1,18 @@
 from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import Iterable
-
 from app.domain.enums import HeroAction, HeroId, MachineAction, MachineKind, Orientation
-
 
 @dataclass(frozen=True, order=True, slots=True)
 class Position:
     row: int
     col: int
 
-    def moved(self, dr: int, dc: int, steps: int = 1) -> "Position":
+    def moved(self, dr: int, dc: int, steps: int=1) -> 'Position':
         return Position(self.row + dr * steps, self.col + dc * steps)
 
-    def manhattan(self, other: "Position") -> int:
+    def manhattan(self, other: 'Position') -> int:
         return abs(self.row - other.row) + abs(self.col - other.col)
-
 
 @dataclass(slots=True)
 class HeroState:
@@ -31,7 +27,6 @@ class HeroState:
     @property
     def is_hacking(self) -> bool:
         return self.hacking_machine_id is not None
-
 
 @dataclass(slots=True)
 class MachineState:
@@ -50,7 +45,6 @@ class MachineState:
     @property
     def is_hacked(self) -> bool:
         return self.hacked_by is not None
-
 
 @dataclass(slots=True)
 class GameMap:
@@ -71,10 +65,9 @@ class GameMap:
         return 0 <= pos.row < self.height and 0 <= pos.col < self.width
 
     def all_positions(self) -> Iterable[Position]:
-        for row in range(self.height):
-            for col in range(self.width):
-                yield Position(row, col)
-
+        for ligne in range(self.height):
+            for colonne in range(self.width):
+                yield Position(ligne, colonne)
 
 @dataclass(slots=True)
 class GameState:
@@ -97,20 +90,20 @@ class GameState:
 
     @property
     def total_hero_stones(self) -> int:
-        return sum(hero.stones for hero in self.heroes.values())
+        return sum((heros.stones for heros in self.heroes.values()))
 
     @property
     def total_stamina(self) -> int:
-        return sum(hero.stamina for hero in self.heroes.values())
+        return sum((heros.stamina for heros in self.heroes.values()))
 
     @property
     def total_battery(self) -> int:
-        return sum(hero.battery for hero in self.heroes.values())
+        return sum((heros.battery for heros in self.heroes.values()))
 
     @property
     def objectives_finished(self) -> bool:
-        machine_stones = sum(machine.carried_stones for machine in self.machines.values())
-        return not self.stones and machine_stones == 0 and not self.chests
+        pierres_machines = sum((machine.carried_stones for machine in self.machines.values()))
+        return not self.stones and pierres_machines == 0 and (not self.chests)
 
     def machine_at(self, pos: Position) -> MachineState | None:
         for machine in self.machines.values():
@@ -119,11 +112,10 @@ class GameState:
         return None
 
     def machines_at(self, pos: Position) -> list[MachineState]:
-        return [m for m in self.machines.values() if m.position == pos]
+        return [machine_locale for machine_locale in self.machines.values() if machine_locale.position == pos]
 
     def hero_at(self, pos: Position) -> list[HeroState]:
         return [h for h in self.heroes.values() if h.position == pos]
-
 
 @dataclass(slots=True)
 class Event:
@@ -133,7 +125,6 @@ class Event:
     position: Position | None = None
     data: dict[str, object] = field(default_factory=dict)
 
-
 @dataclass(slots=True)
 class TickRecord:
     tick: int
@@ -142,7 +133,6 @@ class TickRecord:
     machine_actions: dict[str, MachineAction]
     events: list[Event]
     snapshot: dict[str, object]
-
 
 @dataclass(slots=True)
 class SimulationResult:

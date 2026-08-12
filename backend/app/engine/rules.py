@@ -1,19 +1,7 @@
 from __future__ import annotations
-
 from dataclasses import dataclass
-
-from app.domain.enums import (
-    ACTION_TO_DIRECTION,
-    CLOCKWISE,
-    COUNTER_CLOCKWISE,
-    DIRECTION_VECTORS,
-    ORIENTATION_TO_DIRECTION,
-    HeroAction,
-    HeroId,
-    MachineKind,
-)
+from app.domain.enums import ACTION_TO_DIRECTION, CLOCKWISE, COUNTER_CLOCKWISE, DIRECTION_VECTORS, ORIENTATION_TO_DIRECTION, HeroAction, HeroId, MachineKind
 from app.domain.models import GameState, HeroState, MachineState, Position
-
 
 @dataclass(frozen=True, slots=True)
 class HeroMove:
@@ -23,7 +11,6 @@ class HeroMove:
     jumped: bool = False
     reason: str | None = None
 
-
 @dataclass(frozen=True, slots=True)
 class ChestPush:
     valid: bool
@@ -32,8 +19,8 @@ class ChestPush:
     hero_to: Position | None = None
     reason: str | None = None
 
-
 class Rules:
+
     @staticmethod
     def direction_delta(action: HeroAction) -> tuple[int, int]:
         direction = ACTION_TO_DIRECTION[action]
@@ -41,102 +28,91 @@ class Rules:
 
     @staticmethod
     def hero_move(state: GameState, hero: HeroState, action: HeroAction) -> HeroMove:
-        dr, dc = Rules.direction_delta(action)
-        adjacent = hero.position.moved(dr, dc)
-        game_map = state.game_map
-
-        if not game_map.in_bounds(adjacent):
-            return HeroMove(False, hero.position, reason="outside_map")
-        if adjacent in game_map.rocks:
-            return HeroMove(False, hero.position, reason="rock")
-
+        delta_ligne, delta_col = Rules.direction_delta(action)
+        adjacent = hero.position.moved(delta_ligne, delta_col)
+        carte_jeu = state.game_map
+        if not carte_jeu.in_bounds(adjacent):
+            return HeroMove(False, hero.position, reason='outside_map')
+        if adjacent in carte_jeu.rocks:
+            return HeroMove(False, hero.position, reason='rock')
         if hero.id == HeroId.IKOTOFOSA and adjacent in state.holes:
-            landing = adjacent.moved(dr, dc)
-            if not game_map.in_bounds(landing):
-                return HeroMove(False, hero.position, reason="hop_outside_map")
-            if landing in game_map.rocks or landing in state.trees or landing in state.holes:
-                return HeroMove(False, hero.position, reason="invalid_hop_landing")
+            atterrissage = adjacent.moved(delta_ligne, delta_col)
+            if not carte_jeu.in_bounds(atterrissage):
+                return HeroMove(False, hero.position, reason='hop_outside_map')
+            if atterrissage in carte_jeu.rocks or atterrissage in state.trees or atterrissage in state.holes:
+                return HeroMove(False, hero.position, reason='invalid_hop_landing')
             if hero.stamina < 10:
-                return HeroMove(False, hero.position, reason="not_enough_stamina")
-            return HeroMove(True, landing, stamina_cost=10, jumped=True)
-
+                return HeroMove(False, hero.position, reason='not_enough_stamina')
+            return HeroMove(True, atterrissage, stamina_cost=10, jumped=True)
         if hero.id == HeroId.IMAHAKI and adjacent in state.trees:
-            landing = adjacent.moved(dr, dc)
-            if not game_map.in_bounds(landing):
-                return HeroMove(False, hero.position, reason="climb_outside_map")
-            if landing in game_map.rocks or landing in state.trees or landing in state.holes:
-                return HeroMove(False, hero.position, reason="invalid_climb_landing")
+            atterrissage = adjacent.moved(delta_ligne, delta_col)
+            if not carte_jeu.in_bounds(atterrissage):
+                return HeroMove(False, hero.position, reason='climb_outside_map')
+            if atterrissage in carte_jeu.rocks or atterrissage in state.trees or atterrissage in state.holes:
+                return HeroMove(False, hero.position, reason='invalid_climb_landing')
             if hero.stamina < 10:
-                return HeroMove(False, hero.position, reason="not_enough_stamina")
-            return HeroMove(True, landing, stamina_cost=10, jumped=True)
-
-        # The other hero-specific blocker remains impassable.
+                return HeroMove(False, hero.position, reason='not_enough_stamina')
+            return HeroMove(True, atterrissage, stamina_cost=10, jumped=True)
         if adjacent in state.trees:
-            return HeroMove(False, hero.position, reason="tree")
+            return HeroMove(False, hero.position, reason='tree')
         if adjacent in state.holes:
-            return HeroMove(False, hero.position, reason="hole")
+            return HeroMove(False, hero.position, reason='hole')
         if hero.stamina < 1:
-            return HeroMove(False, hero.position, reason="not_enough_stamina")
+            return HeroMove(False, hero.position, reason='not_enough_stamina')
         return HeroMove(True, adjacent, stamina_cost=1)
 
     @staticmethod
     def chest_push(state: GameState, hero: HeroState, action: HeroAction) -> ChestPush:
-        dr, dc = Rules.direction_delta(action)
-        chest_from = hero.position.moved(dr, dc)
-        chest_to = chest_from.moved(dr, dc)
+        delta_ligne, delta_col = Rules.direction_delta(action)
+        coffre_depart = hero.position.moved(delta_ligne, delta_col)
+        coffre_arrivee = coffre_depart.moved(delta_ligne, delta_col)
         if hero.stamina < 5:
-            return ChestPush(False, reason="not_enough_stamina")
-        if chest_from not in state.chests:
-            return ChestPush(False, reason="no_chest")
-        if not state.game_map.in_bounds(chest_to):
-            return ChestPush(False, reason="chest_outside_map")
-        if chest_to in state.game_map.rocks:
-            return ChestPush(False, reason="rock")
-        if chest_to in state.trees:
-            return ChestPush(False, reason="tree")
-        if chest_to in state.chests:
-            return ChestPush(False, reason="another_chest")
-        return ChestPush(True, chest_from=chest_from, chest_to=chest_to, hero_to=chest_from)
+            return ChestPush(False, reason='not_enough_stamina')
+        if coffre_depart not in state.chests:
+            return ChestPush(False, reason='no_chest')
+        if not state.game_map.in_bounds(coffre_arrivee):
+            return ChestPush(False, reason='chest_outside_map')
+        if coffre_arrivee in state.game_map.rocks:
+            return ChestPush(False, reason='rock')
+        if coffre_arrivee in state.trees:
+            return ChestPush(False, reason='tree')
+        if coffre_arrivee in state.chests:
+            return ChestPush(False, reason='another_chest')
+        return ChestPush(True, chest_from=coffre_depart, chest_to=coffre_arrivee, hero_to=coffre_depart)
 
     @staticmethod
     def compatible_machine(hero: HeroState, machine: MachineState) -> bool:
-        return (
-            hero.id == HeroId.IKOTOFOSA and machine.kind == MachineKind.EXCAVATOR
-        ) or (
-            hero.id == HeroId.IMAHAKI and machine.kind == MachineKind.GRAPPLER
-        )
+        return hero.id == HeroId.IKOTOFOSA and machine.kind == MachineKind.EXCAVATOR or (hero.id == HeroId.IMAHAKI and machine.kind == MachineKind.GRAPPLER)
 
     @staticmethod
     def machine_forward(machine: MachineState) -> Position:
         direction = ORIENTATION_TO_DIRECTION[machine.orientation]
-        dr, dc = DIRECTION_VECTORS[direction]
-        return machine.position.moved(dr, dc)
+        delta_ligne, delta_col = DIRECTION_VECTORS[direction]
+        return machine.position.moved(delta_ligne, delta_col)
 
     @staticmethod
     def machine_forward_clear(state: GameState, machine: MachineState) -> bool:
-        target = Rules.machine_forward(machine)
-        if not state.game_map.in_bounds(target):
+        cible = Rules.machine_forward(machine)
+        if not state.game_map.in_bounds(cible):
             return False
-        if target in state.game_map.rocks:
+        if cible in state.game_map.rocks:
             return False
-        for other in state.machines.values():
-            if other.id != machine.id and other.position == target:
+        for autre in state.machines.values():
+            if autre.id != machine.id and autre.position == cible:
                 return False
-        if machine.kind == MachineKind.EXCAVATOR and target in state.trees:
+        if machine.kind == MachineKind.EXCAVATOR and cible in state.trees:
             return False
-        if machine.kind == MachineKind.GRAPPLER and target in state.holes:
+        if machine.kind == MachineKind.GRAPPLER and cible in state.holes:
             return False
-        if target in state.chests:
-            return Rules.machine_can_push_chest(state, machine, target)
+        if cible in state.chests:
+            return Rules.machine_can_push_chest(state, machine, cible)
         return True
 
     @staticmethod
-    def machine_can_push_chest(
-        state: GameState, machine: MachineState, chest_pos: Position
-    ) -> bool:
+    def machine_can_push_chest(state: GameState, machine: MachineState, chest_pos: Position) -> bool:
         direction = ORIENTATION_TO_DIRECTION[machine.orientation]
-        dr, dc = DIRECTION_VECTORS[direction]
-        destination = chest_pos.moved(dr, dc)
+        delta_ligne, delta_col = DIRECTION_VECTORS[direction]
+        destination = chest_pos.moved(delta_ligne, delta_col)
         if not state.game_map.in_bounds(destination):
             return False
         if destination in state.game_map.rocks:
