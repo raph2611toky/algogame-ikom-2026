@@ -1,0 +1,56 @@
+from __future__ import annotations
+
+from app.domain.models import GameState, Position
+
+
+def pos_dict(pos: Position) -> dict[str, int]:
+    return {"row": pos.row, "col": pos.col}
+
+
+def snapshot_state(state: GameState) -> dict[str, object]:
+    return {
+        "elapsed": state.elapsed,
+        "remaining_time": state.remaining_time,
+        "score_inputs": {
+            "secured_chests": state.secured_chests,
+            "hero_stones": state.total_hero_stones,
+            "total_stamina": state.total_stamina,
+            "total_battery": state.total_battery,
+        },
+        "heroes": {
+            hero_id.value: {
+                "position": pos_dict(hero.position),
+                "stamina": hero.stamina,
+                "battery": hero.battery,
+                "stones": hero.stones,
+                "hacking_machine_id": hero.hacking_machine_id,
+            }
+            for hero_id, hero in state.heroes.items()
+        },
+        "machines": {
+            machine_id: {
+                "kind": machine.kind.value,
+                "position": pos_dict(machine.position),
+                "orientation": machine.orientation.value,
+                "hacked_by": machine.hacked_by.value if machine.hacked_by else None,
+                "carried_stones": machine.carried_stones,
+                "pending_move": machine.pending_move,
+                "auto_move_pending": machine.auto_move_pending,
+                "steps_since_dig": machine.steps_since_dig,
+                "last_action": machine.last_action.value,
+            }
+            for machine_id, machine in state.machines.items()
+        },
+        "props": {
+            "stones": [pos_dict(p) for p in sorted(state.stones)],
+            "chests": [pos_dict(p) for p in sorted(state.chests)],
+            "trees": [pos_dict(p) for p in sorted(state.trees)],
+            "holes": [pos_dict(p) for p in sorted(state.holes)],
+            "bushes": [pos_dict(p) for p in sorted(state.game_map.bushes)],
+            "rocks": [pos_dict(p) for p in sorted(state.game_map.rocks)],
+            "secured_chests": state.secured_chests,
+            "lost_chests": state.lost_chests,
+        },
+        "ended": state.ended,
+        "end_reason": state.end_reason,
+    }
