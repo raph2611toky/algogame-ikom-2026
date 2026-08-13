@@ -71,9 +71,13 @@ backend/
 │   │   ├── simulator.py
 │   │   ├── snapshot.py
 │   │   ├── strategy.py
-│   │   └── strategy_v2.py
+│   │   ├── strategy_v2.py
+│   │   ├── strategy_v4.py
+│   │   ├── strategy_v5.py
+│   │   └── strategy_scalable.py
 │   ├── schemas/
 │   ├── services/
+│   │   ├── settings_service.py
 │   │   └── simulation_service.py
 │   └── main.py
 ├── docs/
@@ -137,15 +141,17 @@ Le moteur implémente notamment :
 - collisions entre machines ;
 - score, snapshots, replay et `actions.txt`.
 
-## IA : `portfolio_v4` par défaut
+## IA : `portfolio_v5` par défaut
 
 Trois modes sont exposés :
 
 ```text
-portfolio_v4   recommandé
-portfolio_v3   stratégie précédente
+portfolio_v5   recommandé, collaboratif
+portfolio_v4   chest-first précédent
+portfolio_v3   portfolio score historique
 adaptive_v2    planificateur score-aware/ability-aware
 heuristic_v1   baseline historique
+scalable_v1    grandes cartes / stress tests
 ```
 
 ### `adaptive_v2`
@@ -164,9 +170,9 @@ Le planificateur tient directement compte de la formule de score : en quarts de 
 - immobilisation coopérative d'une machine dangereuse pendant qu'une autre termine un déblocage critique ;
 - réévaluation à chaque tick.
 
-### `portfolio_v4`
+### `portfolio_v5`
 
-Stratégie chest-first : coffres directement accessibles, puis déblocage ciblé par capacités F/X et M/G, puis pierres. Les coffres géométriquement impossibles sont écartés afin d'éviter les hacks sans objectif. Les dépendances croisées entre Excavator et Grappler sont planifiées explicitement. Voir `docs/PORTFOLIO_V4.md`.
+Stratégie chest-first collaborative : plusieurs coffres directs sont répartis entre F et M, les obstacles sont traités par le héros/machine adapté, et tout héros non requis pour un déblocage collecte une pierre ou prépare un autre coffre au lieu d'attendre. Lorsqu'il ne reste que des pierres, les cibles sont affectées conjointement aux deux héros. Les coffres géométriquement impossibles sont écartés afin d'éviter les hacks sans objectif. Voir `docs/PORTFOLIO_V5.md`.
 
 ### `portfolio_v3`
 

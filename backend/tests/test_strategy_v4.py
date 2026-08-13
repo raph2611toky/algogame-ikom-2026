@@ -151,5 +151,5 @@ def test_service_portfolio_v4_is_fast_and_preserves_requested_priority_map() -> 
     assert response.result.total_battery == 200
 
 
-def test_portfolio_v4_is_default_strategy_option() -> None:
-    assert StrategyOptions().name == "portfolio_v4"
+def test_portfolio_v5_is_default_strategy_option() -> None:
+    assert StrategyOptions().name == "portfolio_v5"
