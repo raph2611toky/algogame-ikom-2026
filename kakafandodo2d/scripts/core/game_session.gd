@@ -230,7 +230,7 @@ static func _default_settings() -> Dictionary:
 		"fullscreen": false,
 		"language": 0,
 		"strategy": {
-			"name": "portfolio_v5",
+			"name": "portfolio_v6",
 			"max_stones_per_hero": 16,
 			"max_chest_pairs_per_hero": 12,
 			"max_unlock_obstacles": 20,

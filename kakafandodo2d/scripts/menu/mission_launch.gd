@@ -27,7 +27,7 @@ func _ready() -> void:
 		str(game_session.selected_map_path).get_file(),
 		int(data["width"]), int(data["height"]), int(data["time_limit"])
 	]
-	objectives_label.text = "OBJECTIF\nRécupérer un maximum de pierres précieuses et cacher un maximum de coffres.\n\nAGENTS\nIkotofosa [F] • Imahaki [M]\n\nMOTEUR\nFastAPI 127.0.0.1:8000 • stratégie %s" % str(game_session.get_strategy_options().get("name", "portfolio_v5"))
+	objectives_label.text = "OBJECTIF\nRécupérer un maximum de pierres précieuses et cacher un maximum de coffres.\n\nAGENTS\nIkotofosa [F] • Imahaki [M]\n\nMOTEUR\nFastAPI 127.0.0.1:8000 • stratégie %s" % str(game_session.get_strategy_options().get("name", "portfolio_v6"))
 	countdown_label.text = "CALCUL IA..."
 	countdown_label.add_theme_font_size_override("font_size", 54)
 	var response: Dictionary = await BackendAPI.simulate(
