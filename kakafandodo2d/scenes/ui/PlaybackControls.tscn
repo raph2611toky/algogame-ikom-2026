@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/playback_controls.gd" id="1_controls"]
+
+[node name="PlaybackControls" type="HBoxContainer"]
+script = ExtResource("1_controls")
+theme_override_constants/separation = 8
+
+[node name="Pause" type="Button" parent="."]
+custom_minimum_size = Vector2(48, 48)
+text = "II"
+
+[node name="Speed1" type="Button" parent="."]
+custom_minimum_size = Vector2(48, 48)
+text = "x1"
+
+[node name="Speed2" type="Button" parent="."]
+custom_minimum_size = Vector2(48, 48)
+text = "x2"
+
+[node name="Speed4" type="Button" parent="."]
+custom_minimum_size = Vector2(48, 48)
+text = "x4"
+
+[connection signal="pressed" from="Pause" to="." method="_on_pause_pressed"]
+[connection signal="pressed" from="Speed1" to="." method="_on_speed_1_pressed"]
+[connection signal="pressed" from="Speed2" to="." method="_on_speed_2_pressed"]
+[connection signal="pressed" from="Speed4" to="." method="_on_speed_4_pressed"]
