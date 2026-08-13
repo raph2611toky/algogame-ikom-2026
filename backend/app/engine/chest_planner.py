@@ -36,6 +36,11 @@ def _score_heuristic_units(chest: Position, bush: Position) -> int:
 def plan_chest_to_bush(state: GameState, hero_id: HeroId, chest: Position, bush: Position, *, max_expansions: int=50000, optimize_for_score: bool=False) -> ChestPlan | None:
     if chest not in state.chests or bush not in state.game_map.bushes:
         return None
+    cellules = state.game_map.height * state.game_map.width
+    if cellules > 2500:
+        max_expansions = min(max_expansions, 5000)
+    elif cellules > 1000:
+        max_expansions = min(max_expansions, 15000)
     depart = _Node(state.heroes[hero_id].position, chest)
     serie = count()
     tas: list[tuple[int, int, int, int, int, _Node]] = []
