@@ -141,12 +141,13 @@ Le moteur implémente notamment :
 - collisions entre machines ;
 - score, snapshots, replay et `actions.txt`.
 
-## IA : `portfolio_v5` par défaut
+## IA : `portfolio_v6` par défaut
 
 Trois modes sont exposés :
 
 ```text
-portfolio_v5   recommandé, collaboratif
+portfolio_v6   recommandé, collaboratif optimisé
+portfolio_v5   collaboratif précédent
 portfolio_v4   chest-first précédent
 portfolio_v3   portfolio score historique
 adaptive_v2    planificateur score-aware/ability-aware
@@ -170,7 +171,7 @@ Le planificateur tient directement compte de la formule de score : en quarts de 
 - immobilisation coopérative d'une machine dangereuse pendant qu'une autre termine un déblocage critique ;
 - réévaluation à chaque tick.
 
-### `portfolio_v5`
+### `portfolio_v6`
 
 Stratégie chest-first collaborative : plusieurs coffres directs sont répartis entre F et M, les obstacles sont traités par le héros/machine adapté, et tout héros non requis pour un déblocage collecte une pierre ou prépare un autre coffre au lieu d'attendre. Lorsqu'il ne reste que des pierres, les cibles sont affectées conjointement aux deux héros. Les coffres géométriquement impossibles sont écartés afin d'éviter les hacks sans objectif. Voir `docs/PORTFOLIO_V5.md`.
 

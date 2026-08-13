@@ -115,12 +115,11 @@ def test_portfolio_v5_preserves_and_improves_official_dependency_result() -> Non
     assert len(result.ticks) <= 60
 
 
-def test_service_portfolio_v5_is_default_and_returns_collaborative_result() -> None:
-    assert StrategyOptions().name == "portfolio_v5"
+def test_service_portfolio_v5_remains_available_for_comparison() -> None:
     response = SimulationService().simulate(
         map_text=USER_COLLABORATION,
         mission_name="collaboration-regression",
-        strategy_options=StrategyOptions(),
+        strategy_options=StrategyOptions(name="portfolio_v5"),
     )
     assert response.result.chests_secured == 1
     assert response.result.stones_collected == 4
