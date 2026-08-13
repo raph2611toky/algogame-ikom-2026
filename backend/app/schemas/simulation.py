@@ -11,18 +11,18 @@ class MissionInput(APIModel):
     model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}}}
 
 class StrategyOptions(APIModel):
-    name: Literal['portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v3', description='portfolio_v3 choisit automatiquement le profil adapté à la complexité de la carte. adaptive_v2 est le planificateur score-aware/ability-aware; heuristic_v1 reste la baseline; scalable_v1 est le profil borné pour les cartes de stress très grandes.')
+    name: Literal['portfolio_v4', 'portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v4', description='portfolio_v4 priorise strictement les coffres: direct, puis déblocage ciblé avec Excavator/Grappler, puis pierres. portfolio_v3 reste disponible; adaptive_v2 est score-aware; heuristic_v1 est la baseline; scalable_v1 est réservé aux cartes de stress.')
     max_stones_per_hero: int = Field(default=16, ge=1, le=100)
     max_chest_pairs_per_hero: int = Field(default=12, ge=1, le=100)
     max_unlock_obstacles: int = Field(default=20, ge=1, le=100, description='Nombre maximal de trous/arbres candidats analysés pour leur valeur de déblocage.')
     unlock_pair_candidates: int = Field(default=8, ge=2, le=20, description='Frontière utilisée pour détecter les chaînes de deux obstacles nécessaires.')
     stuck_end_threshold: int = Field(default=8, ge=1, le=100)
-    scalable_max_ticks: int = Field(default=250, ge=25, le=5000, description='Limite de ticks utilisée par scalable_v1 et par le mode stress automatique de portfolio_v3. Les cartes normales ne sont pas tronquées par cette option.')
+    scalable_max_ticks: int = Field(default=250, ge=25, le=5000, description='Limite de ticks utilisée par scalable_v1 et par le mode stress automatique des portfolios. Les cartes normales ne sont pas tronquées par cette option.')
 
 class SimulationRequest(APIModel):
     mission: MissionInput
     strategy: StrategyOptions = Field(default_factory=StrategyOptions)
-    model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'mission': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}, 'strategy': {'name': 'portfolio_v3', 'max_stones_per_hero': 16, 'max_chest_pairs_per_hero': 12, 'max_unlock_obstacles': 20, 'unlock_pair_candidates': 8, 'stuck_end_threshold': 8}}}}
+    model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'mission': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}, 'strategy': {'name': 'portfolio_v4', 'max_stones_per_hero': 16, 'max_chest_pairs_per_hero': 12, 'max_unlock_obstacles': 20, 'unlock_pair_candidates': 8, 'stuck_end_threshold': 8}}}}
 
 class ReplayActionPair(APIModel):
     F: HeroAction = HeroAction.WAIT

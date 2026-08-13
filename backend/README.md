@@ -137,12 +137,13 @@ Le moteur implémente notamment :
 - collisions entre machines ;
 - score, snapshots, replay et `actions.txt`.
 
-## IA : `portfolio_v3` par défaut
+## IA : `portfolio_v4` par défaut
 
 Trois modes sont exposés :
 
 ```text
-portfolio_v3   recommandé
+portfolio_v4   recommandé
+portfolio_v3   stratégie précédente
 adaptive_v2    planificateur score-aware/ability-aware
 heuristic_v1   baseline historique
 ```
@@ -162,6 +163,10 @@ Le planificateur tient directement compte de la formule de score : en quarts de 
 - repositionnement sécurisé d'une machine contrôlée lorsqu'elle bloque le plan du partenaire ;
 - immobilisation coopérative d'une machine dangereuse pendant qu'une autre termine un déblocage critique ;
 - réévaluation à chaque tick.
+
+### `portfolio_v4`
+
+Stratégie chest-first : coffres directement accessibles, puis déblocage ciblé par capacités F/X et M/G, puis pierres. Les coffres géométriquement impossibles sont écartés afin d'éviter les hacks sans objectif. Les dépendances croisées entre Excavator et Grappler sont planifiées explicitement. Voir `docs/PORTFOLIO_V4.md`.
 
 ### `portfolio_v3`
 
