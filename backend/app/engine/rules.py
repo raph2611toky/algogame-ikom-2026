@@ -127,7 +127,34 @@ class Rules:
         return True
 
     @staticmethod
+    def machine_buffer_reason(
+        state: GameState,
+        machine: MachineState,
+        *,
+        position: Position | None = None,
+        orientation=None,
+        ignore_machines: bool = False,
+    ) -> str | None:
+        if ignore_machines:
+            return None
+        origine = position or machine.position
+        sens = orientation or machine.orientation
+        direction = ORIENTATION_TO_DIRECTION[sens]
+        delta_ligne, delta_col = DIRECTION_VECTORS[direction]
+        case_1 = origine.moved(delta_ligne, delta_col)
+        case_2 = case_1.moved(delta_ligne, delta_col)
+        case_3 = case_2.moved(delta_ligne, delta_col)
+        positions_machines = {autre.position for autre in state.machines.values() if autre.id != machine.id}
+        if case_1 in positions_machines or case_2 in positions_machines:
+            return 'machine_buffer_one_cell'
+        if case_3 in positions_machines and (case_1 in state.chests or case_2 in state.chests):
+            return 'chest_machine_buffer_two_cells'
+        return None
+
+    @staticmethod
     def machine_forward_queueable(state: GameState, machine: MachineState) -> bool:
+        if Rules.machine_buffer_reason(state, machine) is not None:
+            return False
         cible = Rules.machine_forward(machine)
         if not Rules.machine_cell_passable(state, machine, cible):
             return False
@@ -137,19 +164,19 @@ class Rules:
 
     @staticmethod
     def machine_forward_clear(state: GameState, machine: MachineState, *, ignore_machines: bool=False) -> bool:
+        if Rules.machine_buffer_reason(state, machine, ignore_machines=ignore_machines) is not None:
+            return False
         cible = Rules.machine_forward(machine)
         if not Rules.machine_cell_passable(state, machine, cible):
             return False
-        if not ignore_machines:
-            for autre in state.machines.values():
-                if autre.id != machine.id and autre.position == cible:
-                    return False
         if cible in state.chests:
             return Rules.machine_can_push_chest(state, machine, cible, ignore_machines=ignore_machines)
         return True
 
     @staticmethod
     def machine_can_push_chest(state: GameState, machine: MachineState, chest_pos: Position, *, ignore_machines: bool=False) -> bool:
+        if Rules.machine_buffer_reason(state, machine, ignore_machines=ignore_machines) is not None:
+            return False
         direction = ORIENTATION_TO_DIRECTION[machine.orientation]
         delta_ligne, delta_col = DIRECTION_VECTORS[direction]
         destination = chest_pos.moved(delta_ligne, delta_col)

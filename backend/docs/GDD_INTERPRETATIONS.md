@@ -69,32 +69,36 @@ Le moteur applique maintenant exactement la séparation suivante :
 
 Le compteur de pas automatiques de l'Excavator n'est pas remis à zéro par le hack. Les déplacements `HACK_MOVE` ne l'incrémentent pas.
 
-## 9. Machines adjacentes et déplacement en convoi
+## 9. Buffer entre machines
 
-Des machines voisines orientées dans la même direction peuvent effectuer leur déplacement simultanément si toute la chaîne libère effectivement sa case pendant le tick d'exécution.
+Clarification AlgoMada la plus récente : les machines ne doivent jamais se déplacer de manière à devenir voisines. Le déplacement en convoi précédemment envisagé est abandonné.
 
-Le moteur résout donc les déplacements comme des intentions simultanées :
+Le moteur applique désormais les règles suivantes, indépendamment de l'orientation ou de l'état hacké de l'autre machine :
 
-- une machine peut entrer dans la case actuellement occupée par une autre machine si celle-ci avance elle aussi pendant le même tick et avec la même orientation ;
-- la règle s'étend à une chaîne de plusieurs machines ;
-- si une machine intermédiaire ne libère pas sa case, toutes les machines bloquées derrière elle considèrent le chemin bloqué ;
-- les machines automatiques bloquées appliquent alors leur rotation normale ;
-- une machine hackée ne reçoit jamais une rotation automatique à cause de ce blocage.
+- si une autre machine occupe la case immédiatement devant, le MOVE est refusé ;
+- si une autre machine se trouve à deux cases devant, avec une seule case libre entre les deux machines, le MOVE est refusé ;
+- une machine automatique bloquée par ce buffer applique sa rotation normale ;
+- une machine hackée bloquée par ce buffer refuse simplement `HACK_MOVE`, ne tourne pas automatiquement et ne dépense pas de batterie ;
+- le fait que la machine devant puisse elle-même avancer au même tick ne supprime pas le buffer ; les convois ne sont plus autorisés.
 
-## 10. Coffres entre machines
+Ainsi, pour `...G.X..`, si `G` regarde vers la droite, `G` se réoriente même si `X` regarde également vers la droite. Un héros n'est pas concerné par ce buffer : dans `...G.F..`, le Grappler peut avancer vers Ikotofosa.
 
-Les mouvements et poussées sont vérifiés avant application pour éviter qu'un coffre et une machine aboutissent sur la même case.
+## 10. Buffer coffre + machine
 
-Sont notamment bloqués :
+Un second buffer protège les situations où un coffre se trouve entre deux machines.
 
-- une machine qui pousse un coffre vers une case contenant déjà une autre machine ;
-- deux machines poussant le même coffre dans des directions différentes ;
-- une machine qui avance vers la case où une autre machine va pousser un coffre pendant le même tick ;
-- le motif du type `G.*X` avec orientations opposées conduisant la machine de gauche et le coffre vers la même case.
+Pour un déplacement dans une direction donnée, si une autre machine se trouve à trois cases devant et qu'un coffre occupe la première ou la deuxième case de cette ligne, le MOVE est refusé. Cette règle couvre notamment `..G.*X` avec `G` orienté à droite et `X` orienté à gauche : les deux machines automatiques se réorientent au lieu d'avancer.
 
-Dans ces cas, les machines automatiques concernées se réorientent au lieu d'effectuer le mouvement dangereux.
+Cette règle s'applique aussi aux machines hackées : un `HACK_MOVE` qui violerait le buffer est transformé en `WAIT`, sans consommation de batterie et sans rotation automatique.
 
-Un héros ne peut pas pousser un coffre vers une case occupée par une machine. Une case occupée par l'autre héros n'est pas considérée comme bloquante pour le coffre. La stratégie évite de demander aux deux héros de pousser le même coffre en même temps et attribue la poussée à un seul héros.
+Les protections précédentes restent actives :
+
+- une machine ne pousse pas un coffre vers une case contenant une autre machine ;
+- deux machines ne poussent pas un même coffre dans des directions opposées ;
+- une machine ne peut pas entrer dans la destination simultanée d'un coffre ;
+- un héros ne peut pas pousser un coffre vers une case occupée par une machine ;
+- une case occupée par l'autre héros reste autorisée pour le coffre ;
+- la stratégie choisit un seul héros lorsque les deux pourraient pousser le même coffre.
 
 ## 11. Tailles de cartes d'évaluation
 

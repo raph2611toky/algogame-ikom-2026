@@ -33,6 +33,13 @@ def find_machine_path(state: GameState, machine: MachineState, goals: set[Positi
             suivant = courant.moved(delta_ligne, delta_col)
             if suivant in precedents or not _base_passable(state, machine, suivant):
                 continue
+            case_2 = suivant.moved(delta_ligne, delta_col)
+            case_3 = case_2.moved(delta_ligne, delta_col)
+            positions_machines = {autre.position for autre in state.machines.values() if autre.id != machine.id}
+            if case_2 in positions_machines:
+                continue
+            if case_3 in positions_machines and case_2 in state.chests:
+                continue
             precedents[suivant] = courant
             if suivant in goals:
                 trouve = suivant

@@ -1,4 +1,4 @@
-# Vérification backend v0.3.2
+# Vérification backend v0.3.3
 
 ## Conformité règles vérifiée
 
@@ -12,8 +12,10 @@
 - rotations automatiques X/G ;
 - hack : suppression des MOVE/rotations automatiques et du DIG de X ;
 - CUT de G conservé même lorsque le Grappler est hacké ;
-- déplacement simultané de convois de machines de même orientation ;
-- réorientation d'une machine automatique si la machine devant elle ne libère pas sa case ;
+- buffer d'une case vide entre machines, quelle que soit leur orientation ;
+- suppression des convois de machines ;
+- buffer spécial coffre + machine sur deux cases ;
+- application des buffers aux machines hackées sans coût batterie ni rotation automatique ;
 - protection des coffres lors des mouvements opposés de machines ;
 - interdiction d'une poussée héros vers une machine ;
 - choix d'un seul héros pour une poussée concurrente dans la stratégie ;
@@ -38,7 +40,7 @@ La vue `/docs` utilise `/swagger.json`. Les trois routes multipart restent expos
 
 ## Tests automatisés
 
-Dernière validation : **45 tests réussis**.
+Dernière validation : **51 tests réussis**.
 
 La suite couvre le moteur, le replay officiel, les stratégies, le Swagger, les clarifications AlgoMada sur les machines et les coffres, ainsi que les cartes `4x5` et `10x14`.
 

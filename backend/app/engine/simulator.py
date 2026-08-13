@@ -98,6 +98,9 @@ class Simulator:
         self._event(events, 'MACHINE_MOVE_BLOCKED', f'{machine.id} reste sur place.', actor=machine.id, position=machine.position, reason=reason)
 
     def _build_machine_intent(self, machine: MachineState, *, controlled: bool) -> tuple[MachineIntent | None, str | None]:
+        raison_buffer = Rules.machine_buffer_reason(self.state, machine)
+        if raison_buffer is not None:
+            return None, raison_buffer
         cible = Rules.machine_forward(machine)
         if not Rules.machine_cell_passable(self.state, machine, cible):
             return None, 'terrain_blocked'
@@ -476,10 +479,14 @@ class Simulator:
                 bloques_geom[id_machine] = raison or 'blocked'
             else:
                 intentions[id_machine] = intention
+        for id_machine, raison in bloques_geom.items():
+            machine = self.state.machines[id_machine]
+            if pretes[id_machine]:
+                self._wait_controlled_blocked(machine, evenements, raison)
+            else:
+                self._rotate_automatic_blocked(machine, evenements, raison)
         heros_bloques, machines_bloquees_poussee = self._hero_machine_push_conflicts(hero_pushes, intentions)
-        blocs_initiaux = dict(bloques_geom)
-        blocs_initiaux.update(machines_bloquees_poussee)
-        machines_bloquees = self._resolve_machine_intents(intentions, blocs_initiaux)
+        machines_bloquees = self._resolve_machine_intents(intentions, machines_bloquees_poussee)
         self._apply_pushes(hero_pushes, intentions, heros_bloques, machines_bloquees, effectif, evenements)
         machines_traitees = set(pretes)
         self._apply_machine_moves(intentions, machines_bloquees, evenements)
