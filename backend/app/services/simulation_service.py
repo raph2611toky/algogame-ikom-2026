@@ -10,6 +10,7 @@ from app.engine.simulator import Simulator
 from app.engine.strategy import HeuristicStrategy
 from app.engine.strategy_v2 import AdaptiveScoreStrategy
 from app.engine.strategy_scalable import ScalableStrategy
+from app.engine.strategy_v4 import ChestFirstPortfolioStrategy
 from app.schemas.simulation import SimulationResponse, StrategyOptions
 
 class SimulationNotFound(KeyError):
@@ -106,9 +107,30 @@ class SimulationService:
                 meilleur = max(resultats, key=self._result_rank)
         return meilleur
 
+    def _run_portfolio_v4(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            etat = MapParser.build_initial_state(game_map)
+            strategie = ScalableStrategy(
+                max_stones_per_hero=min(6, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(2, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(8, min(24, options.stuck_end_threshold * 2)),
+                max_ticks=min(game_map.time_limit, options.scalable_max_ticks),
+            )
+            return Simulator(etat).run_strategy(strategie)
+        etat = MapParser.build_initial_state(game_map)
+        strategie = ChestFirstPortfolioStrategy(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(12, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(12, options.stuck_end_threshold * 2),
+            max_unlock_checks=min(64, max(16, options.max_unlock_obstacles * 2)),
+        )
+        return Simulator(etat).run_strategy(strategie)
+
     def simulate(self, *, map_text: str, mission_name: str, strategy_options: StrategyOptions) -> SimulationResponse:
         carte_jeu = MapParser.parse(map_text)
-        if strategy_options.name == 'portfolio_v3':
+        if strategy_options.name == 'portfolio_v4':
+            resultat = self._run_portfolio_v4(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v3':
             resultat = self._run_portfolio(carte_jeu, strategy_options)
         else:
             etat = MapParser.build_initial_state(carte_jeu)
