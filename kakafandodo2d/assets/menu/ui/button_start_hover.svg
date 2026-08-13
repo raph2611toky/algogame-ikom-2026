@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="140" viewBox="0 0 760 140">
+  <defs>
+    <linearGradient id="stoneOuter" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6b533a"/>
+      <stop offset="100%" stop-color="#392c21"/>
+    </linearGradient>
+    <linearGradient id="stoneInner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e0ae6d"/>
+      <stop offset="45%" stop-color="#c58f52"/>
+      <stop offset="100%" stop-color="#a36f39"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="20" width="712" height="100" rx="18" fill="#1d150f" opacity="0.25"/>
+  <path d="M30 16 H730 L744 30 V110 L730 124 H30 L16 110 V30 Z" fill="url(#stoneOuter)" stroke="#1d140d" stroke-width="5"/>
+  <path d="M44 30 H716 L728 42 V98 L716 110 H44 L32 98 V42 Z" fill="#4a382b" stroke="#2f241a" stroke-width="3"/>
+  <path d="M58 40 H702 L710 48 V92 L702 100 H58 L50 92 V48 Z" fill="url(#stoneInner)" stroke="#7e552f" stroke-width="2.5"/>
+  <path d="M58 40 H702 L710 48 V58 H50 V48 Z" fill="#ffd99b" opacity="0.24"/>
+  <path d="M58 82 H702 L710 92 V92 L702 100 H58 L50 92 V82 Z" fill="#734c28" opacity="0.20"/>
+  <path d="M130 54 l-18 14 18 14" fill="none" stroke="#956236" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.90"/>
+  <path d="M630 54 l18 14 -18 14" fill="none" stroke="#956236" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.90"/>
+  <path d="M255 50 l-10 10 6 14" stroke="#9a6a3d" stroke-width="3" fill="none" opacity="0.68" stroke-linecap="round"/>
+  <path d="M505 50 l8 10 -6 14" stroke="#9a6a3d" stroke-width="3" fill="none" opacity="0.68" stroke-linecap="round"/>
+  <path d="M386 48 l-5 12 8 12 -5 10" stroke="#9a6a3d" stroke-width="3" fill="none" opacity="0.58" stroke-linecap="round"/>
+  <circle cx="38" cy="32" r="4.2" fill="#7d5b45" stroke="#2b2018" stroke-width="1.5"/>
+  <circle cx="722" cy="32" r="4.2" fill="#7d5b45" stroke="#2b2018" stroke-width="1.5"/>
+  <circle cx="38" cy="108" r="4.2" fill="#7d5b45" stroke="#2b2018" stroke-width="1.5"/>
+  <circle cx="722" cy="108" r="4.2" fill="#7d5b45" stroke="#2b2018" stroke-width="1.5"/>
+</svg>
