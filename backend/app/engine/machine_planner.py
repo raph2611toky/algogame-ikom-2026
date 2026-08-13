@@ -32,8 +32,16 @@ def _move_passable(state: GameState, machine: MachineState, current: Position, t
         return False
     if target in state.game_map.rocks:
         return False
-    if not ignore_other_machines and any((autre.id != machine.id and autre.position == target for autre in state.machines.values())):
-        return False
+    if not ignore_other_machines:
+        delta_ligne = target.row - current.row
+        delta_col = target.col - current.col
+        case_2 = target.moved(delta_ligne, delta_col)
+        case_3 = case_2.moved(delta_ligne, delta_col)
+        positions_machines = {autre.position for autre in state.machines.values() if autre.id != machine.id}
+        if target in positions_machines or case_2 in positions_machines:
+            return False
+        if case_3 in positions_machines and (target in state.chests or case_2 in state.chests):
+            return False
     if target in state.chests:
         return False
     if machine.kind == MachineKind.EXCAVATOR and target in state.trees:
