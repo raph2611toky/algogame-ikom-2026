@@ -588,10 +588,18 @@ class AdaptiveScoreStrategy:
         heros = state.heroes[hero_id]
         if heros.is_hacking:
             return [self._control_machine(state, hero_id)]
-        direct = self._direct_candidates(state, hero_id)[:10]
+        coffres = self._chest_candidates(state, hero_id)
+        pierres = self._stone_candidates(state, hero_id)
+        pierres_machines = self._machine_stone_candidates(state, hero_id)
+        direct = coffres + pierres + pierres_machines
+        direct.sort(key=lambda c: (-c.utility_units, c.description))
         defense = self._defensive_machine_candidates(state, hero_id)[:2]
-        deblocage = self._machine_unlock_candidates(state, hero_id)[:4]
-        candidats = direct + defense + deblocage
+        deblocage: list[Candidate] = []
+        if not coffres and state.chests:
+            deblocage = self._machine_unlock_candidates(state, hero_id)[:4]
+        elif not direct and not defense:
+            deblocage = self._machine_unlock_candidates(state, hero_id)[:4]
+        candidats = direct[:10] + defense + deblocage
         candidats.sort(key=lambda c: (-c.utility_units, c.description))
         return candidats[:12]
 

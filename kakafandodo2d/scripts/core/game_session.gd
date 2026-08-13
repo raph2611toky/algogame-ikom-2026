@@ -236,5 +236,6 @@ static func _default_settings() -> Dictionary:
 			"max_unlock_obstacles": 20,
 			"unlock_pair_candidates": 8,
 			"stuck_end_threshold": 8,
+			"scalable_max_ticks": 250,
 		},
 	}

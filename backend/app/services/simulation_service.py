@@ -9,6 +9,7 @@ from app.engine.map_parser import MapParser
 from app.engine.simulator import Simulator
 from app.engine.strategy import HeuristicStrategy
 from app.engine.strategy_v2 import AdaptiveScoreStrategy
+from app.engine.strategy_scalable import ScalableStrategy
 from app.schemas.simulation import SimulationResponse, StrategyOptions
 
 class SimulationNotFound(KeyError):
@@ -60,20 +61,48 @@ class SimulationService:
     def _adaptive_from_options(options: StrategyOptions, *, breadth_multiplier: int=1, stuck_bonus: int=0) -> AdaptiveScoreStrategy:
         return AdaptiveScoreStrategy(max_stones_per_hero=min(100, options.max_stones_per_hero * breadth_multiplier), max_chest_pairs_per_hero=min(100, options.max_chest_pairs_per_hero * breadth_multiplier), max_unlock_obstacles=min(100, options.max_unlock_obstacles * breadth_multiplier), unlock_pair_candidates=min(20, max(2, options.unlock_pair_candidates * breadth_multiplier)), stuck_end_threshold=min(100, options.stuck_end_threshold + stuck_bonus))
 
+    @staticmethod
+    def _is_stress_map(game_map: GameMap) -> bool:
+        cellules = game_map.height * game_map.width
+        charge_coffres = len(game_map.chests) * max(1, len(game_map.bushes))
+        return cellules > 2500 or len(game_map.initial_machines) > 12 or len(game_map.stones) > 64 or charge_coffres > 96
+
     def _run_portfolio(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
-        fabriques_base = [lambda: self._adaptive_from_options(options), lambda: HeuristicStrategy(max_stones_per_hero=options.max_stones_per_hero, max_chest_pairs_per_hero=options.max_chest_pairs_per_hero, stuck_end_threshold=options.stuck_end_threshold)]
+        if self._is_stress_map(game_map):
+            etat = MapParser.build_initial_state(game_map)
+            strategie = ScalableStrategy(
+                max_stones_per_hero=min(6, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(2, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(8, min(24, options.stuck_end_threshold * 2)),
+                max_ticks=min(game_map.time_limit, options.scalable_max_ticks),
+            )
+            return Simulator(etat).run_strategy(strategie)
+
+        fabriques_base = [
+            lambda: self._adaptive_from_options(options),
+            lambda: HeuristicStrategy(
+                max_stones_per_hero=options.max_stones_per_hero,
+                max_chest_pairs_per_hero=options.max_chest_pairs_per_hero,
+                stuck_end_threshold=options.stuck_end_threshold,
+            ),
+        ]
         resultats: list[SimulationResult] = []
         for fabrique in fabriques_base:
             etat = MapParser.build_initial_state(game_map)
             resultats.append(Simulator(etat).run_strategy(fabrique()))
+
         meilleur = max(resultats, key=self._result_rank)
-        if meilleur.final_snapshot.get('end_reason') != 'OBJECTIVES_FINISHED':
+        etat_final = meilleur.final_snapshot
+        props_finaux = etat_final.get('props', {})
+        coffre_encore_present = bool(props_finaux.get('chests'))
+        coffre_perdu = int(props_finaux.get('lost_chests', 0)) > 0
+
+        if meilleur.final_snapshot.get('end_reason') != 'OBJECTIVES_FINISHED' and (coffre_perdu or not coffre_encore_present):
             cellules = game_map.height * game_map.width
             charge_paires_objectifs = len(game_map.chests) * max(1, len(game_map.bushes))
-            if cellules <= 2500 and game_map.time_limit <= 2000 and (len(game_map.initial_machines) <= 4) and (charge_paires_objectifs <= 8) and (len(game_map.stones) <= 12):
-                for fabrique in (lambda: self._adaptive_from_options(options, breadth_multiplier=2, stuck_bonus=4), lambda: self._adaptive_from_options(options, breadth_multiplier=1, stuck_bonus=12)):
-                    etat = MapParser.build_initial_state(game_map)
-                    resultats.append(Simulator(etat).run_strategy(fabrique()))
+            if cellules <= 2500 and game_map.time_limit <= 2000 and len(game_map.initial_machines) <= 4 and charge_paires_objectifs <= 8 and len(game_map.stones) <= 12:
+                etat = MapParser.build_initial_state(game_map)
+                resultats.append(Simulator(etat).run_strategy(self._adaptive_from_options(options, breadth_multiplier=2, stuck_bonus=4)))
                 meilleur = max(resultats, key=self._result_rank)
         return meilleur
 
@@ -85,6 +114,13 @@ class SimulationService:
             etat = MapParser.build_initial_state(carte_jeu)
             if strategy_options.name == 'heuristic_v1':
                 strategie = HeuristicStrategy(max_stones_per_hero=strategy_options.max_stones_per_hero, max_chest_pairs_per_hero=strategy_options.max_chest_pairs_per_hero, stuck_end_threshold=strategy_options.stuck_end_threshold)
+            elif strategy_options.name == 'scalable_v1':
+                strategie = ScalableStrategy(
+                    max_stones_per_hero=min(6, strategy_options.max_stones_per_hero),
+                    max_chest_pairs_per_hero=min(2, strategy_options.max_chest_pairs_per_hero),
+                    stuck_end_threshold=max(8, min(24, strategy_options.stuck_end_threshold * 2)),
+                    max_ticks=min(carte_jeu.time_limit, strategy_options.scalable_max_ticks),
+                )
             else:
                 strategie = self._adaptive_from_options(strategy_options)
             resultat = Simulator(etat).run_strategy(strategie)

@@ -5,6 +5,7 @@ signal connection_changed(online: bool)
 
 const DEFAULT_BASE_URL := "http://127.0.0.1:8000/api/v1"
 const REQUEST_TIMEOUT := 30.0
+const SIMULATION_TIMEOUT := 120.0
 
 var base_url: String = DEFAULT_BASE_URL
 var online: bool = false
@@ -40,7 +41,7 @@ func simulate(map_text: String, mission_name: String, strategy: Dictionary = {})
 		},
 		"strategy": strategy if not strategy.is_empty() else _default_strategy(),
 	}
-	return await _request_json("POST", "/simulations", payload)
+	return await _request_json("POST", "/simulations", payload, SIMULATION_TIMEOUT)
 
 func replay_text(map_text: String, actions_text: String, mission_name: String = "replay") -> Dictionary:
 	return await _request_json("POST", "/simulations/replay-text", {
@@ -66,13 +67,13 @@ func reset_settings() -> Dictionary:
 func test_connection() -> Dictionary:
 	return await health()
 
-func _request_json(method: String, endpoint: String, payload: Variant = null) -> Dictionary:
+func _request_json(method: String, endpoint: String, payload: Variant = null, timeout_seconds: float = REQUEST_TIMEOUT) -> Dictionary:
 	var headers := PackedStringArray(["Accept: application/json"])
 	var body := ""
 	if payload != null:
 		headers.append("Content-Type: application/json")
 		body = JSON.stringify(payload)
-	return await _perform_request(method, endpoint, headers, body)
+	return await _perform_request(method, endpoint, headers, body, timeout_seconds)
 
 func _request_multipart_file(endpoint: String, field_name: String, filename: String, file_bytes: PackedByteArray) -> Dictionary:
 	var boundary := "----KakafandodoGodot%s" % str(Time.get_ticks_usec())
@@ -88,9 +89,9 @@ func _request_multipart_file(endpoint: String, field_name: String, filename: Str
 	])
 	return await _perform_request_bytes("POST", endpoint, headers, body)
 
-func _perform_request(method: String, endpoint: String, headers: PackedStringArray, body: String) -> Dictionary:
+func _perform_request(method: String, endpoint: String, headers: PackedStringArray, body: String, timeout_seconds: float = REQUEST_TIMEOUT) -> Dictionary:
 	var request := HTTPRequest.new()
-	request.timeout = REQUEST_TIMEOUT
+	request.timeout = timeout_seconds
 	add_child(request)
 	var error := request.request(base_url + endpoint, headers, _method_value(method), body)
 	if error != OK:
@@ -122,6 +123,8 @@ func _decode_response(response: Array) -> Dictionary:
 	var status_code := int(response[1])
 	var body_bytes: PackedByteArray = response[3]
 	var text := body_bytes.get_string_from_utf8()
+	if result_code == HTTPRequest.RESULT_TIMEOUT:
+		return _local_error("Le calcul de simulation a dépassé le délai HTTP. Le backend peut toujours être en train de calculer.", status_code, text)
 	if result_code != HTTPRequest.RESULT_SUCCESS:
 		_set_connection(false)
 		return _local_error("Backend indisponible (résultat HTTP %d)." % result_code, status_code, text)
@@ -182,4 +185,5 @@ func _default_strategy() -> Dictionary:
 		"max_unlock_obstacles": 20,
 		"unlock_pair_candidates": 8,
 		"stuck_end_threshold": 8,
+		"scalable_max_ticks": 250,
 	}
