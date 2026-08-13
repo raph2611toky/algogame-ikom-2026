@@ -32,17 +32,17 @@ func step() -> Dictionary:
 	# Snapshot début de tick : indispensable pour les machines voisines.
 	var machine_positions_at_start: Dictionary = {}
 	for start_machine_id_value in state.machines.keys():
-		var start_machine_id: String = String(start_machine_id_value)
+		var start_machine_id: String = str(start_machine_id_value)
 		var start_machine: Dictionary = state.machines[start_machine_id]
 		var start_pos: Vector2i = Vector2i(start_machine["pos"])
 		machine_positions_at_start[_pos_key(start_pos)] = start_machine_id
 
 	var pending_at_start: Dictionary = {}
 	for machine_id_value in state.machines.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		var machine: Dictionary = state.machines[machine_id]
 		if bool(machine["pending_move"]):
-			pending_at_start[machine_id] = String(machine["pending_source"])
+			pending_at_start[machine_id] = str(machine["pending_source"])
 
 	var requested: Dictionary = {"F": "WAIT", "M": "WAIT"}
 	if brain != null and brain.has_method("get_actions"):
@@ -54,16 +54,16 @@ func step() -> Dictionary:
 	var hero_push_intents: Array = []
 
 	for hero_id in ["F", "M"]:
-		var action: String = _sanitize_action(String(requested.get(hero_id, "WAIT")))
+		var action: String = _sanitize_action(str(requested.get(hero_id, "WAIT")))
 		var hero: Dictionary = state.heroes[hero_id]
-		var hacking_machine: String = String(hero["hacking_machine"])
+		var hacking_machine: String = str(hero["hacking_machine"])
 
 		# Pendant le deuxième tick d'un HACK_MOVE, le héros WAIT automatiquement.
 		if not hacking_machine.is_empty() and pending_at_start.has(hacking_machine):
 			action = "WAIT"
 
 		var prepared: Dictionary = _prepare_hero_action(hero_id, action, pending_at_start, events)
-		actual[hero_id] = String(prepared.get("actual", "WAIT"))
+		actual[hero_id] = str(prepared.get("actual", "WAIT"))
 		var push_value: Variant = prepared.get("push", null)
 		if push_value is Dictionary:
 			hero_push_intents.append(push_value)
@@ -82,7 +82,7 @@ func step() -> Dictionary:
 	var actor_success: Dictionary = push_plan.get("actor_success", {})
 	for intent_value in hero_push_intents:
 		var intent: Dictionary = intent_value
-		var hero_id: String = String(intent["actor_id"])
+		var hero_id: String = str(intent["actor_id"])
 		var actor_key: String = "hero:%s" % hero_id
 		if bool(actor_success.get(actor_key, false)):
 			var hero: Dictionary = state.heroes[hero_id]
@@ -91,17 +91,17 @@ func step() -> Dictionary:
 			state.heroes[hero_id] = hero
 		else:
 			actual[hero_id] = "WAIT"
-			events.append({"type": "invalid_action", "id": hero_id, "requested": String(requested.get(hero_id, "WAIT")), "reason": "push_blocked"})
+			events.append({"type": "invalid_action", "id": hero_id, "requested": str(requested.get(hero_id, "WAIT")), "reason": "push_blocked"})
 
 	var moved_machines: Dictionary = _execute_machine_moves(machine_intents, machine_valid, events)
 	_process_automatic_machines(pending_at_start, moved_machines, machine_positions_at_start, events)
 
 	for hero_id in ["F", "M"]:
 		var hero: Dictionary = state.heroes[hero_id]
-		hero["last_action"] = String(actual[hero_id])
+		hero["last_action"] = str(actual[hero_id])
 		state.heroes[hero_id] = hero
 
-		_apply_rest_recovery(hero_id, String(actual[hero_id]), events)
+		_apply_rest_recovery(hero_id, str(actual[hero_id]), events)
 
 		var picked: int = state.pickup_stones_by_hero(hero_id)
 		if picked > 0:
@@ -140,7 +140,7 @@ func _sanitize_action(action: String) -> String:
 
 func _prepare_hero_action(hero_id: String, action: String, pending_at_start: Dictionary, events: Array) -> Dictionary:
 	var hero: Dictionary = state.heroes[hero_id]
-	var hacking_machine: String = String(hero["hacking_machine"])
+	var hacking_machine: String = str(hero["hacking_machine"])
 
 	# Si le dernier point de batterie a servi à HACK_MOVE, on garde le rider
 	# jusqu'à l'exécution du MOVE au tick suivant.
@@ -172,7 +172,7 @@ func _prepare_hero_action(hero_id: String, action: String, pending_at_start: Dic
 		hero["rest_ticks"] = 0
 		hero["visual_facing"] = action
 		state.heroes[hero_id] = hero
-		events.append({"type": "move", "id": hero_id, "from": from, "to": to, "style": String(transition["style"])})
+		events.append({"type": "move", "id": hero_id, "from": from, "to": to, "style": str(transition["style"])})
 
 		if not hacking_machine.is_empty() and state.machines.has(hacking_machine):
 			_unhack(hero_id, hacking_machine, "left_machine", events)
@@ -209,10 +209,10 @@ func _prepare_hero_action(hero_id: String, action: String, pending_at_start: Dic
 
 		var machine: Dictionary = state.machines[machine_id]
 		var compatible: bool = (
-			(hero_id == "F" and String(machine["kind"]) == "X")
-			or (hero_id == "M" and String(machine["kind"]) == "G")
+			(hero_id == "F" and str(machine["kind"]) == "X")
+			or (hero_id == "M" and str(machine["kind"]) == "G")
 		)
-		if not compatible or not String(machine["hacked_by"]).is_empty():
+		if not compatible or not str(machine["hacked_by"]).is_empty():
 			events.append({"type": "invalid_action", "id": hero_id, "requested": action, "reason": "incompatible_machine"})
 			return {"actual": "WAIT", "push": null}
 
@@ -221,7 +221,7 @@ func _prepare_hero_action(hero_id: String, action: String, pending_at_start: Dic
 		machine["hacked_by"] = hero_id
 
 		# HACK annule un déplacement auto qui n'avait pas encore été exécuté.
-		if String(pending_at_start.get(machine_id, "")) == "auto":
+		if str(pending_at_start.get(machine_id, "")) == "auto":
 			pending_at_start.erase(machine_id)
 			machine["pending_move"] = false
 			machine["pending_source"] = ""
@@ -250,7 +250,7 @@ func _prepare_hero_action(hero_id: String, action: String, pending_at_start: Dic
 
 			"HACK_CW":
 				hero["battery"] = int(hero["battery"]) - 1
-				machine["orientation"] = ActionRules.rotate_cw(String(machine["orientation"]))
+				machine["orientation"] = ActionRules.rotate_cw(str(machine["orientation"]))
 				state.heroes[hero_id] = hero
 				state.machines[hacking_machine] = machine
 				events.append({"type": "rotate", "id": hacking_machine, "orientation": machine["orientation"]})
@@ -258,16 +258,16 @@ func _prepare_hero_action(hero_id: String, action: String, pending_at_start: Dic
 
 			"HACK_CCW":
 				hero["battery"] = int(hero["battery"]) - 1
-				machine["orientation"] = ActionRules.rotate_ccw(String(machine["orientation"]))
+				machine["orientation"] = ActionRules.rotate_ccw(str(machine["orientation"]))
 				state.heroes[hero_id] = hero
 				state.machines[hacking_machine] = machine
 				events.append({"type": "rotate", "id": hacking_machine, "orientation": machine["orientation"]})
 				return {"actual": action, "push": null}
 
 			"HACK_FILL":
-				if String(machine["kind"]) != "X":
+				if str(machine["kind"]) != "X":
 					return {"actual": "WAIT", "push": null}
-				var front: Vector2i = Vector2i(machine["pos"]) + ActionRules.orientation_to_vector(String(machine["orientation"]))
+				var front: Vector2i = Vector2i(machine["pos"]) + ActionRules.orientation_to_vector(str(machine["orientation"]))
 				if not state.in_bounds(front) or state.terrain_at(front) != "o":
 					return {"actual": "WAIT", "push": null}
 				hero["battery"] = int(hero["battery"]) - 1
@@ -277,7 +277,7 @@ func _prepare_hero_action(hero_id: String, action: String, pending_at_start: Dic
 				return {"actual": action, "push": null}
 
 			"HACK_CUT":
-				if String(machine["kind"]) != "G" or state.terrain_at(Vector2i(machine["pos"])) != "t":
+				if str(machine["kind"]) != "G" or state.terrain_at(Vector2i(machine["pos"])) != "t":
 					return {"actual": "WAIT", "push": null}
 				hero["battery"] = int(hero["battery"]) - 1
 				state.set_terrain(Vector2i(machine["pos"]), ".")
@@ -338,21 +338,21 @@ func _hero_transition(hero_id: String, origin: Vector2i, action: String) -> Dict
 
 func _process_hacked_grappler_waits(actual: Dictionary, pending_at_start: Dictionary, events: Array) -> void:
 	for hero_id in ["F", "M"]:
-		if String(actual[hero_id]) != "WAIT":
+		if str(actual[hero_id]) != "WAIT":
 			continue
 		var hero: Dictionary = state.heroes[hero_id]
-		var machine_id: String = String(hero["hacking_machine"])
+		var machine_id: String = str(hero["hacking_machine"])
 		if machine_id.is_empty() or pending_at_start.has(machine_id) or not state.machines.has(machine_id):
 			continue
 		var machine: Dictionary = state.machines[machine_id]
-		if String(machine["kind"]) == "G" and state.terrain_at(Vector2i(machine["pos"])) == "t":
+		if str(machine["kind"]) == "G" and state.terrain_at(Vector2i(machine["pos"])) == "t":
 			state.set_terrain(Vector2i(machine["pos"]), ".")
 			events.append({"type": "cut", "id": machine_id, "pos": machine["pos"], "automatic": true})
 
 func _build_machine_move_intents(pending_at_start: Dictionary) -> Dictionary:
 	var intents: Dictionary = {}
 	for machine_id_value in pending_at_start.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		if not state.machines.has(machine_id):
 			continue
 
@@ -361,14 +361,14 @@ func _build_machine_move_intents(pending_at_start: Dictionary) -> Dictionary:
 		machine["pending_source"] = ""
 		state.machines[machine_id] = machine
 
-		var dir: Vector2i = ActionRules.orientation_to_vector(String(machine["orientation"]))
+		var dir: Vector2i = ActionRules.orientation_to_vector(str(machine["orientation"]))
 		var target: Vector2i = Vector2i(machine["pos"]) + dir
 		intents[machine_id] = {
 			"id": machine_id,
 			"from": Vector2i(machine["pos"]),
 			"to": target,
 			"dir": dir,
-			"source": String(pending_at_start[machine_id]),
+			"source": str(pending_at_start[machine_id]),
 			"chest_id": state.chest_at(target),
 		}
 	return intents
@@ -387,11 +387,11 @@ func _plan_simultaneous_machines_and_chests(machine_intents: Dictionary, hero_pu
 	for _iteration in range(max_iterations):
 		var all_push_intents: Array = hero_push_intents.duplicate(true)
 		for machine_id_value in machine_intents.keys():
-			var machine_id: String = String(machine_id_value)
+			var machine_id: String = str(machine_id_value)
 			if not bool(machine_valid.get(machine_id, false)):
 				continue
 			var intent: Dictionary = machine_intents[machine_id]
-			var chest_id: String = String(intent["chest_id"])
+			var chest_id: String = str(intent["chest_id"])
 			if not chest_id.is_empty():
 				all_push_intents.append({
 					"actor_key": "machine:%s" % machine_id,
@@ -408,10 +408,10 @@ func _plan_simultaneous_machines_and_chests(machine_intents: Dictionary, hero_pu
 		var changed: bool = false
 
 		for machine_id_value in machine_intents.keys():
-			var machine_id: String = String(machine_id_value)
+			var machine_id: String = str(machine_id_value)
 			var keep_valid: bool = bool(machine_valid.get(machine_id, false)) and bool(new_topology.get(machine_id, false))
 			var intent: Dictionary = machine_intents[machine_id]
-			var chest_id: String = String(intent["chest_id"])
+			var chest_id: String = str(intent["chest_id"])
 			if keep_valid and not chest_id.is_empty():
 				keep_valid = bool(actor_success.get("machine:%s" % machine_id, false))
 			if keep_valid != bool(machine_valid.get(machine_id, false)):
@@ -424,11 +424,11 @@ func _plan_simultaneous_machines_and_chests(machine_intents: Dictionary, hero_pu
 	# Recalcul final avec uniquement les machines réellement valides.
 	var final_push_intents: Array = hero_push_intents.duplicate(true)
 	for machine_id_value in machine_intents.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		if not bool(machine_valid.get(machine_id, false)):
 			continue
 		var intent: Dictionary = machine_intents[machine_id]
-		var chest_id: String = String(intent["chest_id"])
+		var chest_id: String = str(intent["chest_id"])
 		if not chest_id.is_empty():
 			final_push_intents.append({
 				"actor_key": "machine:%s" % machine_id,
@@ -441,11 +441,11 @@ func _plan_simultaneous_machines_and_chests(machine_intents: Dictionary, hero_pu
 	push_plan = _plan_chest_pushes(final_push_intents)
 	var final_actor_success: Dictionary = push_plan.get("actor_success", {})
 	for machine_id_value in machine_intents.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		if not bool(machine_valid.get(machine_id, false)):
 			continue
 		var intent: Dictionary = machine_intents[machine_id]
-		if not String(intent["chest_id"]).is_empty():
+		if not str(intent["chest_id"]).is_empty():
 			machine_valid[machine_id] = bool(final_actor_success.get("machine:%s" % machine_id, false))
 
 	return {
@@ -472,8 +472,8 @@ func _plan_chest_pushes(intents: Array) -> Dictionary:
 	var by_chest: Dictionary = {}
 	for intent_value in intents:
 		var intent: Dictionary = intent_value
-		var chest_id: String = String(intent["chest_id"])
-		var actor_key: String = String(intent["actor_key"])
+		var chest_id: String = str(intent["chest_id"])
+		var actor_key: String = str(intent["actor_key"])
 		if chest_id.is_empty() or not state.chests.has(chest_id):
 			actor_success[actor_key] = false
 			continue
@@ -485,7 +485,7 @@ func _plan_chest_pushes(intents: Array) -> Dictionary:
 
 	# Construire d'abord chaque groupe.
 	for chest_id_value in by_chest.keys():
-		var chest_id: String = String(chest_id_value)
+		var chest_id: String = str(chest_id_value)
 		var group: Array = by_chest[chest_id]
 		var unique_dirs: Dictionary = {}
 		for intent_value in group:
@@ -512,7 +512,7 @@ func _plan_chest_pushes(intents: Array) -> Dictionary:
 	# Deux coffres différents ne peuvent pas finir sur la même cellule.
 	var destination_counts: Dictionary = {}
 	for chest_id_value in groups.keys():
-		var chest_id: String = String(chest_id_value)
+		var chest_id: String = str(chest_id_value)
 		var group_data: Dictionary = groups[chest_id]
 		if not bool(group_data["success"]):
 			continue
@@ -521,7 +521,7 @@ func _plan_chest_pushes(intents: Array) -> Dictionary:
 		destination_counts[key] = int(destination_counts.get(key, 0)) + 1
 
 	for chest_id_value in groups.keys():
-		var chest_id: String = String(chest_id_value)
+		var chest_id: String = str(chest_id_value)
 		var group_data: Dictionary = groups[chest_id]
 		if bool(group_data["success"]):
 			var to: Vector2i = Vector2i(group_data["to"])
@@ -531,12 +531,12 @@ func _plan_chest_pushes(intents: Array) -> Dictionary:
 
 	# Propager le résultat vers chaque acteur et réserver les destinations.
 	for chest_id_value in groups.keys():
-		var chest_id: String = String(chest_id_value)
+		var chest_id: String = str(chest_id_value)
 		var group_data: Dictionary = groups[chest_id]
 		var success: bool = bool(group_data["success"])
 		for intent_value in group_data["intents"]:
 			var intent: Dictionary = intent_value
-			actor_success[String(intent["actor_key"])] = success
+			actor_success[str(intent["actor_key"])] = success
 		if success:
 			reserved[_pos_key(Vector2i(group_data["to"]))] = chest_id
 
@@ -545,7 +545,7 @@ func _plan_chest_pushes(intents: Array) -> Dictionary:
 func _apply_chest_plan(plan: Dictionary, events: Array) -> void:
 	var groups: Dictionary = plan.get("groups", {})
 	for chest_id_value in groups.keys():
-		var chest_id: String = String(chest_id_value)
+		var chest_id: String = str(chest_id_value)
 		var group_data: Dictionary = groups[chest_id]
 		if not bool(group_data["success"]) or not state.chests.has(chest_id):
 			continue
@@ -588,7 +588,7 @@ func _compute_machine_topology_valid(intents: Dictionary, reserved_chest_destina
 	var target_counts: Dictionary = {}
 
 	for machine_id_value in intents.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		var intent: Dictionary = intents[machine_id]
 		var target: Vector2i = Vector2i(intent["to"])
 		var okay: bool = _machine_target_static_valid(machine_id, target, reserved_chest_destinations)
@@ -597,14 +597,14 @@ func _compute_machine_topology_valid(intents: Dictionary, reserved_chest_destina
 		target_counts[key] = int(target_counts.get(key, 0)) + 1
 
 	for machine_id_value in intents.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		var target: Vector2i = Vector2i(intents[machine_id]["to"])
 		if int(target_counts.get(_pos_key(target), 0)) > 1:
 			valid[machine_id] = false
 
 	var memo: Dictionary = {}
 	for machine_id_value in intents.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		if bool(valid.get(machine_id, false)):
 			valid[machine_id] = _machine_chain_can_move(machine_id, intents, valid, memo, {})
 
@@ -618,9 +618,9 @@ func _machine_target_static_valid(machine_id: String, target: Vector2i, reserved
 
 	var machine: Dictionary = state.machines[machine_id]
 	var terrain_symbol: String = state.terrain_at(target)
-	if String(machine["kind"]) == "X" and terrain_symbol in ["#", "t"]:
+	if str(machine["kind"]) == "X" and terrain_symbol in ["#", "t"]:
 		return false
-	if String(machine["kind"]) == "G" and terrain_symbol in ["#", "o"]:
+	if str(machine["kind"]) == "G" and terrain_symbol in ["#", "o"]:
 		return false
 	return true
 
@@ -654,13 +654,13 @@ func _machine_chain_can_move(machine_id: String, intents: Dictionary, valid: Dic
 func _execute_machine_moves(intents: Dictionary, valid: Dictionary, events: Array) -> Dictionary:
 	var moved: Dictionary = {}
 	for machine_id_value in intents.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		var intent: Dictionary = intents[machine_id]
 		var machine: Dictionary = state.machines[machine_id]
 
 		if not bool(valid.get(machine_id, false)):
 			moved[machine_id] = false
-			if String(intent["source"]) == "auto" and String(machine["hacked_by"]).is_empty():
+			if str(intent["source"]) == "auto" and str(machine["hacked_by"]).is_empty():
 				_rotate_blocked_machine(machine_id, events)
 			else:
 				events.append({"type": "machine_blocked", "id": machine_id, "pos": machine["pos"]})
@@ -671,7 +671,7 @@ func _execute_machine_moves(intents: Dictionary, valid: Dictionary, events: Arra
 		machine["pos"] = to
 
 		# Le DIG tous les 5 pas appartient à la routine automatique de X.
-		if String(machine["kind"]) == "X" and String(intent["source"]) == "auto":
+		if str(machine["kind"]) == "X" and str(intent["source"]) == "auto":
 			machine["steps_since_dig"] = int(machine["steps_since_dig"]) + 1
 
 		state.machines[machine_id] = machine
@@ -683,12 +683,12 @@ func _execute_machine_moves(intents: Dictionary, valid: Dictionary, events: Arra
 			events.append({"type": "stone_pickup_machine", "id": machine_id, "count": picked})
 
 		machine = state.machines[machine_id]
-		var rider: String = String(machine["hacked_by"])
+		var rider: String = str(machine["hacked_by"])
 		if not rider.is_empty() and state.heroes.has(rider):
 			var hero: Dictionary = state.heroes[rider]
 			var hero_from: Vector2i = Vector2i(hero["pos"])
 			hero["pos"] = to
-			hero["visual_facing"] = String(machine["orientation"])
+			hero["visual_facing"] = str(machine["orientation"])
 			state.heroes[rider] = hero
 			events.append({"type": "move", "id": rider, "from": hero_from, "to": to, "style": "ride"})
 	return moved
@@ -701,12 +701,12 @@ func _process_automatic_machines(pending_at_start: Dictionary, _moved_machines: 
 	var eligible: Dictionary = {}
 
 	for machine_id_value in state.machines.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		if pending_at_start.has(machine_id):
 			continue
 
 		var machine: Dictionary = state.machines[machine_id]
-		if not String(machine["hacked_by"]).is_empty() or bool(machine["pending_move"]):
+		if not str(machine["hacked_by"]).is_empty() or bool(machine["pending_move"]):
 			continue
 
 		if int(machine["unhack_cooldown"]) > 0:
@@ -716,13 +716,13 @@ func _process_automatic_machines(pending_at_start: Dictionary, _moved_machines: 
 			continue
 
 		# Grappler : lorsqu'il est sur un arbre, son action de ce tick est CUT.
-		if String(machine["kind"]) == "G" and state.terrain_at(Vector2i(machine["pos"])) == "t":
+		if str(machine["kind"]) == "G" and state.terrain_at(Vector2i(machine["pos"])) == "t":
 			state.set_terrain(Vector2i(machine["pos"]), ".")
 			events.append({"type": "cut", "id": machine_id, "pos": machine["pos"], "automatic": true})
 			continue
 
 		# Excavator : après 5 pas AUTO, son action suivante est DIG.
-		if String(machine["kind"]) == "X" and int(machine["steps_since_dig"]) >= 5:
+		if str(machine["kind"]) == "X" and int(machine["steps_since_dig"]) >= 5:
 			if state.terrain_at(Vector2i(machine["pos"])) == ".":
 				state.set_terrain(Vector2i(machine["pos"]), "o")
 			machine["steps_since_dig"] = 0
@@ -730,7 +730,7 @@ func _process_automatic_machines(pending_at_start: Dictionary, _moved_machines: 
 			events.append({"type": "dig", "id": machine_id, "pos": machine["pos"]})
 			continue
 
-		var dir: Vector2i = ActionRules.orientation_to_vector(String(machine["orientation"]))
+		var dir: Vector2i = ActionRules.orientation_to_vector(str(machine["orientation"]))
 		eligible[machine_id] = {
 			"to": Vector2i(machine["pos"]) + dir,
 			"dir": dir,
@@ -740,10 +740,10 @@ func _process_automatic_machines(pending_at_start: Dictionary, _moved_machines: 
 	var target_counts: Dictionary = {}
 
 	for machine_id_value in eligible.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		var auto_target: Vector2i = Vector2i(eligible[machine_id]["to"])
 		var auto_target_key: String = _pos_key(auto_target)
-		var start_occupant: String = String(machine_positions_at_start.get(auto_target_key, ""))
+		var start_occupant: String = str(machine_positions_at_start.get(auto_target_key, ""))
 
 		# Clarification synchronisation : si la machine devant était déjà dans sa
 		# phase d'attente MOVE au début du tick, celle derrière est désynchronisée
@@ -753,19 +753,19 @@ func _process_automatic_machines(pending_at_start: Dictionary, _moved_machines: 
 		target_counts[auto_target_key] = int(target_counts.get(auto_target_key, 0)) + 1
 
 	for machine_id_value in eligible.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		var target: Vector2i = Vector2i(eligible[machine_id]["to"])
 		if int(target_counts.get(_pos_key(target), 0)) > 1:
 			candidate_valid[machine_id] = false
 
 	var memo: Dictionary = {}
 	for machine_id_value in eligible.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		if bool(candidate_valid.get(machine_id, false)):
 			candidate_valid[machine_id] = _auto_chain_can_queue(machine_id, eligible, candidate_valid, memo, {})
 
 	for machine_id_value in eligible.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		if bool(candidate_valid.get(machine_id, false)):
 			var machine: Dictionary = state.machines[machine_id]
 			machine["pending_move"] = true
@@ -782,9 +782,9 @@ func _auto_queue_static_valid(machine_id: String, candidate: Dictionary) -> bool
 
 	var machine: Dictionary = state.machines[machine_id]
 	var terrain_symbol: String = state.terrain_at(target)
-	if String(machine["kind"]) == "X" and terrain_symbol in ["#", "t"]:
+	if str(machine["kind"]) == "X" and terrain_symbol in ["#", "t"]:
 		return false
-	if String(machine["kind"]) == "G" and terrain_symbol in ["#", "o"]:
+	if str(machine["kind"]) == "G" and terrain_symbol in ["#", "o"]:
 		return false
 
 	var chest_id: String = state.chest_at(target)
@@ -818,7 +818,7 @@ func _auto_chain_can_queue(machine_id: String, eligible: Dictionary, valid: Dict
 
 	var a: Dictionary = state.machines[machine_id]
 	var b: Dictionary = state.machines[occupant]
-	if String(a["orientation"]) != String(b["orientation"]):
+	if str(a["orientation"]) != str(b["orientation"]):
 		visiting.erase(machine_id)
 		memo[machine_id] = false
 		return false
@@ -830,24 +830,24 @@ func _auto_chain_can_queue(machine_id: String, eligible: Dictionary, valid: Dict
 
 func _rotate_blocked_machine(machine_id: String, events: Array) -> void:
 	var machine: Dictionary = state.machines[machine_id]
-	if String(machine["kind"]) == "X":
-		machine["orientation"] = ActionRules.rotate_ccw(String(machine["orientation"]))
+	if str(machine["kind"]) == "X":
+		machine["orientation"] = ActionRules.rotate_ccw(str(machine["orientation"]))
 	else:
-		machine["orientation"] = ActionRules.rotate_cw(String(machine["orientation"]))
+		machine["orientation"] = ActionRules.rotate_cw(str(machine["orientation"]))
 	state.machines[machine_id] = machine
 	events.append({"type": "rotate", "id": machine_id, "orientation": machine["orientation"], "automatic": true})
 
 func _machine_forward_is_commandable(machine_id: String) -> bool:
 	var machine: Dictionary = state.machines[machine_id]
-	var dir: Vector2i = ActionRules.orientation_to_vector(String(machine["orientation"]))
+	var dir: Vector2i = ActionRules.orientation_to_vector(str(machine["orientation"]))
 	var target: Vector2i = Vector2i(machine["pos"]) + dir
 	if not state.in_bounds(target):
 		return false
 
 	var terrain_symbol: String = state.terrain_at(target)
-	if String(machine["kind"]) == "X" and terrain_symbol in ["#", "t"]:
+	if str(machine["kind"]) == "X" and terrain_symbol in ["#", "t"]:
 		return false
-	if String(machine["kind"]) == "G" and terrain_symbol in ["#", "o"]:
+	if str(machine["kind"]) == "G" and terrain_symbol in ["#", "o"]:
 		return false
 
 	# Une autre machine peut être devant ; la résolution simultanée du tick

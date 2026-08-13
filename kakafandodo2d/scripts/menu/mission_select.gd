@@ -18,8 +18,11 @@ extends Control
 @onready var file_dialog: FileDialog = $FileDialog
 
 var current_data: Dictionary = {}
+var current_response: Dictionary = {}
 var current_path: String = ""
+var current_text: String = ""
 var preview_state: GameState
+var loading: bool = false
 
 func _ready() -> void:
 	UIStyle.apply_panel(preview_panel)
@@ -31,57 +34,84 @@ func _ready() -> void:
 	play_button.pressed.connect(_on_play)
 	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/menu/MainMenu.tscn"))
 	file_dialog.file_selected.connect(_on_file_selected)
-
-	var initial: String = String(game_session.selected_map_path)
+	var initial := str(game_session.selected_map_path)
 	if initial.is_empty():
 		initial = "res://data/maps/example_map.txt"
-	_load_map(initial)
+	await _load_map(initial)
 
 func _on_file_selected(path: String) -> void:
-	_load_map(path)
+	await _load_map(path)
 
 func _load_map(path: String) -> void:
-	var result: Dictionary = MapLoader.load_from_file(path)
-	if not bool(result.get("ok", false)):
-		current_data = {}
-		current_path = ""
-		error_label.text = "✖ %s" % String(result.get("error", "Erreur inconnue"))
-		validation_label.text = "CARTE INVALIDE"
-		validation_label.add_theme_color_override("font_color", Color("#ff7566"))
-		play_button.disabled = true
+	if loading:
 		return
-
-	current_data = result["data"]
-	current_path = path
+	loading = true
+	play_button.disabled = true
+	import_button.disabled = true
+	validation_label.text = "CONNEXION BACKEND • VALIDATION..."
+	validation_label.add_theme_color_override("font_color", Color("#e8c57e"))
 	error_label.text = ""
-	validation_label.text = "✓ CARTE VALIDE • PRÊTE À SIMULER"
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		_show_error("Impossible d'ouvrir le fichier : %s" % path)
+		loading = false
+		import_button.disabled = false
+		return
+	current_text = file.get_as_text()
+	file.close()
+	var response: Dictionary = await BackendAPI.parse_map_file(path)
+	if not bool(response.get("ok", false)):
+		_show_error(_api_error(response))
+		loading = false
+		import_button.disabled = false
+		return
+	current_response = response.get("data", {})
+	current_data = BackendStateAdapter.map_response_to_game_data(current_response, path, current_text)
+	current_path = path
+	validation_label.text = "✓ BACKEND CONNECTÉ • CARTE VALIDE"
 	validation_label.add_theme_color_override("font_color", Color("#9fdd83"))
 	play_button.disabled = false
+	import_button.disabled = false
 	file_label.text = "Fichier : %s" % path.get_file()
-	size_label.text = "Dimensions : %d × %d cellules" % [int(current_data["width"]), int(current_data["height"])]
-	time_label.text = "Temps relatif : %d s  •  %d ticks max" % [int(current_data["time_limit"]), int(current_data["time_limit"])]
-	var x_count: int = 0
-	var g_count: int = 0
-	for machine_value in current_data["machines"]:
+	size_label.text = "Dimensions : %d × %d cellules" % [int(current_response.get("width", 0)), int(current_response.get("height", 0))]
+	time_label.text = "Temps relatif : %d s  •  %d ticks max" % [int(current_response.get("time_limit", 0)), int(current_response.get("time_limit", 0))]
+	var counts: Dictionary = current_response.get("counts", {})
+	var x_count := 0
+	var g_count := 0
+	for machine_value in current_response.get("machines", []):
 		var machine: Dictionary = machine_value
-		if String(machine["kind"]) == "X":
+		if str(machine.get("kind", "")) == "X":
 			x_count += 1
 		else:
 			g_count += 1
 	objects_label.text = "Pierres + : %d   •   Coffres * : %d\nExcavateurs X : %d   •   Grapplers G : %d" % [
-		current_data["stones"].size(), current_data["chests"].size(), x_count, g_count
+		int(counts.get("stones", 0)), int(counts.get("chests", 0)), x_count, g_count
 	]
-	var terrain_counts: Dictionary = current_data.get("terrain_counts", {})
 	terrain_label.text = "Rochers # : %d   •   Arbres t : %d\nTrous o : %d   •   Cachettes @ : %d" % [
-		int(terrain_counts.get("#", 0)), int(terrain_counts.get("t", 0)),
-		int(terrain_counts.get("o", 0)), int(terrain_counts.get("@", 0))
+		int(counts.get("rocks", 0)), int(counts.get("trees", 0)), int(counts.get("holes", 0)), int(counts.get("bushes", 0))
 	]
 	preview_state = GameState.new()
 	preview_state.setup(current_data)
 	preview.set_state(preview_state, [], 0.0)
+	loading = false
+
+func _show_error(message: String) -> void:
+	current_data = {}
+	current_response = {}
+	current_path = ""
+	error_label.text = "✖ %s" % message
+	validation_label.text = "BACKEND / CARTE INDISPONIBLE"
+	validation_label.add_theme_color_override("font_color", Color("#ff7566"))
+	play_button.disabled = true
+
+func _api_error(response: Dictionary) -> String:
+	var message := str(response.get("error", "Erreur backend inconnue"))
+	if int(response.get("status", 0)) == 0:
+		return "%s\nVérifiez que FastAPI tourne sur 127.0.0.1:8000." % message
+	return message
 
 func _on_play() -> void:
-	if current_data.is_empty():
+	if current_data.is_empty() or current_text.is_empty():
 		return
-	game_session.set_selected_map(current_path, current_data)
+	game_session.set_selected_map(current_path, current_data, current_text, current_response)
 	get_tree().change_scene_to_file("res://scenes/menu/MissionLaunch.tscn")

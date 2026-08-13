@@ -34,7 +34,7 @@ func setup(map_data: Dictionary) -> void:
 	time_limit = int(map_data["time_limit"])
 	remaining_time = time_limit
 	terrain = map_data["terrain"].duplicate(true)
-	source_path = String(map_data.get("source_path", ""))
+	source_path = str(map_data.get("source_path", ""))
 
 	heroes = {
 		"F": _new_hero("F", Vector2i(map_data["heroes"]["F"])),
@@ -46,7 +46,7 @@ func setup(map_data: Dictionary) -> void:
 	var g_index: int = 0
 	for entry_value in map_data["machines"]:
 		var entry: Dictionary = entry_value
-		var kind: String = String(entry["kind"])
+		var kind: String = str(entry["kind"])
 		var index: int = x_index if kind == "X" else g_index
 		var machine_id: String = "%s%d" % [kind, index]
 		if kind == "X":
@@ -123,7 +123,7 @@ func in_bounds(pos: Vector2i) -> bool:
 func terrain_at(pos: Vector2i) -> String:
 	if not in_bounds(pos):
 		return "#"
-	return String(terrain[pos.y][pos.x])
+	return str(terrain[pos.y][pos.x])
 
 func set_terrain(pos: Vector2i, symbol: String) -> void:
 	if in_bounds(pos):
@@ -131,7 +131,7 @@ func set_terrain(pos: Vector2i, symbol: String) -> void:
 
 func machine_at(pos: Vector2i) -> String:
 	for machine_id_value in machines.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		var machine: Dictionary = machines[machine_id]
 		if Vector2i(machine["pos"]) == pos:
 			return machine_id
@@ -139,7 +139,7 @@ func machine_at(pos: Vector2i) -> String:
 
 func chest_at(pos: Vector2i) -> String:
 	for chest_id_value in chests.keys():
-		var chest_id: String = String(chest_id_value)
+		var chest_id: String = str(chest_id_value)
 		var chest: Dictionary = chests[chest_id]
 		if Vector2i(chest["pos"]) == pos:
 			return chest_id
@@ -185,7 +185,7 @@ func steal_machine_stones(hero_id: String) -> int:
 func remaining_machine_stones() -> int:
 	var count: int = 0
 	for machine_id_value in machines.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		count += int(machines[machine_id]["stones"])
 	return count
 

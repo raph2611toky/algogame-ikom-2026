@@ -53,6 +53,17 @@ texture = ExtResource("3_logo")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="TopQuitButton" type="Button" parent="."]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_top = 28.0
+offset_right = -30.0
+offset_bottom = 84.0
+grow_horizontal = 0
+text = "QUITTER"
+
 [node name="LeftCharacter" type="TextureRect" parent="."]
 layout_mode = 1
 anchor_left = 0.0
@@ -417,6 +428,15 @@ custom_minimum_size = Vector2(58, 42)
 layout_mode = 2
 text = "▶"
 
+[node name="SaveStatus" type="Label" parent="SettingsPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.93, 0.82, 0.59, 1)
+theme_override_font_sizes/font_size = 16
+
 [node name="Spacer" type="Control" parent="SettingsPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
@@ -433,7 +453,7 @@ text = "RETOUR"
 custom_minimum_size = Vector2(230, 64)
 layout_mode = 2
 text = "PAR DÉFAUT"
-[node name="QuitButton" type="Button" parent="SettingsPanel/Margin/VBox/Buttons"]
-custom_minimum_size = Vector2(190, 64)
+[node name="SaveButton" type="Button" parent="SettingsPanel/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(210, 64)
 layout_mode = 2
-text = "QUITTER"
+text = "ENREGISTRER"

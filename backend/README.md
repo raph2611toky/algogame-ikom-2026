@@ -229,3 +229,20 @@ La suite vérifie notamment :
 
 - `docs/API_CONTRACT.md` : contrat Godot ↔ FastAPI.
 - `docs/GDD_INTERPRETATIONS.md` : ambiguïtés du GDD documentées explicitement.
+
+
+## Intégration Godot 2D
+
+Le frontend minimal utilise par défaut `http://127.0.0.1:8000/api/v1`.
+
+Routes utilisées directement par Godot :
+
+- `GET /health` : test de disponibilité du backend.
+- `POST /maps/upload` : validation multipart du `map.txt` sélectionné dans Godot.
+- `POST /simulations` : calcul complet de la simulation et des ticks à jouer.
+- `GET /settings` : chargement des paramètres persistés.
+- `PUT /settings` : sauvegarde des paramètres.
+- `POST /settings/reset` : réinitialisation des paramètres.
+- `POST /simulations/replay-text` : vérification d'un `actions.txt` déjà calculé.
+
+Les paramètres sont sauvegardés dans `data/settings.json` par défaut.

@@ -10,7 +10,7 @@ def test_custom_swagger_is_complete_and_uses_real_routes() -> None:
     assert response.status_code == 200
     swagger = response.json()
     assert swagger['swagger'] == '2.0'
-    expected_paths = {'/api/v1/health', '/api/v1/contracts', '/api/v1/maps/parse', '/api/v1/maps/upload', '/api/v1/simulations', '/api/v1/simulations/upload', '/api/v1/simulations/replay', '/api/v1/simulations/replay-text', '/api/v1/simulations/replay-upload', '/api/v1/simulations/{simulation_id}', '/api/v1/simulations/{simulation_id}/actions.txt'}
+    expected_paths = {'/api/v1/health', '/api/v1/contracts', '/api/v1/maps/parse', '/api/v1/maps/upload', '/api/v1/settings', '/api/v1/settings/reset', '/api/v1/simulations', '/api/v1/simulations/upload', '/api/v1/simulations/replay', '/api/v1/simulations/replay-text', '/api/v1/simulations/replay-upload', '/api/v1/simulations/{simulation_id}', '/api/v1/simulations/{simulation_id}/actions.txt'}
     assert set(swagger['paths']) == expected_paths
     operation_ids: list[str] = []
     for path_item in swagger['paths'].values():

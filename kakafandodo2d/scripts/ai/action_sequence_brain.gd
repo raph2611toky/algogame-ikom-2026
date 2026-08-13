@@ -13,6 +13,6 @@ func get_actions(_state: GameState) -> Dictionary:
 	var pair: Dictionary = action_pairs[cursor]
 	cursor += 1
 	return {
-		"F": String(pair.get("F", "WAIT")),
-		"M": String(pair.get("M", "WAIT")),
+		"F": str(pair.get("F", "WAIT")),
+		"M": str(pair.get("M", "WAIT")),
 	}

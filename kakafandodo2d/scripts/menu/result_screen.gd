@@ -40,7 +40,7 @@ func _show_result() -> void:
 		int(s["collected_stones"]), int(s["total_stones"]), int(s.get("stone_points", 0)),
 		int(s.get("resource_points", 0)), int(s["remaining_time"]), int(s.get("time_points", 0)),
 		int(s["stamina_f"]), int(s["stamina_m"]), int(s["battery_f"]), int(s["battery_m"]), ratio,
-		int(s["ticks"]), String(s["end_reason"])
+		int(s["ticks"]), str(s["end_reason"])
 	]
 	path_label.text = "actions.txt : %s" % game_session.last_actions_path
 	actions_preview.text = ActionsWriter.read_text(game_session.last_actions_path)

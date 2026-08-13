@@ -1,0 +1,17 @@
+{
+  "sound": 80,
+  "music": 60,
+  "effects": 80,
+  "dialogue": 90,
+  "quality": 2,
+  "fullscreen": false,
+  "language": 0,
+  "strategy": {
+    "name": "portfolio_v3",
+    "max_stones_per_hero": 16,
+    "max_chest_pairs_per_hero": 12,
+    "max_unlock_obstacles": 20,
+    "unlock_pair_candidates": 8,
+    "stuck_end_threshold": 8
+  }
+}
