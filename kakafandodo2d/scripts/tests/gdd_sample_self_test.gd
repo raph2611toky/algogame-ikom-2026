@@ -6,7 +6,7 @@ extends Node
 
 func _ready() -> void:
 	var result: Dictionary = MapLoader.load_from_file("res://data/maps/example_map.txt")
-	assert(bool(result["ok"]), String(result["error"]))
+	assert(bool(result["ok"]), str(result["error"]))
 
 	var pairs: Array = [
 		{"F":"LEFT", "M":"LEFT"},
@@ -52,7 +52,7 @@ func _ready() -> void:
 	assert(int(state.heroes["M"]["stamina"]) == 100, "Stamina finale M différente du GDD")
 	assert(int(state.heroes["M"]["battery"]) == 90, "Batterie finale M différente du GDD")
 	assert(state.machines["X0"]["pos"] == Vector2i(4, 0), "Position finale X différente du GDD")
-	assert(String(state.machines["X0"]["orientation"]) == "UP", "Orientation finale X différente du GDD")
+	assert(str(state.machines["X0"]["orientation"]) == "UP", "Orientation finale X différente du GDD")
 	assert(state.machines["G0"]["pos"] == Vector2i(5, 0), "Position finale G différente du GDD")
-	assert(String(state.machines["G0"]["orientation"]) == "UP", "Orientation finale G différente du GDD")
+	assert(str(state.machines["G0"]["orientation"]) == "UP", "Orientation finale G différente du GDD")
 	print("SELF TEST OK")

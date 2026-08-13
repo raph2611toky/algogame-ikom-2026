@@ -11,4 +11,5 @@ class Settings:
     port: int = int(os.getenv('KAKAFANDODO_PORT', '8000'))
     max_upload_bytes: int = int(os.getenv('KAKAFANDODO_MAX_UPLOAD_BYTES', str(1024 * 1024)))
     output_dir: Path = Path(os.getenv('KAKAFANDODO_OUTPUT_DIR', 'output'))
+    settings_file: Path = Path(os.getenv('KAKAFANDODO_SETTINGS_FILE', 'data/settings.json'))
 settings = Settings()

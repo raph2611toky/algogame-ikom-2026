@@ -13,7 +13,7 @@ func get_actions(state: GameState) -> Dictionary:
 
 func _choose_action(state: GameState, hero_id: String) -> String:
 	var hero: Dictionary = state.heroes[hero_id]
-	var hacking_machine := String(hero["hacking_machine"])
+	var hacking_machine := str(hero["hacking_machine"])
 
 	if not hacking_machine.is_empty() and state.machines.has(hacking_machine):
 		return _choose_hacking_action(state, hero_id, hacking_machine)
@@ -53,7 +53,7 @@ func _choose_hacking_action(state: GameState, hero_id: String, machine_id: Strin
 	if machine["kind"] == "G" and state.terrain_at(machine["pos"]) == "t":
 		return "WAIT"
 
-	var dir: Vector2i = ActionRules.orientation_to_vector(String(machine["orientation"]))
+	var dir: Vector2i = ActionRules.orientation_to_vector(str(machine["orientation"]))
 	var front: Vector2i = Vector2i(machine["pos"]) + dir
 
 	if machine["kind"] == "X":
@@ -62,15 +62,15 @@ func _choose_hacking_action(state: GameState, hero_id: String, machine_id: Strin
 		var holes: Array = _terrain_positions(state, "o")
 		if not holes.is_empty():
 			var desired: String = _desired_orientation_toward(Vector2i(machine["pos"]), _nearest(Vector2i(machine["pos"]), holes))
-			if desired != String(machine["orientation"]):
-				return _rotation_toward(String(machine["orientation"]), desired)
+			if desired != str(machine["orientation"]):
+				return _rotation_toward(str(machine["orientation"]), desired)
 		return "HACK_MOVE"
 
 	var trees: Array = _terrain_positions(state, "t")
 	if not trees.is_empty():
 		var desired_tree: String = _desired_orientation_toward(Vector2i(machine["pos"]), _nearest(Vector2i(machine["pos"]), trees))
-		if desired_tree != String(machine["orientation"]):
-			return _rotation_toward(String(machine["orientation"]), desired_tree)
+		if desired_tree != str(machine["orientation"]):
+			return _rotation_toward(str(machine["orientation"]), desired_tree)
 	return "HACK_MOVE"
 
 func _maybe_push_chest(state: GameState, hero_id: String) -> String:
@@ -126,7 +126,7 @@ func _first_action_to_targets(state: GameState, hero_id: String, targets: Array)
 			visited[next_pos] = true
 			first_action[next_pos] = action if pos == start else first_action[pos]
 			if targets.has(next_pos):
-				return String(first_action[next_pos])
+				return str(first_action[next_pos])
 			queue.append(next_pos)
 	return ""
 

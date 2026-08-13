@@ -73,3 +73,15 @@ scripts/menu/*.gd                 flux UI complet
 ## Important — Artistic Prize
 
 interface provisoire en 2D
+
+## Backend FastAPI dynamique
+
+Cette version 2D utilise `http://127.0.0.1:8000/api/v1`.
+
+1. `MissionSelect` envoie le `map.txt` à `POST /maps/upload`.
+2. `MissionLaunch` appelle `POST /simulations`.
+3. `GameScreen` joue `initial_state` puis `ticks[]` sans recalculer les règles.
+4. `actions_txt` est enregistré dans `user://actions.txt`.
+5. Les paramètres utilisent `/settings` avec `user://settings.cfg` comme fallback local.
+
+Test Godot : `res://scenes/tests/BackendIntegrationTest.tscn`.

@@ -32,7 +32,7 @@ func play_events(events: Array) -> void:
 	var strong_sound_played := false
 	for event_value in events:
 		var event_data: Dictionary = event_value
-		var event_type: String = String(event_data.get("type", ""))
+		var event_type: String = str(event_data.get("type", ""))
 		match event_type:
 			"hack":
 				_play(HACK_SOUND, 1.0, -2.0)
@@ -61,7 +61,7 @@ func play_events(events: Array) -> void:
 				if not strong_sound_played:
 					_play(PUSH_SOUND, randf_range(0.96, 1.03), -5.0)
 			"move":
-				_play_move_style(String(event_data.get("style", "move")))
+				_play_move_style(str(event_data.get("style", "move")))
 			_:
 				pass
 
@@ -82,6 +82,8 @@ func _play_move_style(style: String) -> void:
 	_play(MOVE_SOUND, randf_range(0.95, 1.08), -10.0)
 
 func _play(stream: AudioStream, pitch: float = 1.0, volume_db: float = 0.0) -> void:
+	if not _audio_available():
+		return
 	var player := AudioStreamPlayer.new()
 	player.stream = stream
 	player.bus = "Effects"
@@ -90,3 +92,9 @@ func _play(stream: AudioStream, pitch: float = 1.0, volume_db: float = 0.0) -> v
 	add_child(player)
 	player.finished.connect(player.queue_free)
 	player.play()
+
+func _audio_available() -> bool:
+	var driver := AudioServer.get_driver_name()
+	if driver.is_empty() or driver.to_lower() == "dummy":
+		return false
+	return not AudioServer.get_output_device_list().is_empty()

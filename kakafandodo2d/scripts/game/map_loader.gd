@@ -23,7 +23,7 @@ static func parse_text(text: String, source_path: String = "") -> Dictionary:
 	var raw_lines: PackedStringArray = normalized.split("\n", false)
 	var lines: Array[String] = []
 	for raw_line_value in raw_lines:
-		var line: String = String(raw_line_value).strip_edges()
+		var line: String = str(raw_line_value).strip_edges()
 		if line.is_empty():
 			continue
 		lines.append(line)
@@ -35,7 +35,7 @@ static func parse_text(text: String, source_path: String = "") -> Dictionary:
 	if header.size() != 3:
 		return _error("La première ligne doit contenir exactement : H W TEMPS.")
 
-	if not String(header[0]).is_valid_int() or not String(header[1]).is_valid_int() or not String(header[2]).is_valid_int():
+	if not str(header[0]).is_valid_int() or not str(header[1]).is_valid_int() or not str(header[2]).is_valid_int():
 		return _error("H, W et TEMPS doivent être des entiers.")
 
 	var height: int = int(header[0])

@@ -7,7 +7,7 @@ static func write_default(state: GameState) -> String:
 static func write_to_path(state: GameState, path: String) -> String:
 	var validation: Dictionary = validate_history(state)
 	if not bool(validation.get("ok", false)):
-		push_error(String(validation.get("error", "Historique actions invalide.")))
+		push_error(str(validation.get("error", "Historique actions invalide.")))
 		return ""
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
@@ -51,8 +51,8 @@ static func validate_history(state: GameState) -> Dictionary:
 		var parts: PackedStringArray = line.split("|", false)
 		if parts.size() != 2:
 			return {"ok": false, "error": "Action tick %d invalide : %s" % [index + 1, line]}
-		var action_f: String = String(parts[0]).strip_edges()
-		var action_m: String = String(parts[1]).strip_edges()
+		var action_f: String = str(parts[0]).strip_edges()
+		var action_m: String = str(parts[1]).strip_edges()
 		if not _valid_action(action_f) or not _valid_action(action_m):
 			return {"ok": false, "error": "Action inconnue au tick %d : %s" % [index + 1, line]}
 	return {"ok": true, "error": ""}

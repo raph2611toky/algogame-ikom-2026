@@ -1,0 +1,19 @@
+[project]
+name = "kakafandodo-backend"
+version = "0.3.3"
+description = "Local FastAPI simulation/AI backend for KAKAFANDODO - AlgoGames 2"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.128,<1.0",
+  "pydantic>=2.12,<3.0",
+  "uvicorn[standard]>=0.35,<1.0",
+  "python-multipart>=0.0.20,<1.0",
+]
+
+[project.optional-dependencies]
+test = ["httpx>=0.28,<1.0", "pytest>=9.0,<10.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

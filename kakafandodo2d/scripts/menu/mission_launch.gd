@@ -16,29 +16,38 @@ func _ready() -> void:
 	UIStyle.apply_panel($Content/Panel)
 	UIStyle.apply_button(cancel_button, 20)
 	cancel_button.pressed.connect(_cancel)
-
 	var data: Dictionary = game_session.selected_map_data
-	if data.is_empty():
-		var result: Dictionary = MapLoader.load_from_file(game_session.selected_map_path)
-		if not bool(result.get("ok", false)):
-			countdown_label.text = "MAP INVALIDE"
-			return
-		data = result["data"]
-		game_session.set_selected_map(game_session.selected_map_path, data)
-
+	if data.is_empty() or game_session.selected_map_text.is_empty():
+		countdown_label.text = "MISSION NON CHARGÉE"
+		return
 	var preview_state := GameState.new()
 	preview_state.setup(data)
 	preview.set_state(preview_state, [], 0.0)
 	map_label.text = "%s  •  %d×%d  •  %d s" % [
-		String(game_session.selected_map_path).get_file(),
+		str(game_session.selected_map_path).get_file(),
 		int(data["width"]), int(data["height"]), int(data["time_limit"])
 	]
-	objectives_label.text = "OBJECTIF\nRécupérer un maximum de pierres précieuses et cacher un maximum de coffres.\n\nAGENTS\nIkotofosa [F] • Imahaki [M]\n\nMODE\nZero Player Game • simulation automatique"
+	objectives_label.text = "OBJECTIF\nRécupérer un maximum de pierres précieuses et cacher un maximum de coffres.\n\nAGENTS\nIkotofosa [F] • Imahaki [M]\n\nMOTEUR\nFastAPI 127.0.0.1:8000 • stratégie %s" % str(game_session.get_strategy_options().get("name", "portfolio_v3"))
+	countdown_label.text = "CALCUL IA..."
+	countdown_label.add_theme_font_size_override("font_size", 54)
+	var response: Dictionary = await BackendAPI.simulate(
+		game_session.selected_map_text,
+		str(game_session.selected_map_path).get_file().get_basename(),
+		game_session.get_strategy_options()
+	)
+	if _cancelled:
+		return
+	if not bool(response.get("ok", false)):
+		countdown_label.text = "ERREUR BACKEND\n%s" % str(response.get("error", "Simulation impossible"))
+		countdown_label.add_theme_font_size_override("font_size", 30)
+		return
+	game_session.set_simulation(response.get("data", {}))
 	_audio.play_mission_start()
-	await get_tree().create_timer(0.35).timeout
+	await get_tree().create_timer(0.25).timeout
 	_start_countdown()
 
 func _start_countdown() -> void:
+	countdown_label.add_theme_font_size_override("font_size", 108)
 	for value in [3, 2, 1]:
 		if _cancelled:
 			return
@@ -52,7 +61,6 @@ func _start_countdown() -> void:
 		tween.tween_property(countdown_label, "modulate:a", 1.0, 0.10)
 		tween.parallel().tween_property(countdown_label, "scale", Vector2.ONE, 0.18)
 		await get_tree().create_timer(0.62).timeout
-
 	if _cancelled:
 		return
 	countdown_label.text = "GO !"

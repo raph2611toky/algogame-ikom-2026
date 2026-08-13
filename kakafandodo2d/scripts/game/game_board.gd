@@ -123,24 +123,24 @@ func _sync_entities(events: Array, duration: float) -> void:
 		desired[hero_id] = {
 			"kind": hero_id,
 			"pos": Vector2i(hero_data["pos"]),
-			"facing": String(hero_data.get("visual_facing", "DOWN")),
-			"hacked": not String(hero_data.get("hacking_machine", "")).is_empty(),
+			"facing": str(hero_data.get("visual_facing", "DOWN")),
+			"hacked": not str(hero_data.get("hacking_machine", "")).is_empty(),
 			"pending": false,
-			"action": String(hero_data.get("last_action", "WAIT")),
+			"action": str(hero_data.get("last_action", "WAIT")),
 		}
 	for machine_id_value in state_ref.machines.keys():
-		var machine_id: String = String(machine_id_value)
+		var machine_id: String = str(machine_id_value)
 		var machine_data: Dictionary = state_ref.machines[machine_id]
 		desired[machine_id] = {
-			"kind": String(machine_data["kind"]),
+			"kind": str(machine_data["kind"]),
 			"pos": Vector2i(machine_data["pos"]),
-			"facing": String(machine_data["orientation"]),
-			"hacked": not String(machine_data.get("hacked_by", "")).is_empty(),
+			"facing": str(machine_data["orientation"]),
+			"hacked": not str(machine_data.get("hacked_by", "")).is_empty(),
 			"pending": bool(machine_data.get("pending_move", false)),
 			"action": "WAIT",
 		}
 	for chest_id_value in state_ref.chests.keys():
-		var chest_id: String = String(chest_id_value)
+		var chest_id: String = str(chest_id_value)
 		var chest_data: Dictionary = state_ref.chests[chest_id]
 		desired[chest_id] = {
 			"kind": "C",
@@ -155,23 +155,23 @@ func _sync_entities(events: Array, duration: float) -> void:
 	var removal_events: Dictionary = {}
 	for event_value in events:
 		var event_data: Dictionary = event_value
-		var event_id: String = String(event_data.get("id", ""))
+		var event_id: String = str(event_data.get("id", ""))
 		if event_id.is_empty():
 			continue
-		var event_type: String = String(event_data.get("type", ""))
+		var event_type: String = str(event_data.get("type", ""))
 		if event_type == "move" or event_type == "chest_move":
-			event_styles[event_id] = String(event_data.get("style", "move"))
+			event_styles[event_id] = str(event_data.get("style", "move"))
 		elif event_type == "chest_hidden" or event_type == "chest_lost":
 			removal_events[event_id] = event_data
 
 	for entity_id_value in desired.keys():
-		var entity_id: String = String(entity_id_value)
+		var entity_id: String = str(entity_id_value)
 		var spec: Dictionary = desired[entity_id]
 		var entity_view: EntityView
 		var is_new: bool = not entity_nodes.has(entity_id)
 		if is_new:
 			entity_view = EntityView.new()
-			entity_view.setup(String(spec["kind"]), entity_id)
+			entity_view.setup(str(spec["kind"]), entity_id)
 			add_child(entity_view)
 			entity_nodes[entity_id] = entity_view
 		else:
@@ -180,12 +180,12 @@ func _sync_entities(events: Array, duration: float) -> void:
 		entity_view.size = Vector2(_cell_size * 0.88, _cell_size * 0.88)
 		entity_view.pivot_offset = entity_view.size / 2.0
 		entity_view.queue_redraw()
-		entity_view.z_index = _z_for_kind(String(spec["kind"])) + int(Vector2i(spec["pos"]).y)
+		entity_view.z_index = _z_for_kind(str(spec["kind"])) + int(Vector2i(spec["pos"]).y)
 		entity_view.set_visual_state(
-			String(spec.get("facing", "")),
+			str(spec.get("facing", "")),
 			bool(spec.get("hacked", false)),
 			bool(spec.get("pending", false)),
-			String(spec.get("action", "WAIT"))
+			str(spec.get("action", "WAIT"))
 		)
 		var target_position: Vector2 = _cell_center(Vector2i(spec["pos"])) - entity_view.size / 2.0
 
@@ -198,11 +198,11 @@ func _sync_entities(events: Array, duration: float) -> void:
 			else:
 				entity_view.modulate.a = 1.0
 		else:
-			entity_view.animate_to(target_position, duration, String(event_styles.get(entity_id, "move")))
+			entity_view.animate_to(target_position, duration, str(event_styles.get(entity_id, "move")))
 
 	var stale_ids: Array[String] = []
 	for entity_id_value in entity_nodes.keys():
-		var entity_id: String = String(entity_id_value)
+		var entity_id: String = str(entity_id_value)
 		if desired.has(entity_id):
 			continue
 		var stale_view: EntityView = entity_nodes[entity_id] as EntityView
@@ -223,10 +223,10 @@ func cell_center_local(pos: Vector2i) -> Vector2:
 func _play_entity_reactions(events: Array) -> void:
 	for event_value in events:
 		var event_data: Dictionary = event_value
-		var event_type: String = String(event_data.get("type", ""))
-		var event_id: String = String(event_data.get("id", ""))
+		var event_type: String = str(event_data.get("type", ""))
+		var event_id: String = str(event_data.get("id", ""))
 		if event_type == "hack":
-			var machine_id: String = String(event_data.get("machine", ""))
+			var machine_id: String = str(event_data.get("machine", ""))
 			if entity_nodes.has(machine_id):
 				var machine_view: EntityView = entity_nodes[machine_id] as EntityView
 				machine_view.play_reaction("hack")
@@ -245,7 +245,7 @@ func _emit_event_effects(events: Array) -> void:
 		return
 	for event_value in events:
 		var event_data: Dictionary = event_value
-		var event_type: String = String(event_data.get("type", ""))
+		var event_type: String = str(event_data.get("type", ""))
 		var pos: Vector2i = _event_cell(event_data)
 		if pos.x < 0 or pos.y < 0:
 			continue
@@ -272,7 +272,7 @@ func _emit_event_effects(events: Array) -> void:
 				_spawn_particles(pos, Color("#6c4431"), 26, Vector2(0.0, -1.0), 150.0, 45.0, 110.0, 0.48)
 				_spawn_pulse(pos, Color("#d88465"), "PERDU")
 			"move":
-				var style: String = String(event_data.get("style", "move"))
+				var style: String = str(event_data.get("style", "move"))
 				if style == "hop" or style == "climb":
 					_spawn_particles(pos, Color(0.92, 0.86, 0.70, 1.0), 10, Vector2(0.0, -1.0), 125.0, 28.0, 72.0, 0.24)
 			"invalid_action":
@@ -285,14 +285,14 @@ func _event_cell(event_data: Dictionary) -> Vector2i:
 		return Vector2i(event_data["pos"])
 	if event_data.has("to"):
 		return Vector2i(event_data["to"])
-	var id: String = String(event_data.get("id", ""))
+	var id: String = str(event_data.get("id", ""))
 	if state_ref.heroes.has(id):
 		return Vector2i(state_ref.heroes[id]["pos"])
 	if state_ref.machines.has(id):
 		return Vector2i(state_ref.machines[id]["pos"])
 	if state_ref.chests.has(id):
 		return Vector2i(state_ref.chests[id]["pos"])
-	var machine_id: String = String(event_data.get("machine", ""))
+	var machine_id: String = str(event_data.get("machine", ""))
 	if state_ref.machines.has(machine_id):
 		return Vector2i(state_ref.machines[machine_id]["pos"])
 	return Vector2i(-1, -1)

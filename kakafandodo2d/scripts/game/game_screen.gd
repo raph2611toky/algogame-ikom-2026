@@ -41,7 +41,10 @@ const RELATIVE_TICK_REAL_SECONDS := 0.2
 @onready var quick_close: Button = $TopLayer/QuickSettings/Margin/VBox/Buttons/CloseButton
 @onready var quick_menu: Button = $TopLayer/QuickSettings/Margin/VBox/Buttons/MenuButton
 
-var engine := SimulationEngine.new()
+var playback_state: GameState
+var simulation_data: Dictionary = {}
+var simulation_ticks: Array = []
+var tick_index: int = 0
 var accumulator: float = 0.0
 var playback_speed: float = 1.0
 var paused: bool = false
@@ -70,39 +73,46 @@ func _ready() -> void:
 	_load_quick_settings()
 	board.set_effects_percent(int(game_session.settings["effects"]))
 
-	var data: Dictionary = game_session.selected_map_data
-	if data.is_empty():
-		var map_result: Dictionary = MapLoader.load_from_file(String(game_session.selected_map_path))
-		if not bool(map_result["ok"]):
-			status_label.text = "ERREUR MAP : %s" % String(map_result["error"])
-			set_process(false)
-			return
-		data = map_result["data"]
-		game_session.set_selected_map(game_session.selected_map_path, data)
-
-	engine.initialize(data)
-	board.set_state(engine.state, [], 0.0)
+	if not game_session.has_simulation():
+		status_label.text = "ERREUR BACKEND : aucune simulation calculée."
+		set_process(false)
+		return
+	simulation_data = game_session.simulation
+	simulation_ticks = simulation_data.get("ticks", [])
+	tick_index = 0
+	playback_state = BackendStateAdapter.create_state(
+		simulation_data,
+		simulation_data.get("initial_state", {}),
+		game_session.selected_map_path
+	)
+	board.set_state(playback_state, [], 0.0)
 	_update_hud({"F": "WAIT", "M": "WAIT"})
-	status_label.text = "ZERO PLAYER GAME • %s • tick standard 0,2 s" % String(game_session.selected_map_path).get_file()
+	status_label.text = "FASTAPI • %s • %d ticks calculés • 0,2 s/tick" % [str(game_session.selected_map_path).get_file(), simulation_ticks.size()]
 	call_deferred("_setup_camera_rest")
 	_show_event_banner("MISSION EN COURS", Color("#ffe1a0"), 0.85)
 
 func _process(delta: float) -> void:
-	if paused or finishing or engine.state == null or engine.state.ended:
+	if paused or finishing or playback_state == null:
 		return
 	accumulator += delta * playback_speed
 	while accumulator >= RELATIVE_TICK_REAL_SECONDS:
 		accumulator -= RELATIVE_TICK_REAL_SECONDS
-		var step_result: Dictionary = engine.step()
+		if tick_index >= simulation_ticks.size():
+			_finish_game()
+			break
+		var tick_data: Dictionary = simulation_ticks[tick_index]
+		var actions: Dictionary = tick_data.get("effective_actions", {"F": "WAIT", "M": "WAIT"})
+		BackendStateAdapter.apply_snapshot(playback_state, tick_data.get("state", {}), actions)
+		var events: Array = BackendStateAdapter.events_to_frontend(tick_data.get("events", []))
 		var animation_duration := clampf(0.14 / playback_speed, 0.035, 0.14)
-		var events: Array = step_result["events"]
-		board.set_state(engine.state, events, animation_duration)
+		board.set_state(playback_state, events, animation_duration)
 		audio.play_events(events)
 		_camera_react(events)
-		_update_hud(step_result["actions"])
+		_update_hud(actions)
 		status_label.text = _event_summary(events)
 		_react_to_events(events)
-		if bool(step_result["ended"]):
+		tick_index += 1
+		if tick_index >= simulation_ticks.size():
 			_finish_game()
 			break
 
@@ -121,16 +131,16 @@ func _style_ui() -> void:
 	UIStyle.apply_button(quick_menu, 18)
 
 func _update_hud(actions: Dictionary) -> void:
-	var hero_f: Dictionary = engine.state.heroes["F"]
-	var hero_m: Dictionary = engine.state.heroes["M"]
+	var hero_f: Dictionary = playback_state.heroes["F"]
+	var hero_m: Dictionary = playback_state.heroes["M"]
 	f_stamina.value = int(hero_f["stamina"])
 	f_battery.value = int(hero_f["battery"])
 	m_stamina.value = int(hero_m["stamina"])
 	m_battery.value = int(hero_m["battery"])
 	var pos_f: Vector2i = hero_f["pos"]
 	var pos_m: Vector2i = hero_m["pos"]
-	var hack_f: String = String(hero_f.get("hacking_machine", ""))
-	var hack_m: String = String(hero_m.get("hacking_machine", ""))
+	var hack_f: String = str(hero_f.get("hacking_machine", ""))
+	var hack_m: String = str(hero_m.get("hacking_machine", ""))
 	var hack_text_f: String = " • HACK %s" % hack_f if not hack_f.is_empty() else ""
 	var hack_text_m: String = " • HACK %s" % hack_m if not hack_m.is_empty() else ""
 	f_info.text = "STA %d • BAT %d • (%d,%d) • %s%s" % [
@@ -139,33 +149,33 @@ func _update_hud(actions: Dictionary) -> void:
 	m_info.text = "STA %d • BAT %d • (%d,%d) • %s%s" % [
 		int(hero_m["stamina"]), int(hero_m["battery"]), pos_m.y, pos_m.x, actions.get("M", "WAIT"), hack_text_m
 	]
-	time_label.text = "◷ %d" % engine.state.remaining_time
-	score_label.text = "★ %d" % engine.state.score()
-	tick_label.text = "TICK %d" % engine.state.tick
+	time_label.text = "◷ %d" % playback_state.remaining_time
+	score_label.text = "★ %d" % playback_state.score()
+	tick_label.text = "TICK %d" % playback_state.tick
 	objectives_label.text = "◆ PIERRES %d/%d\n▣ COFFRES %d/%d" % [
-		engine.state.collected_stones,
-		engine.state.total_stones,
-		engine.state.hidden_chests,
-		engine.state.total_chests
+		playback_state.collected_stones,
+		playback_state.total_stones,
+		playback_state.hidden_chests,
+		playback_state.total_chests
 	]
 	last_actions.text = "F %s | M %s" % [actions.get("F", "WAIT"), actions.get("M", "WAIT")]
-	var current_score: int = engine.state.score()
+	var current_score: int = playback_state.score()
 	if previous_score >= 0 and current_score > previous_score:
 		_pulse_control(score_label, Color("#ffd766"))
-	if previous_stones >= 0 and engine.state.collected_stones > previous_stones:
+	if previous_stones >= 0 and playback_state.collected_stones > previous_stones:
 		_pulse_control(objectives_label, Color("#7fe7ff"))
-	if previous_chests >= 0 and engine.state.hidden_chests > previous_chests:
+	if previous_chests >= 0 and playback_state.hidden_chests > previous_chests:
 		_pulse_control(objectives_label, Color("#9ee17d"))
 	previous_score = current_score
-	previous_stones = engine.state.collected_stones
-	previous_chests = engine.state.hidden_chests
+	previous_stones = playback_state.collected_stones
+	previous_chests = playback_state.hidden_chests
 
 func _event_summary(events: Array) -> String:
 	if events.is_empty():
 		return "Aucune modification visible sur ce tick."
 	var messages: Array[String] = []
 	for event_data in events:
-		var event_type := String(event_data.get("type", ""))
+		var event_type := str(event_data.get("type", ""))
 		match event_type:
 			"stone_pickup":
 				messages.append("%s récupère %d pierre(s)" % [event_data.get("id", "?"), int(event_data.get("count", 0))])
@@ -271,7 +281,7 @@ func _camera_react(events: Array) -> void:
 	for wanted_type in priority_types:
 		for event_value in events:
 			var event_data: Dictionary = event_value
-			if String(event_data.get("type", "")) != wanted_type:
+			if str(event_data.get("type", "")) != wanted_type:
 				continue
 			focus_cell = _screen_event_cell(event_data)
 			match wanted_type:
@@ -308,20 +318,20 @@ func _screen_event_cell(event_data: Dictionary) -> Vector2i:
 		return Vector2i(event_data["pos"])
 	if event_data.has("to"):
 		return Vector2i(event_data["to"])
-	var id: String = String(event_data.get("id", ""))
-	if engine.state.heroes.has(id):
-		return Vector2i(engine.state.heroes[id]["pos"])
-	if engine.state.machines.has(id):
-		return Vector2i(engine.state.machines[id]["pos"])
-	var machine_id: String = String(event_data.get("machine", ""))
-	if engine.state.machines.has(machine_id):
-		return Vector2i(engine.state.machines[machine_id]["pos"])
+	var id: String = str(event_data.get("id", ""))
+	if playback_state.heroes.has(id):
+		return Vector2i(playback_state.heroes[id]["pos"])
+	if playback_state.machines.has(id):
+		return Vector2i(playback_state.machines[id]["pos"])
+	var machine_id: String = str(event_data.get("machine", ""))
+	if playback_state.machines.has(machine_id):
+		return Vector2i(playback_state.machines[machine_id]["pos"])
 	return Vector2i(-1, -1)
 
 func _react_to_events(events: Array) -> void:
 	for event_value in events:
 		var event_data: Dictionary = event_value
-		var event_type: String = String(event_data.get("type", ""))
+		var event_type: String = str(event_data.get("type", ""))
 		match event_type:
 			"hack":
 				_flash_screen(Color(0.20, 0.78, 1.0, 0.15))
@@ -378,13 +388,14 @@ func _finish_game() -> void:
 	status_label.text = "Fin de simulation • export actions.txt..."
 	audio.play_finish()
 	_show_event_banner("MISSION TERMINÉE", Color("#ffe08a"), 1.0)
-	var actions_path: String = ActionsWriter.write_default(engine.state)
+	var actions_text := str(simulation_data.get("actions_txt", ""))
+	var actions_path := game_session.save_actions_text(actions_text)
 	if actions_path.is_empty():
-		status_label.text = "Erreur : impossible de générer actions.txt"
+		status_label.text = "Erreur : impossible de sauvegarder actions.txt"
 		finishing = false
 		paused = true
 		return
-	var summary: Dictionary = engine.state.summary()
+	var summary: Dictionary = BackendStateAdapter.result_to_summary(simulation_data, playback_state)
 	game_session.set_result(summary, actions_path)
 	await get_tree().create_timer(0.45).timeout
 	get_tree().change_scene_to_file("res://scenes/menu/ResultScreen.tscn")
