@@ -6,6 +6,7 @@ from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.responses import HTMLResponse, JSONResponse
 JSON_MEDIA = 'application/json'
 MULTIPART_MEDIA = 'multipart/form-data'
+FILE_FORM_FIELDS = {'file', 'map_file', 'actions_file'}
 
 def _rewrite_refs(value: Any) -> Any:
     if isinstance(value, dict):
@@ -71,8 +72,9 @@ def _resolve_schema(schema: dict[str, Any], components: dict[str, Any]) -> dict[
 
 def _parameter_from_property(name: str, prop: dict[str, Any], *, required: bool) -> dict[str, Any]:
     parameter: dict[str, Any] = {'name': name, 'in': 'formData', 'required': required, 'description': prop.get('description', '')}
-    if prop.get('type') == 'string' and prop.get('format') == 'binary':
+    if name in FILE_FORM_FIELDS or (prop.get('type') == 'string' and prop.get('format') == 'binary'):
         parameter['type'] = 'file'
+        parameter['x-kakafandodo-file-input'] = True
         return parameter
     for key in ('type', 'format', 'default', 'enum', 'minimum', 'maximum', 'minLength', 'maxLength', 'pattern'):
         if key in prop:

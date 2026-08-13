@@ -7,11 +7,12 @@
   "fullscreen": false,
   "language": 0,
   "strategy": {
-    "name": "portfolio_v4",
+    "name": "portfolio_v5",
     "max_stones_per_hero": 16,
     "max_chest_pairs_per_hero": 12,
     "max_unlock_obstacles": 20,
     "unlock_pair_candidates": 8,
-    "stuck_end_threshold": 8
+    "stuck_end_threshold": 8,
+    "scalable_max_ticks": 250
   }
 }

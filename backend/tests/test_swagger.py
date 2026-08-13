@@ -35,6 +35,8 @@ def test_multipart_routes_are_manual_formdata_parameters_not_request_bodies() ->
             assert parameters[nom]['in'] == 'formData'
             assert parameters[nom]['type'] == type_
             assert parameters[nom]['required'] is required
+            if type_ == 'file':
+                assert parameters[nom].get('x-kakafandodo-file-input') is True
 
 def test_canonical_openapi_remains_fastapi_openapi3() -> None:
     openapi = client.get('/openapi.json').json()
