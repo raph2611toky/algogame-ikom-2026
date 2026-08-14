@@ -76,12 +76,14 @@ interface provisoire en 2D
 
 ## Backend FastAPI dynamique
 
-Cette version 2D utilise `http://127.0.0.1:8000/api/v1`.
+Cette version 2D utilise par défaut `http://127.0.0.1:8000/api/v1`, mais l’hôte et le port sont modifiables dans **Paramètres** et sauvegardés localement.
 
 1. `MissionSelect` envoie le `map.txt` à `POST /maps/upload`.
-2. `MissionLaunch` appelle `POST /simulations`.
-3. `GameScreen` joue `initial_state` puis `ticks[]` sans recalculer les règles.
-4. `actions_txt` est enregistré dans `user://actions.txt`.
-5. Les paramètres utilisent `/settings` avec `user://settings.cfg` comme fallback local.
+2. Les paramètres chargent `GET /strategies` pour construire dynamiquement le choix de stratégie.
+3. `MissionLaunch` crée un job avec `POST /simulation-jobs`, puis interroge `GET /simulation-jobs/{job_id}`.
+4. Une fois le job terminé, Godot récupère `GET /simulation-jobs/{job_id}/result`.
+5. `GameScreen` joue `initial_state` puis `ticks[]` sans recalculer les règles.
+6. `actions_txt` est enregistré dans `user://actions.txt`.
+7. Les paramètres applicatifs utilisent `/settings` avec `user://settings.cfg` comme fallback local ; l’IP et le port du backend restent volontairement locaux au frontend.
 
 Test Godot : `res://scenes/tests/BackendIntegrationTest.tscn`.

@@ -27,21 +27,57 @@ func _ready() -> void:
 		str(game_session.selected_map_path).get_file(),
 		int(data["width"]), int(data["height"]), int(data["time_limit"])
 	]
-	objectives_label.text = "OBJECTIF\nRécupérer un maximum de pierres précieuses et cacher un maximum de coffres.\n\nAGENTS\nIkotofosa [F] • Imahaki [M]\n\nMOTEUR\nFastAPI 127.0.0.1:8000 • stratégie %s" % str(game_session.get_strategy_options().get("name", "portfolio_v6"))
+	objectives_label.text = "OBJECTIF\nRécupérer un maximum de pierres précieuses et cacher un maximum de coffres.\n\nAGENTS\nIkotofosa [F] • Imahaki [M]\n\nMOTEUR\nFastAPI %s • stratégie %s" % [BackendAPI.endpoint_label(), str(game_session.get_strategy_options().get("name", "portfolio_v7"))]
 	countdown_label.text = "CALCUL IA..."
-	countdown_label.add_theme_font_size_override("font_size", 54)
-	var response: Dictionary = await BackendAPI.simulate(
+	countdown_label.add_theme_font_size_override("font_size", 46)
+	var strategy := game_session.get_strategy_options()
+	var mission_name := str(game_session.selected_map_path).get_file().get_basename()
+	var submit: Dictionary = await BackendAPI.submit_simulation_job(
 		game_session.selected_map_text,
-		str(game_session.selected_map_path).get_file().get_basename(),
-		game_session.get_strategy_options()
+		mission_name,
+		strategy
 	)
 	if _cancelled:
 		return
-	if not bool(response.get("ok", false)):
-		countdown_label.text = "ERREUR BACKEND\n%s" % str(response.get("error", "Simulation impossible"))
-		countdown_label.add_theme_font_size_override("font_size", 30)
+	if not bool(submit.get("ok", false)):
+		countdown_label.text = "ERREUR BACKEND\n%s" % str(submit.get("error", "Impossible de démarrer le calcul"))
+		countdown_label.add_theme_font_size_override("font_size", 28)
 		return
-	game_session.set_simulation(response.get("data", {}))
+	var job_payload: Dictionary = submit.get("data", {})
+	var job_id := str(job_payload.get("job_id", ""))
+	if job_id.is_empty():
+		countdown_label.text = "ERREUR BACKEND\njob_id manquant"
+		return
+	while not _cancelled:
+		var status_response: Dictionary = await BackendAPI.get_simulation_job(job_id)
+		if not bool(status_response.get("ok", false)):
+			countdown_label.text = "ERREUR BACKEND\n%s" % str(status_response.get("error", "Statut du calcul indisponible"))
+			countdown_label.add_theme_font_size_override("font_size", 28)
+			return
+		var job: Dictionary = status_response.get("data", {})
+		var job_status := str(job.get("status", ""))
+		var elapsed := float(job.get("elapsed_seconds", 0.0))
+		countdown_label.text = "CALCUL IA...\n%s • %.1f s" % [str(strategy.get("name", "portfolio_v7")), elapsed]
+		if job_status == "completed":
+			break
+		if job_status == "failed":
+			countdown_label.text = "ERREUR STRATÉGIE\n%s" % str(job.get("error", "Calcul impossible"))
+			countdown_label.add_theme_font_size_override("font_size", 26)
+			return
+		await get_tree().create_timer(0.35).timeout
+	if _cancelled:
+		return
+	var result_response: Dictionary = await BackendAPI.get_simulation_job_result(job_id)
+	if not bool(result_response.get("ok", false)):
+		countdown_label.text = "ERREUR BACKEND\n%s" % str(result_response.get("error", "Résultat de simulation indisponible"))
+		countdown_label.add_theme_font_size_override("font_size", 28)
+		return
+	var result_payload: Dictionary = result_response.get("data", {})
+	var simulation_data: Variant = result_payload.get("simulation", {})
+	if not (simulation_data is Dictionary):
+		countdown_label.text = "ERREUR BACKEND\nSimulation invalide"
+		return
+	game_session.set_simulation(simulation_data)
 	_audio.play_mission_start()
 	await get_tree().create_timer(0.25).timeout
 	_start_countdown()

@@ -28,6 +28,7 @@ Exemples :
 
 - `/api/v1/maps/upload` → `file` ;
 - `/api/v1/simulations/upload` → `file`, `name`, `strategy_json` ;
+- `/api/v1/simulation-jobs/upload` → `file`, `name`, `strategy_json` ;
 - `/api/v1/simulations/replay-upload` → `map_file`, `actions_file`, `name`, `stop_when_objectives_finished`.
 
 Les modèles de réponse du Swagger sont les mêmes modèles Pydantic que ceux utilisés par les vues FastAPI.
@@ -51,6 +52,9 @@ backend/
 │   │       ├── contracts.py
 │   │       ├── health.py
 │   │       ├── maps.py
+│   │       ├── settings.py
+│   │       ├── strategies.py
+│   │       ├── simulation_jobs.py
 │   │       └── simulations.py
 │   ├── core/
 │   ├── domain/
@@ -74,10 +78,14 @@ backend/
 │   │   ├── strategy_v2.py
 │   │   ├── strategy_v4.py
 │   │   ├── strategy_v5.py
+│   │   ├── strategy_v6.py
+│   │   ├── strategy_v7.py
+│   │   ├── strategy_registry.py
 │   │   └── strategy_scalable.py
 │   ├── schemas/
 │   ├── services/
 │   │   ├── settings_service.py
+│   │   ├── simulation_job_service.py
 │   │   └── simulation_service.py
 │   └── main.py
 ├── docs/
@@ -141,12 +149,13 @@ Le moteur implémente notamment :
 - collisions entre machines ;
 - score, snapshots, replay et `actions.txt`.
 
-## IA : `portfolio_v6` par défaut
+## IA : `portfolio_v7` par défaut
 
-Trois modes sont exposés :
+Le catalogue est dynamique via `GET /api/v1/strategies`. Le frontend 2D peut donc choisir une stratégie sans modification de code côté menu.
 
 ```text
-portfolio_v6   recommandé, collaboratif optimisé
+portfolio_v7   recommandé, collaboratif + cache structurel
+portfolio_v6   collaboratif optimisé précédent
 portfolio_v5   collaboratif précédent
 portfolio_v4   chest-first précédent
 portfolio_v3   portfolio score historique
@@ -154,6 +163,10 @@ adaptive_v2    planificateur score-aware/ability-aware
 heuristic_v1   baseline historique
 scalable_v1    grandes cartes / stress tests
 ```
+
+### `portfolio_v7`
+
+`portfolio_v7` garde les priorités coffres → déblocage adapté → pierres de `portfolio_v6`, mais mémorise les analyses structurelles qui ne changent pas lorsque seuls les agents se déplacent. Il évite également d'attendre jusqu'au `TIME_LIMIT` lorsqu'il ne reste que des coffres réellement impossibles et aucune pierre libre ou transportée. Voir `docs/PORTFOLIO_V7.md`.
 
 ### `adaptive_v2`
 
@@ -173,7 +186,7 @@ Le planificateur tient directement compte de la formule de score : en quarts de 
 
 ### `portfolio_v6`
 
-Stratégie chest-first collaborative : plusieurs coffres directs sont répartis entre F et M, les obstacles sont traités par le héros/machine adapté, et tout héros non requis pour un déblocage collecte une pierre ou prépare un autre coffre au lieu d'attendre. Lorsqu'il ne reste que des pierres, les cibles sont affectées conjointement aux deux héros. Les coffres géométriquement impossibles sont écartés afin d'éviter les hacks sans objectif. Voir `docs/PORTFOLIO_V5.md`.
+Version précédente de la stratégie chest-first collaborative : plusieurs coffres directs sont répartis entre F et M, les obstacles sont traités par le héros/machine adapté, et tout héros non requis pour un déblocage collecte une pierre ou prépare un autre coffre au lieu d'attendre. Lorsqu'il ne reste que des pierres, les cibles sont affectées conjointement aux deux héros. Les coffres géométriquement impossibles sont écartés afin d'éviter les hacks sans objectif. Voir `docs/PORTFOLIO_V5.md`.
 
 ### `portfolio_v3`
 
@@ -186,9 +199,18 @@ Cela garantit dans le moteur local que `portfolio_v3` ne choisit jamais un plan 
 ```text
 GET  /api/v1/health
 GET  /api/v1/contracts
+GET  /api/v1/strategies
+GET  /api/v1/settings
+PUT  /api/v1/settings
+POST /api/v1/settings/reset
 
 POST /api/v1/maps/parse
 POST /api/v1/maps/upload
+
+POST /api/v1/simulation-jobs
+POST /api/v1/simulation-jobs/upload
+GET  /api/v1/simulation-jobs/{job_id}
+GET  /api/v1/simulation-jobs/{job_id}/result
 
 POST /api/v1/simulations
 POST /api/v1/simulations/upload

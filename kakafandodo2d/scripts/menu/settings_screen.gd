@@ -46,15 +46,27 @@ const FULLSCREEN_LABELS: Array[String] = ["NON", "OUI"]
 @onready var top_quit_button: Button = $TopQuitButton
 @onready var save_status: Label = $SettingsPanel/Margin/VBox/SaveStatus
 
+var strategy_row: PanelContainer
+var strategy_option: OptionButton
+var backend_row: PanelContainer
+var backend_host_input: LineEdit
+var backend_port_input: SpinBox
+var backend_test_button: Button
+var backend_status_label: Label
+var _strategy_names: Array[String] = []
+var _loading_values: bool = false
+
 var _audio: GameAudio
 var _saved_settings: Dictionary = {}
 
 func _ready() -> void:
 	_audio = GameAudioScript.new()
 	add_child(_audio)
+	_build_dynamic_backend_rows()
 	_style_screen()
 	game_session.settings_changed.connect(_load_values)
 	await game_session.refresh_settings_from_backend()
+	await _load_strategy_catalog()
 	_saved_settings = game_session.settings.duplicate(true)
 	_load_values()
 	_bind_slider(sound_slider, sound_value, "sound")
@@ -72,13 +84,145 @@ func _ready() -> void:
 	default_button.pressed.connect(_on_default)
 	save_button.pressed.connect(_on_save)
 	top_quit_button.pressed.connect(_on_quit)
+	strategy_option.item_selected.connect(_on_strategy_selected)
+	backend_host_input.text_changed.connect(_on_backend_host_changed)
+	backend_port_input.value_changed.connect(_on_backend_port_changed)
+	backend_test_button.pressed.connect(_on_test_backend)
 	_animate_intro()
+
+func _build_dynamic_backend_rows() -> void:
+	var vbox: VBoxContainer = $SettingsPanel/Margin/VBox
+	var buttons: HBoxContainer = $SettingsPanel/Margin/VBox/Buttons
+
+	strategy_row = PanelContainer.new()
+	strategy_row.name = "StrategyRow"
+	strategy_row.custom_minimum_size = Vector2(0, 58)
+	var strategy_box := HBoxContainer.new()
+	strategy_box.add_theme_constant_override("separation", 16)
+	strategy_row.add_child(strategy_box)
+	var strategy_name := Label.new()
+	strategy_name.custom_minimum_size = Vector2(230, 0)
+	strategy_name.text = "STRATÉGIE IA"
+	strategy_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	strategy_name.add_theme_font_size_override("font_size", 20)
+	strategy_box.add_child(strategy_name)
+	strategy_option = OptionButton.new()
+	strategy_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	strategy_option.custom_minimum_size = Vector2(360, 46)
+	strategy_box.add_child(strategy_option)
+	vbox.add_child(strategy_row)
+	vbox.move_child(strategy_row, buttons.get_index())
+
+	backend_row = PanelContainer.new()
+	backend_row.name = "BackendRow"
+	backend_row.custom_minimum_size = Vector2(0, 62)
+	var backend_box := HBoxContainer.new()
+	backend_box.add_theme_constant_override("separation", 12)
+	backend_row.add_child(backend_box)
+	var backend_name := Label.new()
+	backend_name.custom_minimum_size = Vector2(150, 0)
+	backend_name.text = "BACKEND"
+	backend_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	backend_name.add_theme_font_size_override("font_size", 20)
+	backend_box.add_child(backend_name)
+	backend_host_input = LineEdit.new()
+	backend_host_input.placeholder_text = "127.0.0.1"
+	backend_host_input.custom_minimum_size = Vector2(230, 44)
+	backend_host_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	backend_box.add_child(backend_host_input)
+	backend_port_input = SpinBox.new()
+	backend_port_input.min_value = 1
+	backend_port_input.max_value = 65535
+	backend_port_input.step = 1
+	backend_port_input.custom_minimum_size = Vector2(120, 44)
+	backend_box.add_child(backend_port_input)
+	backend_test_button = Button.new()
+	backend_test_button.text = "TESTER"
+	backend_test_button.custom_minimum_size = Vector2(120, 44)
+	backend_box.add_child(backend_test_button)
+	backend_status_label = Label.new()
+	backend_status_label.custom_minimum_size = Vector2(135, 0)
+	backend_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	backend_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	backend_status_label.add_theme_font_size_override("font_size", 15)
+	backend_box.add_child(backend_status_label)
+	vbox.add_child(backend_row)
+	vbox.move_child(backend_row, buttons.get_index())
+
+func _load_strategy_catalog() -> void:
+	_strategy_names.clear()
+	strategy_option.clear()
+	var loaded := await game_session.refresh_strategy_catalog()
+	if loaded:
+		for item in game_session.available_strategies:
+			var name := str(item.get("name", ""))
+			if name.is_empty():
+				continue
+			_strategy_names.append(name)
+			var label := str(item.get("label", name))
+			if bool(item.get("recommended", false)):
+				label += "  ★"
+			strategy_option.add_item(label)
+	else:
+		var current := str(game_session.get_strategy_options().get("name", "portfolio_v7"))
+		_strategy_names.append(current)
+		strategy_option.add_item(current)
+	_update_strategy_selection()
+
+func _update_strategy_selection() -> void:
+	if strategy_option == null or _strategy_names.is_empty():
+		return
+	var current := str(game_session.get_strategy_options().get("name", game_session.default_strategy_name))
+	var index := _strategy_names.find(current)
+	if index < 0:
+		_strategy_names.append(current)
+		strategy_option.add_item(current)
+		index = _strategy_names.size() - 1
+	strategy_option.select(index)
+
+func _on_strategy_selected(index: int) -> void:
+	if _loading_values or index < 0 or index >= _strategy_names.size():
+		return
+	var options := game_session.get_strategy_options()
+	options["name"] = _strategy_names[index]
+	game_session.settings["strategy"] = options
+	_mark_dirty()
+
+func _on_backend_host_changed(value: String) -> void:
+	if _loading_values:
+		return
+	game_session.settings["backend_host"] = value.strip_edges()
+	_mark_dirty()
+
+func _on_backend_port_changed(value: float) -> void:
+	if _loading_values:
+		return
+	game_session.settings["backend_port"] = int(value)
+	_mark_dirty()
+
+func _on_test_backend() -> void:
+	_audio.play_ui_click()
+	game_session.settings["backend_host"] = backend_host_input.text.strip_edges()
+	game_session.settings["backend_port"] = int(backend_port_input.value)
+	game_session.apply_backend_endpoint()
+	backend_test_button.disabled = true
+	backend_status_label.text = "TEST..."
+	var response: Dictionary = await BackendAPI.health()
+	backend_test_button.disabled = false
+	if bool(response.get("ok", false)):
+		backend_status_label.text = "CONNECTÉ"
+		backend_status_label.add_theme_color_override("font_color", Color("#9fe28f"))
+		await _load_strategy_catalog()
+	else:
+		backend_status_label.text = "INDISPONIBLE"
+		backend_status_label.add_theme_color_override("font_color", Color("#f06b5f"))
+	_mark_dirty()
 
 func _style_screen() -> void:
 	UIStyle.apply_panel(panel)
 	panel.add_theme_stylebox_override("panel", _panel_style())
 	title_plaque.add_theme_stylebox_override("panel", _plaque_style())
-	for row_value in [sound_row, music_row, effects_row, dialogue_row, quality_row, fullscreen_row, language_row]:
+	for row_value in [sound_row, music_row, effects_row, dialogue_row, quality_row, fullscreen_row, language_row, strategy_row, backend_row]:
 		var row: PanelContainer = row_value
 		row.add_theme_stylebox_override("panel", _row_style())
 	for slider_value in [sound_slider, music_slider, effects_slider, dialogue_slider]:
@@ -91,6 +235,10 @@ func _style_screen() -> void:
 		var action_button: Button = action_button_value
 		UIStyle.apply_button(action_button, 22)
 	_apply_quit_button(top_quit_button)
+	UIStyle.apply_button(backend_test_button, 17)
+	strategy_option.add_theme_font_size_override("font_size", 18)
+	backend_host_input.add_theme_font_size_override("font_size", 18)
+	backend_port_input.add_theme_font_size_override("font_size", 18)
 
 func _apply_quit_button(button: Button) -> void:
 	var normal := StyleBoxFlat.new()
@@ -218,6 +366,7 @@ func _bind_slider(slider: HSlider, label: Label, key: String) -> void:
 	)
 
 func _load_values() -> void:
+	_loading_values = true
 	sound_slider.value = int(game_session.settings["sound"])
 	music_slider.value = int(game_session.settings["music"])
 	effects_slider.value = int(game_session.settings["effects"])
@@ -229,6 +378,11 @@ func _load_values() -> void:
 	quality_value.text = QUALITY_LABELS[clampi(int(game_session.settings["quality"]), 0, QUALITY_LABELS.size() - 1)]
 	fullscreen_value.text = FULLSCREEN_LABELS[1 if bool(game_session.settings["fullscreen"]) else 0]
 	language_value.text = LANGUAGE_LABELS[clampi(int(game_session.settings["language"]), 0, LANGUAGE_LABELS.size() - 1)]
+	backend_host_input.text = str(game_session.settings.get("backend_host", "127.0.0.1"))
+	backend_port_input.value = int(game_session.settings.get("backend_port", 8000))
+	backend_status_label.text = "CONNECTÉ" if game_session.backend_online else "LOCAL"
+	_update_strategy_selection()
+	_loading_values = false
 
 func _cycle_quality(delta: int) -> void:
 	_audio.play_ui_click()

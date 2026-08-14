@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from app.domain.enums import HeroId
 from app.engine.map_parser import MapParser
 from app.engine.simulator import Simulator
@@ -34,6 +35,7 @@ F+..X..M.
 """
 
 
+@lru_cache(maxsize=None)
 def _run(text: str):
     game_map = MapParser.parse(text)
     state = MapParser.build_initial_state(game_map)
@@ -90,11 +92,11 @@ def test_portfolio_v6_keeps_official_map_result_strong() -> None:
     assert len(result.ticks) <= 70
 
 
-def test_portfolio_v6_is_service_default() -> None:
-    assert StrategyOptions().name == "portfolio_v6"
+def test_latest_portfolio_is_service_default() -> None:
+    assert StrategyOptions().name == "portfolio_v7"
     response = SimulationService().simulate(
         map_text=USER_TWO_CHESTS,
-        mission_name="v6-regression",
+        mission_name="latest-regression",
         strategy_options=StrategyOptions(),
     )
     assert response.result.end_reason == "OBJECTIVES_FINISHED"

@@ -107,7 +107,7 @@ func _show_error(message: String) -> void:
 func _api_error(response: Dictionary) -> String:
 	var message := str(response.get("error", "Erreur backend inconnue"))
 	if int(response.get("status", 0)) == 0:
-		return "%s\nVérifiez que FastAPI tourne sur 127.0.0.1:8000." % message
+		return "%s\nVérifiez que FastAPI tourne sur %s." % [message, BackendAPI.endpoint_label()]
 	return message
 
 func _on_play() -> void:

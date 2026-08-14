@@ -12,6 +12,8 @@ var simulation: Dictionary = {}
 var last_summary: Dictionary = {}
 var last_actions_path: String = ""
 var backend_online: bool = false
+var available_strategies: Array[Dictionary] = []
+var default_strategy_name: String = "portfolio_v7"
 
 var settings: Dictionary = _default_settings()
 var _sync_in_flight: bool = false
@@ -19,6 +21,7 @@ var _sync_pending: bool = false
 
 func _ready() -> void:
 	load_settings_local()
+	apply_backend_endpoint()
 	apply_settings()
 	BackendAPI.connection_changed.connect(_on_backend_connection_changed)
 	call_deferred("_initialize_backend")
@@ -48,6 +51,34 @@ func get_strategy_options() -> Dictionary:
 		return value.duplicate(true)
 	return _default_settings()["strategy"].duplicate(true)
 
+func apply_backend_endpoint() -> void:
+	BackendAPI.configure_endpoint(
+		str(settings.get("backend_host", "127.0.0.1")),
+		int(settings.get("backend_port", 8000))
+	)
+
+func refresh_strategy_catalog() -> bool:
+	apply_backend_endpoint()
+	var response: Dictionary = await BackendAPI.get_strategies()
+	if not bool(response.get("ok", false)):
+		return false
+	var payload: Dictionary = response.get("data", {})
+	default_strategy_name = str(payload.get("default_strategy", "portfolio_v7"))
+	available_strategies.clear()
+	var raw: Variant = payload.get("strategies", [])
+	if raw is Array:
+		for item in raw:
+			if item is Dictionary:
+				available_strategies.append((item as Dictionary).duplicate(true))
+	var available_names: Array[String] = []
+	for item in available_strategies:
+		available_names.append(str(item.get("name", "")))
+	var options := get_strategy_options()
+	if not available_names.has(str(options.get("name", ""))):
+		options["name"] = default_strategy_name
+		settings["strategy"] = options
+	return true
+
 func reset_settings() -> void:
 	settings = _default_settings()
 	apply_settings()
@@ -74,6 +105,7 @@ func save_settings() -> void:
 
 
 func persist_settings_now() -> Dictionary:
+	apply_backend_endpoint()
 	save_settings_local()
 	while _sync_in_flight:
 		await get_tree().process_frame
@@ -95,6 +127,7 @@ func preview_default_settings() -> void:
 func replace_settings(value: Dictionary, apply_now: bool = true) -> void:
 	settings = _default_settings()
 	_merge_settings(value)
+	apply_backend_endpoint()
 	if apply_now:
 		apply_settings()
 
@@ -118,6 +151,7 @@ func load_settings_local() -> void:
 			settings[key] = cfg.get_value("settings", key, settings[key])
 
 func refresh_settings_from_backend() -> bool:
+	apply_backend_endpoint()
 	var response: Dictionary = await BackendAPI.get_settings()
 	if not bool(response.get("ok", false)):
 		backend_online = false
@@ -166,13 +200,16 @@ func save_actions_text(actions_text: String) -> String:
 	return ProjectSettings.globalize_path(path)
 
 func _initialize_backend() -> void:
+	apply_backend_endpoint()
 	var health_response: Dictionary = await BackendAPI.health()
 	backend_online = bool(health_response.get("ok", false))
 	backend_status_changed.emit(backend_online)
 	if backend_online:
+		await refresh_strategy_catalog()
 		await refresh_settings_from_backend()
 
 func _sync_settings_to_backend() -> void:
+	apply_backend_endpoint()
 	if _sync_in_flight:
 		_sync_pending = true
 		return
@@ -199,7 +236,7 @@ func _settings_payload() -> Dictionary:
 	}
 
 func _merge_settings(backend_settings: Dictionary) -> void:
-	for key in ["sound", "music", "effects", "dialogue", "quality", "fullscreen", "language", "strategy"]:
+	for key in ["sound", "music", "effects", "dialogue", "quality", "fullscreen", "language", "backend_host", "backend_port", "strategy"]:
 		if backend_settings.has(key):
 			settings[key] = backend_settings[key]
 
@@ -229,8 +266,10 @@ static func _default_settings() -> Dictionary:
 		"quality": 2,
 		"fullscreen": false,
 		"language": 0,
+		"backend_host": "127.0.0.1",
+		"backend_port": 8000,
 		"strategy": {
-			"name": "portfolio_v6",
+			"name": "portfolio_v7",
 			"max_stones_per_hero": 16,
 			"max_chest_pairs_per_hero": 12,
 			"max_unlock_obstacles": 20,

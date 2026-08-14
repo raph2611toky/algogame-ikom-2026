@@ -13,6 +13,7 @@ from app.engine.strategy_scalable import ScalableStrategy
 from app.engine.strategy_v4 import ChestFirstPortfolioStrategy
 from app.engine.strategy_v5 import CollaborativePortfolioStrategy
 from app.engine.strategy_v6 import OptimizedCollaborativePortfolioStrategy
+from app.engine.strategy_v7 import CachedCollaborativePortfolioStrategy
 from app.schemas.simulation import SimulationResponse, StrategyOptions
 
 class SimulationNotFound(KeyError):
@@ -168,9 +169,31 @@ class SimulationService:
         )
         return Simulator(etat).run_strategy(strategie)
 
+
+    def _run_portfolio_v7(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            etat = MapParser.build_initial_state(game_map)
+            strategie = ScalableStrategy(
+                max_stones_per_hero=min(10, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(4, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(12, min(40, options.stuck_end_threshold * 3)),
+                max_ticks=min(game_map.time_limit, max(options.scalable_max_ticks, 350)),
+            )
+            return Simulator(etat).run_strategy(strategie)
+        etat = MapParser.build_initial_state(game_map)
+        strategie = CachedCollaborativePortfolioStrategy(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(20, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(24, options.stuck_end_threshold * 3),
+            max_unlock_checks=min(64, max(20, options.max_unlock_obstacles * 2)),
+        )
+        return Simulator(etat).run_strategy(strategie)
+
     def simulate(self, *, map_text: str, mission_name: str, strategy_options: StrategyOptions) -> SimulationResponse:
         carte_jeu = MapParser.parse(map_text)
-        if strategy_options.name == 'portfolio_v6':
+        if strategy_options.name == 'portfolio_v7':
+            resultat = self._run_portfolio_v7(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v6':
             resultat = self._run_portfolio_v6(carte_jeu, strategy_options)
         elif strategy_options.name == 'portfolio_v5':
             resultat = self._run_portfolio_v5(carte_jeu, strategy_options)

@@ -559,7 +559,8 @@ class Simulator:
                 break
             if strategy.should_end(self.state):
                 self.state.ended = True
-                self.state.end_reason = 'STRATEGY_END_GAME'
+                reason = getattr(strategy, 'stop_reason', None)
+                self.state.end_reason = reason or 'STRATEGY_END_GAME'
                 break
             self.step(strategy.next_actions(self.state))
         return self.result()

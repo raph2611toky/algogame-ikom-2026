@@ -10,7 +10,7 @@ def test_custom_swagger_is_complete_and_uses_real_routes() -> None:
     assert response.status_code == 200
     swagger = response.json()
     assert swagger['swagger'] == '2.0'
-    expected_paths = {'/api/v1/health', '/api/v1/contracts', '/api/v1/maps/parse', '/api/v1/maps/upload', '/api/v1/settings', '/api/v1/settings/reset', '/api/v1/simulations', '/api/v1/simulations/upload', '/api/v1/simulations/replay', '/api/v1/simulations/replay-text', '/api/v1/simulations/replay-upload', '/api/v1/simulations/{simulation_id}', '/api/v1/simulations/{simulation_id}/actions.txt'}
+    expected_paths = {'/api/v1/health', '/api/v1/contracts', '/api/v1/maps/parse', '/api/v1/maps/upload', '/api/v1/settings', '/api/v1/settings/reset', '/api/v1/strategies', '/api/v1/simulation-jobs', '/api/v1/simulation-jobs/upload', '/api/v1/simulation-jobs/{job_id}', '/api/v1/simulation-jobs/{job_id}/result', '/api/v1/simulations', '/api/v1/simulations/upload', '/api/v1/simulations/replay', '/api/v1/simulations/replay-text', '/api/v1/simulations/replay-upload', '/api/v1/simulations/{simulation_id}', '/api/v1/simulations/{simulation_id}/actions.txt'}
     assert set(swagger['paths']) == expected_paths
     operation_ids: list[str] = []
     for path_item in swagger['paths'].values():
@@ -24,7 +24,7 @@ def test_custom_swagger_is_complete_and_uses_real_routes() -> None:
 
 def test_multipart_routes_are_manual_formdata_parameters_not_request_bodies() -> None:
     swagger = client.get('/swagger.json').json()
-    expected = {'/api/v1/maps/upload': {'file': ('file', True)}, '/api/v1/simulations/upload': {'file': ('file', True), 'name': ('string', False), 'strategy_json': ('string', False)}, '/api/v1/simulations/replay-upload': {'map_file': ('file', True), 'actions_file': ('file', True), 'name': ('string', False), 'stop_when_objectives_finished': ('boolean', False)}}
+    expected = {'/api/v1/maps/upload': {'file': ('file', True)}, '/api/v1/simulations/upload': {'file': ('file', True), 'name': ('string', False), 'strategy_json': ('string', False)}, '/api/v1/simulations/replay-upload': {'map_file': ('file', True), 'actions_file': ('file', True), 'name': ('string', False), 'stop_when_objectives_finished': ('boolean', False)}, '/api/v1/simulation-jobs/upload': {'file': ('file', True), 'name': ('string', False), 'strategy_json': ('string', False)}}
     for chemin, fields in expected.items():
         operation = swagger['paths'][chemin]['post']
         assert 'requestBody' not in operation
@@ -43,6 +43,7 @@ def test_canonical_openapi_remains_fastapi_openapi3() -> None:
     assert openapi['openapi'].startswith('3.')
     assert 'requestBody' in openapi['paths']['/api/v1/maps/upload']['post']
     assert 'requestBody' in openapi['paths']['/api/v1/simulations/upload']['post']
+    assert 'requestBody' in openapi['paths']['/api/v1/simulation-jobs/upload']['post']
 
 def test_docs_and_redoc_are_reachable() -> None:
     docs = client.get('/docs')
