@@ -15,6 +15,28 @@ var backend_port: int = DEFAULT_PORT
 var online: bool = false
 var last_error: String = ""
 
+func _ready() -> void:
+    _apply_packaged_arguments()
+
+func _apply_packaged_arguments() -> void:
+    var host := ""
+    var port := -1
+
+    for argument in OS.get_cmdline_user_args():
+        if argument.begins_with("--backend-host="):
+            host = argument.trim_prefix(
+                "--backend-host="
+            )
+
+        elif argument.begins_with("--backend-port="):
+            port = int(
+                argument.trim_prefix(
+                    "--backend-port="
+                )
+            )
+
+    if not host.is_empty() and port > 0:
+        configure_backend(host, port)
 
 func configure_endpoint(host_value: String, port_value: int) -> void:
 	var normalized := host_value.strip_edges()
