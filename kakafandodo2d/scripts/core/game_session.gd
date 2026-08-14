@@ -13,7 +13,7 @@ var last_summary: Dictionary = {}
 var last_actions_path: String = ""
 var backend_online: bool = false
 var available_strategies: Array[Dictionary] = []
-var default_strategy_name: String = "portfolio_v7"
+var default_strategy_name: String = "portfolio_v8"
 
 var settings: Dictionary = _default_settings()
 var _sync_in_flight: bool = false
@@ -63,7 +63,7 @@ func refresh_strategy_catalog() -> bool:
 	if not bool(response.get("ok", false)):
 		return false
 	var payload: Dictionary = response.get("data", {})
-	default_strategy_name = str(payload.get("default_strategy", "portfolio_v7"))
+	default_strategy_name = str(payload.get("default_strategy", "portfolio_v8"))
 	available_strategies.clear()
 	var raw: Variant = payload.get("strategies", [])
 	if raw is Array:
@@ -269,7 +269,7 @@ static func _default_settings() -> Dictionary:
 		"backend_host": "127.0.0.1",
 		"backend_port": 8000,
 		"strategy": {
-			"name": "portfolio_v7",
+			"name": "portfolio_v8",
 			"max_stones_per_hero": 16,
 			"max_chest_pairs_per_hero": 12,
 			"max_unlock_obstacles": 20,

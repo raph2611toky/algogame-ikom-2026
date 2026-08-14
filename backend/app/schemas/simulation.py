@@ -11,7 +11,7 @@ class MissionInput(APIModel):
     model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}}}
 
 class StrategyOptions(APIModel):
-    name: Literal['portfolio_v7', 'portfolio_v6', 'portfolio_v5', 'portfolio_v4', 'portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v7', description='portfolio_v7 conserve la logique collaborative de v6 et ajoute des caches topologiques pour limiter les recalculs coûteux sur les cartes plus grandes. Les versions antérieures restent disponibles pour comparaison.')
+    name: Literal['portfolio_v8', 'portfolio_v7', 'portfolio_v6', 'portfolio_v5', 'portfolio_v4', 'portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v8', description='portfolio_v8 ajoute a v7 un handoff stamina-aware des coffres, une orientation sure avant UNHACK et conserve le meilleur prefixe de score. Les versions antérieures restent disponibles pour comparaison.')
     max_stones_per_hero: int = Field(default=16, ge=1, le=100)
     max_chest_pairs_per_hero: int = Field(default=12, ge=1, le=100)
     max_unlock_obstacles: int = Field(default=20, ge=1, le=100, description='Nombre maximal de trous/arbres candidats analysés pour leur valeur de déblocage.')
@@ -22,7 +22,7 @@ class StrategyOptions(APIModel):
 class SimulationRequest(APIModel):
     mission: MissionInput
     strategy: StrategyOptions = Field(default_factory=StrategyOptions)
-    model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'mission': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}, 'strategy': {'name': 'portfolio_v7', 'max_stones_per_hero': 16, 'max_chest_pairs_per_hero': 12, 'max_unlock_obstacles': 20, 'unlock_pair_candidates': 8, 'stuck_end_threshold': 8}}}}
+    model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'mission': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}, 'strategy': {'name': 'portfolio_v8', 'max_stones_per_hero': 16, 'max_chest_pairs_per_hero': 12, 'max_unlock_obstacles': 20, 'unlock_pair_candidates': 8, 'stuck_end_threshold': 8}}}}
 
 class ReplayActionPair(APIModel):
     F: HeroAction = HeroAction.WAIT
@@ -76,6 +76,7 @@ class PropsSnapshotSchema(APIModel):
 class StateSnapshotSchema(APIModel):
     elapsed: int
     remaining_time: int
+    current_score: int
     score_inputs: ScoreInputsSchema
     heroes: dict[str, HeroSnapshotSchema]
     machines: dict[str, MachineSnapshotSchema]

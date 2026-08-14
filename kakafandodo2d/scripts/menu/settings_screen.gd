@@ -164,7 +164,7 @@ func _load_strategy_catalog() -> void:
 				label += "  ★"
 			strategy_option.add_item(label)
 	else:
-		var current := str(game_session.get_strategy_options().get("name", "portfolio_v7"))
+		var current := str(game_session.get_strategy_options().get("name", "portfolio_v8"))
 		_strategy_names.append(current)
 		strategy_option.add_item(current)
 	_update_strategy_selection()

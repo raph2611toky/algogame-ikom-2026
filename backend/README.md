@@ -149,12 +149,13 @@ Le moteur implémente notamment :
 - collisions entre machines ;
 - score, snapshots, replay et `actions.txt`.
 
-## IA : `portfolio_v7` par défaut
+## IA : `portfolio_v8` par défaut
 
 Le catalogue est dynamique via `GET /api/v1/strategies`. Le frontend 2D peut donc choisir une stratégie sans modification de code côté menu.
 
 ```text
-portfolio_v7   recommandé, collaboratif + cache structurel
+portfolio_v8   recommandé, stamina + handoff + score peak
+portfolio_v7   collaboratif + cache structurel précédent
 portfolio_v6   collaboratif optimisé précédent
 portfolio_v5   collaboratif précédent
 portfolio_v4   chest-first précédent
@@ -164,9 +165,13 @@ heuristic_v1   baseline historique
 scalable_v1    grandes cartes / stress tests
 ```
 
+### `portfolio_v8`
+
+`portfolio_v8` conserve les priorités de v7 mais ajoute quatre protections : relais de pousseur en fonction de la stamina, invalidation immédiate d'une route coffre lorsque DIG/CUT modifie le terrain, orientation sûre d'une machine avant tout UNHACK, et conservation du meilleur préfixe de score lorsque poursuivre la trajectoire ferait baisser le score final. Chaque snapshot expose aussi `current_score`, calculé avec la formule officielle. Voir `docs/PORTFOLIO_V8.md`.
+
 ### `portfolio_v7`
 
-`portfolio_v7` garde les priorités coffres → déblocage adapté → pierres de `portfolio_v6`, mais mémorise les analyses structurelles qui ne changent pas lorsque seuls les agents se déplacent. Il évite également d'attendre jusqu'au `TIME_LIMIT` lorsqu'il ne reste que des coffres réellement impossibles et aucune pierre libre ou transportée. Voir `docs/PORTFOLIO_V7.md`.
+Version précédente gardée pour comparaison dynamique depuis Godot. Elle conserve le cache structurel et l'orchestration collaborative de v6, mais ne possède pas les protections stamina/route dynamique/score peak de v8. Voir `docs/PORTFOLIO_V7.md`.
 
 ### `adaptive_v2`
 
