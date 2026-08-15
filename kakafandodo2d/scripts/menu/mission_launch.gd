@@ -27,7 +27,7 @@ func _ready() -> void:
 		str(game_session.selected_map_path).get_file(),
 		int(data["width"]), int(data["height"]), int(data["time_limit"])
 	]
-	objectives_label.text = "OBJECTIF\nRécupérer un maximum de pierres précieuses et cacher un maximum de coffres.\n\nAGENTS\nIkotofosa [F] • Imahaki [M]\n\nMOTEUR\nFastAPI %s • stratégie %s" % [BackendAPI.endpoint_label(), str(game_session.get_strategy_options().get("name", "portfolio_v8"))]
+	objectives_label.text = "OBJECTIF\nRécupérer un maximum de pierres précieuses et cacher un maximum de coffres.\n\nAGENTS\nIkotofosa [F] • Imahaki [M]\n\nMOTEUR\nFastAPI %s • stratégie %s" % [BackendAPI.endpoint_label(), str(game_session.get_strategy_options().get("name", "portfolio_v9"))]
 	countdown_label.text = "CALCUL IA..."
 	countdown_label.add_theme_font_size_override("font_size", 46)
 	var strategy := game_session.get_strategy_options()
@@ -57,7 +57,7 @@ func _ready() -> void:
 		var job: Dictionary = status_response.get("data", {})
 		var job_status := str(job.get("status", ""))
 		var elapsed := float(job.get("elapsed_seconds", 0.0))
-		countdown_label.text = "CALCUL IA...\n%s • %.1f s" % [str(strategy.get("name", "portfolio_v8")), elapsed]
+		countdown_label.text = "CALCUL IA...\n%s • %.1f s" % [str(strategy.get("name", "portfolio_v9")), elapsed]
 		if job_status == "completed":
 			break
 		if job_status == "failed":

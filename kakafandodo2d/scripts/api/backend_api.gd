@@ -400,7 +400,7 @@ func _method_value(method: String) -> HTTPClient.Method:
 
 func _default_strategy() -> Dictionary:
 	return {
-		"name": "portfolio_v8",
+		"name": "portfolio_v9",
 		"max_stones_per_hero": 16,
 		"max_chest_pairs_per_hero": 12,
 		"max_unlock_obstacles": 20,

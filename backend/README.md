@@ -149,12 +149,13 @@ Le moteur implémente notamment :
 - collisions entre machines ;
 - score, snapshots, replay et `actions.txt`.
 
-## IA : `portfolio_v8` par défaut
+## IA : `portfolio_v9` par défaut
 
 Le catalogue est dynamique via `GET /api/v1/strategies`. Le frontend 2D peut donc choisir une stratégie sans modification de code côté menu.
 
 ```text
-portfolio_v8   recommandé, stamina + handoff + score peak
+portfolio_v9   recommandé, relais stratégique par segments
+portfolio_v8   précédent, stamina + handoff + score peak
 portfolio_v7   collaboratif + cache structurel précédent
 portfolio_v6   collaboratif optimisé précédent
 portfolio_v5   collaboratif précédent
@@ -164,6 +165,11 @@ adaptive_v2    planificateur score-aware/ability-aware
 heuristic_v1   baseline historique
 scalable_v1    grandes cartes / stress tests
 ```
+
+
+### `portfolio_v9`
+
+`portfolio_v9` conserve toute la logique de `portfolio_v8` (priorité coffres, déblocage X/G, pierres libres ou portées par les machines, orientation sûre avant UNHACK et meilleur préfixe de score) mais remplace le relais opportuniste par un **relais stratégique par segments**. Pour un coffre unique, un seul héros est pousseur actif. Le second rejoint un point de relais futur et attend pour récupérer de la stamina. Le changement de pousseur se fait au point prévu ou lorsque le pousseur courant est réellement à bout et que le partenaire dispose d'une réserve utile. Avec deux coffres directs distincts, F et M peuvent toujours pousser en parallèle. Le mouvement attendu du coffre suivi ne détruit plus son cache de route; DIG/CUT/FILL et les changements externes de topologie l'invalident toujours. Voir `docs/PORTFOLIO_V9.md`.
 
 ### `portfolio_v8`
 

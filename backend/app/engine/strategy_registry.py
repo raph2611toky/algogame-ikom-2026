@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict
 
-DEFAULT_STRATEGY = "portfolio_v8"
+DEFAULT_STRATEGY = "portfolio_v9"
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,11 +20,19 @@ class StrategyDescriptor:
 
 STRATEGIES: tuple[StrategyDescriptor, ...] = (
     StrategyDescriptor(
+        "portfolio_v9",
+        "Portfolio v9 — relais strategique",
+        "portfolio",
+        "Version recommandee: conserve v8 et coordonne les longs trajets de coffre par segments. Un seul pousseur actif, l'autre se place au relais et recharge; relais anticipe pour liberer le specialiste F/X ou M/G sur un autre coffre.",
+        True,
+        True,
+    ),
+    StrategyDescriptor(
         "portfolio_v8",
         "Portfolio v8 — stamina + handoff + score peak",
         "portfolio",
-        "Version recommandee: collaboration stamina-aware pour les coffres, orientation sure des machines avant UNHACK, cache direct et conservation du meilleur prefixe de score.",
-        True,
+        "Version precedente: collaboration stamina-aware pour les coffres, orientation sure des machines avant UNHACK, cache direct et conservation du meilleur prefixe de score.",
+        False,
         True,
     ),
     StrategyDescriptor(

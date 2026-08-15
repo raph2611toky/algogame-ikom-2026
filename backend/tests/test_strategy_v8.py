@@ -22,8 +22,8 @@ o##t#tX
 """
 
 
-def test_portfolio_v8_is_default_and_improves_official_sample() -> None:
-    assert StrategyOptions().name == "portfolio_v8"
+def test_default_v9_still_improves_official_sample_while_v8_unit_tests_remain() -> None:
+    assert StrategyOptions().name == "portfolio_v9"
     response = SimulationService().simulate(
         map_text=OFFICIAL,
         mission_name="official-v8",
