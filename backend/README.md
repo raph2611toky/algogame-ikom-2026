@@ -154,7 +154,7 @@ Le moteur implémente notamment :
 Le catalogue est dynamique via `GET /api/v1/strategies`. Le frontend 2D peut donc choisir une stratégie sans modification de code côté menu.
 
 ```text
-portfolio_v9   recommandé, relais stratégique par segments
+portfolio_v9   recommandé, cœur v8 + relais minimal anti ping-pong
 portfolio_v8   précédent, stamina + handoff + score peak
 portfolio_v7   collaboratif + cache structurel précédent
 portfolio_v6   collaboratif optimisé précédent
@@ -169,7 +169,7 @@ scalable_v1    grandes cartes / stress tests
 
 ### `portfolio_v9`
 
-`portfolio_v9` conserve toute la logique de `portfolio_v8` (priorité coffres, déblocage X/G, pierres libres ou portées par les machines, orientation sûre avant UNHACK et meilleur préfixe de score) mais remplace le relais opportuniste par un **relais stratégique par segments**. Pour un coffre unique, un seul héros est pousseur actif. Le second rejoint un point de relais futur et attend pour récupérer de la stamina. Le changement de pousseur se fait au point prévu ou lorsque le pousseur courant est réellement à bout et que le partenaire dispose d'une réserve utile. Avec deux coffres directs distincts, F et M peuvent toujours pousser en parallèle. Le mouvement attendu du coffre suivi ne détruit plus son cache de route; DIG/CUT/FILL et les changements externes de topologie l'invalident toujours. Voir `docs/PORTFOLIO_V9.md`.
+`portfolio_v9` est désormais une **couche minimale au-dessus de `portfolio_v8`**. Les choix de coffres, le cache/validation des routes, le déblocage X/G, les pierres, les machines et le score peak restent ceux de v8. V9 ajoute seulement une affinité de pousseur pour éviter le ping-pong F/M sur le même coffre, un filtrage de relais lorsque le dernier coffre est manipulé avec très peu de stamina, et un staging très conservateur uniquement à la place d'un WAIT de réserve déjà décidé par v8. Voir `docs/PORTFOLIO_V9.md`.
 
 ### `portfolio_v8`
 

@@ -1,39 +1,58 @@
-# portfolio_v9 — relais stratégique de coffre
+# portfolio_v9 — portfolio_v8 + relais minimal
 
-`portfolio_v9` étend `portfolio_v8`. Les règles du moteur ne changent pas : les coûts de stamina, les actions de hacking, les routines des machines, les buffers AlgoMada, la collecte des pierres et le score restent identiques.
+Cette version corrige la première tentative `portfolio_v9` qui modifiait trop de décisions internes et pouvait régresser par rapport à `portfolio_v8`.
 
-## Problème corrigé
+## Règle de conception
 
-Dans v8, le changement de pousseur pouvait être réévalué presque à chaque nouvelle position du coffre. De plus, la signature de cache d'une route directe incluait la position du coffre lui-même : un PUSH normal pouvait donc être interprété comme un changement de topologie et forcer une replanification. Sur les longs trajets, cela favorisait des séquences F/M/F/M trop fréquentes.
+`portfolio_v9` garde **strictement le cœur de `portfolio_v8`**. Il n'override pas :
 
-## Politique v9
+- le cache et la validation des routes (`_cache_route`, `_route_valid`) ;
+- la sélection globale du coffre ;
+- `_direct_collaborative_actions` ;
+- le déblocage F/X et M/G ;
+- la collecte des pierres libres ou portées par les machines ;
+- la sécurité des machines avant UNHACK ;
+- `next_actions` ;
+- l'optimisation du meilleur préfixe de score.
 
-- Un seul héros est propriétaire/pousseur d'un coffre à un instant donné.
-- Si le propriétaire peut terminer avec une marge de stamina, il garde le coffre.
-- Sinon, le partenaire reçoit un point de relais futur calculé sur le plan de PUSH.
-- Le partenaire rejoint ce point sans pousser puis WAIT afin de recharger sa stamina.
-- Le relais se fait au point prévu, ou plus tôt si le pousseur n'a plus assez de stamina et que le partenaire possède une vraie réserve.
-- Après un relais, on applique une hystérésis : l'ancien pousseur ne reprend pas immédiatement le même coffre avec seulement 5 stamina.
-- Lorsque plusieurs coffres directs distincts existent, F et M gardent le parallélisme de v8 et peuvent pousser chacun leur coffre au même tick.
-- Si le pousseur libéré est probablement requis pour un autre coffre (F pour des trous, M pour des arbres), le déblocage secondaire passe avant la préparation d'un nouveau relais.
+Il ajoute seulement une couche de coopération sur **le héros qui pousse le même coffre**.
 
-## Cache de route
+## Ajout 1 — affinité de pousseur
 
-La signature d'une route v9 ignore uniquement le coffre suivi. Le déplacement attendu de ce coffre ne casse donc pas le cache. Les changements réellement dangereux continuent d'invalider le plan : trous ajoutés/supprimés, arbres coupés, autres coffres déplacés, rochers/cachettes différents.
+Après un PUSH, v8 peut replanifier et choisir l'autre héros pour le même coffre. V9 mémorise donc le pousseur du segment courant.
 
-## Régression synthétique
+Si v8 sélectionne un **autre coffre**, sa décision est conservée telle quelle.
 
-Carte longue à un coffre :
+Si v8 sélectionne le **même coffre mais l'autre héros**, v9 autorise le relais seulement si :
 
-```text
-1 30 300
-F*.........................@.M
-```
+- un petit segment a déjà été poussé ;
+- le partenaire possède une réserve utile de stamina ;
+- le pousseur courant est faible, ou le plan du partenaire apporte un gain runtime significatif ;
+- ou le relais est nécessaire parce que le pousseur est à bout.
 
-Dans l'environnement de test :
+Cela évite surtout `F -> M -> F -> M` à chaque case sans changer les objectifs choisis par v8.
 
-- `portfolio_v8` : 55 ticks, score 338.
-- `portfolio_v9` : 26 ticks, score 352.
-- v9 utilise un seul changement de pousseur sur le coffre : F pousse un segment, M se place au relais, puis M termine.
+## Ajout 2 — dernier coffre et stamina très faible
 
-Ces chiffres servent uniquement de régression locale; le score officiel reste celui de l'évaluateur AlgoMada.
+Quand il ne reste qu'un seul coffre, le handoff interne de v8 est légèrement filtré : si le pousseur est à moins de 5 stamina mais que le partenaire n'a pas encore constitué une vraie réserve, il attend au lieu de transmettre immédiatement le coffre à un partenaire presque aussi vide.
+
+Le partenaire recharge donc suffisamment pour pousser plusieurs cases avant un nouveau relais.
+
+## Ajout 3 — staging facultatif
+
+V8 possède déjà un mode où le héros libre fait `WAIT` pour conserver sa stamina en réserve d'un long coffre.
+
+V9 ne remplace **que ce WAIT** : si le héros est déjà très bien rechargé, que le point de relais est proche (au maximum quelques ticks) et que le déplacement lui laisse une forte réserve, il peut rejoindre un point vers le milieu du trajet puis reprendre son `WAIT`.
+
+Si ces conditions ne sont pas remplies, le WAIT original de v8 est conservé.
+
+## Non-régression locale
+
+- Sample officiel : v8 = v9 = score 382, 49 ticks.
+- Régression 10x14 : v8 = v9 = score 633, 64 ticks.
+- Deux coffres directs distincts : parallélisme F/M inchangé.
+- Grande map 15x20 fournie par l'utilisateur :
+  - v8 : score 1025, 361 ticks, 4 coffres, 9 pierres ;
+  - v9 corrigé : score 1031, 349 ticks, 4 coffres, 9 pierres.
+
+Ces mesures sont des tests locaux ; l'évaluateur AlgoMada reste la référence finale.

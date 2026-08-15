@@ -21,9 +21,9 @@ class StrategyDescriptor:
 STRATEGIES: tuple[StrategyDescriptor, ...] = (
     StrategyDescriptor(
         "portfolio_v9",
-        "Portfolio v9 — relais strategique",
+        "Portfolio v9 — coeur v8 + relais minimal",
         "portfolio",
-        "Version recommandee: conserve v8 et coordonne les longs trajets de coffre par segments. Un seul pousseur actif, l'autre se place au relais et recharge; relais anticipe pour liberer le specialiste F/X ou M/G sur un autre coffre.",
+        "Version recommandee: coeur portfolio_v8 strictement conserve; ajout limite a une affinite de pousseur sur le meme coffre, un relais stamina prudent sur le dernier coffre et un staging local uniquement a la place d'un WAIT de reserve v8.",
         True,
         True,
     ),
