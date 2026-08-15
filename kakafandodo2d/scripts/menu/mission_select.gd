@@ -60,6 +60,7 @@ func _load_map(path: String) -> void:
 	current_text = file.get_as_text()
 	file.close()
 	var response: Dictionary = await BackendAPI.parse_map_file(path)
+	
 	if not bool(response.get("ok", false)):
 		_show_error(_api_error(response))
 		loading = false
