@@ -52,10 +52,22 @@ func get_strategy_options() -> Dictionary:
 	return _default_settings()["strategy"].duplicate(true)
 
 func apply_backend_endpoint() -> void:
+	# En build packagé, l'endpoint fourni par le launcher est prioritaire.
+	# Il ne doit jamais être écrasé par user://settings.cfg.
+	if BackendAPI.endpoint_forced:
+		return
 	BackendAPI.configure_endpoint(
 		str(settings.get("backend_host", "127.0.0.1")),
 		int(settings.get("backend_port", 8000))
 	)
+
+
+func is_packaged_mode() -> bool:
+	return BackendAPI.packaged_mode
+
+
+func runtime_backend_endpoint() -> Dictionary:
+	return BackendAPI.runtime_endpoint()
 
 func refresh_strategy_catalog() -> bool:
 	apply_backend_endpoint()
@@ -80,7 +92,13 @@ func refresh_strategy_catalog() -> bool:
 	return true
 
 func reset_settings() -> void:
+	var current_host := str(settings.get("backend_host", "127.0.0.1"))
+	var current_port := int(settings.get("backend_port", 8000))
 	settings = _default_settings()
+	# L'adresse backend est une configuration d'environnement, pas un réglage de jeu.
+	settings["backend_host"] = current_host
+	settings["backend_port"] = current_port
+	apply_backend_endpoint()
 	apply_settings()
 	save_settings()
 
@@ -121,7 +139,12 @@ func persist_settings_now() -> Dictionary:
 	return response
 
 func preview_default_settings() -> void:
+	var current_host := str(settings.get("backend_host", "127.0.0.1"))
+	var current_port := int(settings.get("backend_port", 8000))
 	settings = _default_settings()
+	settings["backend_host"] = current_host
+	settings["backend_port"] = current_port
+	apply_backend_endpoint()
 	apply_settings()
 
 func replace_settings(value: Dictionary, apply_now: bool = true) -> void:
@@ -236,7 +259,9 @@ func _settings_payload() -> Dictionary:
 	}
 
 func _merge_settings(backend_settings: Dictionary) -> void:
-	for key in ["sound", "music", "effects", "dialogue", "quality", "fullscreen", "language", "backend_host", "backend_port", "strategy"]:
+	# backend_host/backend_port sont volontairement LOCAUX au frontend.
+	# Le backend distant ne doit jamais pouvoir remplacer son propre endpoint.
+	for key in ["sound", "music", "effects", "dialogue", "quality", "fullscreen", "language", "strategy"]:
 		if backend_settings.has(key):
 			settings[key] = backend_settings[key]
 

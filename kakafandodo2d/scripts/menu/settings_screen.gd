@@ -189,34 +189,42 @@ func _on_strategy_selected(index: int) -> void:
 	_mark_dirty()
 
 func _on_backend_host_changed(value: String) -> void:
-	if _loading_values:
+	if _loading_values or BackendAPI.endpoint_forced:
 		return
 	game_session.settings["backend_host"] = value.strip_edges()
 	_mark_dirty()
 
 func _on_backend_port_changed(value: float) -> void:
-	if _loading_values:
+	if _loading_values or BackendAPI.endpoint_forced:
 		return
 	game_session.settings["backend_port"] = int(value)
 	_mark_dirty()
 
 func _on_test_backend() -> void:
 	_audio.play_ui_click()
-	game_session.settings["backend_host"] = backend_host_input.text.strip_edges()
-	game_session.settings["backend_port"] = int(backend_port_input.value)
-	game_session.apply_backend_endpoint()
+
+	# En développement, on teste la valeur saisie.
+	# En build packagé, l'endpoint est imposé par le launcher et reste inchangé.
+	if not BackendAPI.endpoint_forced:
+		game_session.settings["backend_host"] = backend_host_input.text.strip_edges()
+		game_session.settings["backend_port"] = int(backend_port_input.value)
+		game_session.apply_backend_endpoint()
+
 	backend_test_button.disabled = true
 	backend_status_label.text = "TEST..."
 	var response: Dictionary = await BackendAPI.health()
 	backend_test_button.disabled = false
+
 	if bool(response.get("ok", false)):
-		backend_status_label.text = "CONNECTÉ"
+		backend_status_label.text = "EMBARQUÉ • CONNECTÉ" if BackendAPI.endpoint_forced else "CONNECTÉ"
 		backend_status_label.add_theme_color_override("font_color", Color("#9fe28f"))
 		await _load_strategy_catalog()
 	else:
-		backend_status_label.text = "INDISPONIBLE"
+		backend_status_label.text = "EMBARQUÉ • INDISPONIBLE" if BackendAPI.endpoint_forced else "INDISPONIBLE"
 		backend_status_label.add_theme_color_override("font_color", Color("#f06b5f"))
-	_mark_dirty()
+
+	if not BackendAPI.endpoint_forced:
+		_mark_dirty()
 
 func _style_screen() -> void:
 	UIStyle.apply_panel(panel)
@@ -378,9 +386,20 @@ func _load_values() -> void:
 	quality_value.text = QUALITY_LABELS[clampi(int(game_session.settings["quality"]), 0, QUALITY_LABELS.size() - 1)]
 	fullscreen_value.text = FULLSCREEN_LABELS[1 if bool(game_session.settings["fullscreen"]) else 0]
 	language_value.text = LANGUAGE_LABELS[clampi(int(game_session.settings["language"]), 0, LANGUAGE_LABELS.size() - 1)]
-	backend_host_input.text = str(game_session.settings.get("backend_host", "127.0.0.1"))
-	backend_port_input.value = int(game_session.settings.get("backend_port", 8000))
-	backend_status_label.text = "CONNECTÉ" if game_session.backend_online else "LOCAL"
+
+	if BackendAPI.endpoint_forced:
+		backend_host_input.text = BackendAPI.backend_host
+		backend_port_input.value = BackendAPI.backend_port
+		backend_status_label.text = "EMBARQUÉ • CONNECTÉ" if game_session.backend_online else "EMBARQUÉ"
+	else:
+		backend_host_input.text = str(game_session.settings.get("backend_host", "127.0.0.1"))
+		backend_port_input.value = int(game_session.settings.get("backend_port", 8000))
+		backend_status_label.text = "CONNECTÉ" if game_session.backend_online else "LOCAL"
+
+	backend_host_input.editable = not BackendAPI.endpoint_forced
+	backend_port_input.editable = not BackendAPI.endpoint_forced
+	backend_test_button.text = "VÉRIFIER" if BackendAPI.endpoint_forced else "TESTER"
+
 	_update_strategy_selection()
 	_loading_values = false
 
