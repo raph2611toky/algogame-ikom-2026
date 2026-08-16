@@ -149,12 +149,19 @@ Le moteur implémente notamment :
 - collisions entre machines ;
 - score, snapshots, replay et `actions.txt`.
 
-## IA : `portfolio_v9` par défaut
+
+## IA : `portfolio_v10` par défaut
+
+`portfolio_v10` conserve le cœur `portfolio_v9` / `portfolio_v8` et ajoute une couche ciblée pour les coffres bloqués : détection d'obstacles communs à plusieurs coffres, micro-plans machines engagés, anti-oscillation/deadlock, protection globale des coffres contre une machine autonome et collecte parallèle du héros non requis.
+
+Le catalogue dynamique reste disponible via `GET /api/v1/strategies`; les anciennes stratégies restent sélectionnables pour comparaison. Voir `docs/PORTFOLIO_V10.md` et `docs/VERIFICATION_V0.11.0.md`.
+
+## IA historique : `portfolio_v9`
 
 Le catalogue est dynamique via `GET /api/v1/strategies`. Le frontend 2D peut donc choisir une stratégie sans modification de code côté menu.
 
 ```text
-portfolio_v9   recommandé, cœur v8 + relais minimal anti ping-pong
+portfolio_v9   historique, cœur v8 + relais minimal anti ping-pong
 portfolio_v8   précédent, stamina + handoff + score peak
 portfolio_v7   collaboratif + cache structurel précédent
 portfolio_v6   collaboratif optimisé précédent

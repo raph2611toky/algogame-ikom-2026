@@ -30,7 +30,7 @@ def simulate(payload: SimulationRequest) -> SimulationResponse:
         raise _handle_domain_error(exc) from exc
 
 @router.post('/upload', response_model=SimulationResponse, summary='Calculer une simulation depuis map.txt', description='Équivalent multipart synchrone de `POST /simulations`, pratique pour les petites cartes. Pour les cartes complexes, préférer `POST /simulation-jobs/upload`: il répond immédiatement avec un job_id et évite de garder Swagger/Godot bloqué pendant le calcul. Dans Swagger `/docs`, `file` reste un vrai sélecteur de fichier (`type: file`) et `name`/`strategy_json` sont des paramètres `formData`, sans bloc Request Body.', operation_id='simulate_uploaded_map')
-async def simulate_upload(file: Annotated[UploadFile, File(..., description='Fichier map.txt UTF-8 à simuler.')], name: Annotated[str, Form(description='Nom de mission renvoyé à Godot.')]='mission', strategy_json: Annotated[str | None, Form(description='JSON optionnel de StrategyOptions. Exemple: {"name":"portfolio_v9","max_unlock_obstacles":20}')]=None) -> SimulationResponse:
+async def simulate_upload(file: Annotated[UploadFile, File(..., description='Fichier map.txt UTF-8 à simuler.')], name: Annotated[str, Form(description='Nom de mission renvoyé à Godot.')]='mission', strategy_json: Annotated[str | None, Form(description='JSON optionnel de StrategyOptions. Exemple: {"name":"portfolio_v10","max_unlock_obstacles":20}')]=None) -> SimulationResponse:
     map_text = await _read_utf8_upload(file, label='map.txt')
     try:
         strategy = StrategyOptions.model_validate_json(strategy_json) if strategy_json else StrategyOptions()

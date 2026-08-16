@@ -7,7 +7,7 @@
   "fullscreen": false,
   "language": 0,
   "strategy": {
-    "name": "portfolio_v9",
+    "name": "portfolio_v10",
     "max_stones_per_hero": 16,
     "max_chest_pairs_per_hero": 12,
     "max_unlock_obstacles": 20,

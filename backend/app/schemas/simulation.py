@@ -11,7 +11,7 @@ class MissionInput(APIModel):
     model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}}}
 
 class StrategyOptions(APIModel):
-    name: Literal['portfolio_v9', 'portfolio_v8', 'portfolio_v7', 'portfolio_v6', 'portfolio_v5', 'portfolio_v4', 'portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v9', description='portfolio_v9 conserve strictement le coeur de portfolio_v8 et ajoute seulement une affinite de pousseur/relais stamina sur le meme coffre; les choix de coffre, deblocages, pierres, machines et score restent ceux de v8.')
+    name: Literal['portfolio_v11', 'portfolio_v10', 'portfolio_v9', 'portfolio_v8', 'portfolio_v7', 'portfolio_v6', 'portfolio_v5', 'portfolio_v4', 'portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v10', description='portfolio_v10 conserve le coeur v8/v9 et ajoute une orchestration ciblee des coffres bloques: opportunites partagees, micro-plans machines engages, anti-oscillation/deadlock et collecte parallele.')
     max_stones_per_hero: int = Field(default=16, ge=1, le=100)
     max_chest_pairs_per_hero: int = Field(default=12, ge=1, le=100)
     max_unlock_obstacles: int = Field(default=20, ge=1, le=100, description='Nombre maximal de trous/arbres candidats analysés pour leur valeur de déblocage.')
@@ -22,7 +22,7 @@ class StrategyOptions(APIModel):
 class SimulationRequest(APIModel):
     mission: MissionInput
     strategy: StrategyOptions = Field(default_factory=StrategyOptions)
-    model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'mission': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}, 'strategy': {'name': 'portfolio_v9', 'max_stones_per_hero': 16, 'max_chest_pairs_per_hero': 12, 'max_unlock_obstacles': 20, 'unlock_pair_candidates': 8, 'stuck_end_threshold': 8}}}}
+    model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'mission': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}, 'strategy': {'name': 'portfolio_v10', 'max_stones_per_hero': 16, 'max_chest_pairs_per_hero': 12, 'max_unlock_obstacles': 20, 'unlock_pair_candidates': 8, 'stuck_end_threshold': 8}}}}
 
 class ReplayActionPair(APIModel):
     F: HeroAction = HeroAction.WAIT

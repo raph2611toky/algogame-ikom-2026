@@ -50,7 +50,7 @@ def create_job(payload: SimulationRequest) -> SimulationJobStatus:
 async def create_job_upload(
     file: Annotated[UploadFile, File(..., description="Fichier map.txt UTF-8 à simuler.")],
     name: Annotated[str, Form(description="Nom de mission.")] = "mission",
-    strategy_json: Annotated[str, Form(description="Options StrategyOptions en JSON.")] = '{"name":"portfolio_v9"}',
+    strategy_json: Annotated[str, Form(description="Options StrategyOptions en JSON.")] = '{"name":"portfolio_v10"}',
 ) -> SimulationJobStatus:
     map_text = await _read_utf8(file)
     try:

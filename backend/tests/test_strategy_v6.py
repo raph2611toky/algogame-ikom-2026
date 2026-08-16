@@ -93,7 +93,7 @@ def test_portfolio_v6_keeps_official_map_result_strong() -> None:
 
 
 def test_latest_portfolio_is_service_default() -> None:
-    assert StrategyOptions().name == "portfolio_v9"
+    assert StrategyOptions().name == "portfolio_v10"
     response = SimulationService().simulate(
         map_text=USER_TWO_CHESTS,
         mission_name="latest-regression",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict
 
-DEFAULT_STRATEGY = "portfolio_v9"
+DEFAULT_STRATEGY = "portfolio_v10"
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,11 +20,27 @@ class StrategyDescriptor:
 
 STRATEGIES: tuple[StrategyDescriptor, ...] = (
     StrategyDescriptor(
+        "portfolio_v10",
+        "Portfolio v10 — opportunites + micro-plans machines",
+        "portfolio",
+        "Version recommandee: conserve portfolio_v9/v8 et ajoute seulement, pour les coffres bloques, la priorite aux corridors partages, le commitment de micro-plans machines, anti-oscillation/deadlock et collecte parallele du heros non requis.",
+        False,
+        True,
+    ),
+    StrategyDescriptor(
+        "portfolio_v11",
+        "Portfolio v11 — priorites strictes + anti-detours",
+        "portfolio",
+        "Version experimentale: conserve v10/v9/v8 et limite les pierres secondaires aux pierres situees a <=3 cases d'un coffre restant; utile pour comparer les detours sans remplacer le v10 valide.",
+        False,
+        True,
+    ),
+    StrategyDescriptor(
         "portfolio_v9",
         "Portfolio v9 — coeur v8 + relais minimal",
         "portfolio",
         "Version recommandee: coeur portfolio_v8 strictement conserve; ajout limite a une affinite de pousseur sur le meme coffre, un relais stamina prudent sur le dernier coffre et un staging local uniquement a la place d'un WAIT de reserve v8.",
-        True,
+        False,
         True,
     ),
     StrategyDescriptor(
