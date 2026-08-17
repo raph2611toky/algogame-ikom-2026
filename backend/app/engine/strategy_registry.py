@@ -29,9 +29,9 @@ STRATEGIES: tuple[StrategyDescriptor, ...] = (
     ),
     StrategyDescriptor(
         "portfolio_v11",
-        "Portfolio v11 — priorites strictes + anti-detours",
+        "Portfolio v11 — parallelisme progressif par roles",
         "portfolio",
-        "Version experimentale: conserve v10/v9/v8 et limite les pierres secondaires aux pierres situees a <=3 cases d'un coffre restant; utile pour comparer les detours sans remplacer le v10 valide.",
+        "Candidate conserve le coeur v10. Quand un coffre direct est deja traite, le heros libre prefere une vraie tache executable sur un autre coffre a une pierre secondaire; aucune parallelisation n'est lancee si elle casserait un relais stamina ou exige seulement un staging lointain.",
         False,
         True,
     ),

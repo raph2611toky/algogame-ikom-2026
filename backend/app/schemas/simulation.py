@@ -11,7 +11,7 @@ class MissionInput(APIModel):
     model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}}}
 
 class StrategyOptions(APIModel):
-    name: Literal['portfolio_v11', 'portfolio_v10', 'portfolio_v9', 'portfolio_v8', 'portfolio_v7', 'portfolio_v6', 'portfolio_v5', 'portfolio_v4', 'portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v10', description='portfolio_v10 conserve le coeur v8/v9 et ajoute une orchestration ciblee des coffres bloques: opportunites partagees, micro-plans machines engages, anti-oscillation/deadlock et collecte parallele.')
+    name: Literal['portfolio_v11', 'portfolio_v10', 'portfolio_v9', 'portfolio_v8', 'portfolio_v7', 'portfolio_v6', 'portfolio_v5', 'portfolio_v4', 'portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v10', description='portfolio_v10 reste le defaut stable; portfolio_v11 ajoute au-dessus de v10 un parallelisme progressif entre coffres independants, sans casser relais stamina, micro-plans machines ni protections X/G.')
     max_stones_per_hero: int = Field(default=16, ge=1, le=100)
     max_chest_pairs_per_hero: int = Field(default=12, ge=1, le=100)
     max_unlock_obstacles: int = Field(default=20, ge=1, le=100, description='Nombre maximal de trous/arbres candidats analysés pour leur valeur de déblocage.')
