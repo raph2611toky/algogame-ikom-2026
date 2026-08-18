@@ -132,6 +132,118 @@ mesh = SubResource("BoxMesh_jc63w")
 material = SubResource("StandardMaterial3D_jc63w")
 metadata/_edit_group_ = true
 
+[node name="PorteCarre2" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=1923061555]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, 3.3309097, -4.073063)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre3" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=1719380374]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, 3.3309097, -9.396263)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre4" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=1106563717]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -0.22618484, -9.396263)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre5" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=1607787454]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -3.8498702, -9.396263)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre6" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=410865789]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -3.8498702, -14.706223)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre7" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=786300432]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -3.8498702, -19.94442)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre8" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=666413082]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -7.509435, -19.94442)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre9" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=1298929328]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -11.121506, -19.94442)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre10" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=2104079014]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -11.121506, -25.290257)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre11" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=2033035364]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -11.121506, -30.590923)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre12" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=2065050741]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -14.709314, -30.590923)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre13" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=1699334406]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -18.42769, -30.590923)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre14" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=1100814903]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -18.42769, -35.820072)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre15" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=413126688]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -18.42769, -41.134792)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre16" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=585665166]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -21.984789, -41.134792)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
+[node name="PorteCarre17" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=250761941]
+transform = Transform3D(1, 0, 0, 0, 0.0031958222, 0.99999493, 0, -0.99999493, 0.0031958222, 2.5187683, -25.70928, -41.134792)
+flip_faces = true
+mesh = SubResource("BoxMesh_jc63w")
+material = SubResource("StandardMaterial3D_jc63w")
+metadata/_edit_group_ = true
+
 [node name="PorteHaut" type="CSGMesh3D" parent="Architecture/Maison/MurMaison/MurEtPorte2/PorteCreux" unique_id=342459840]
 transform = Transform3D(1, 0, 0, 0, 0.0147647, -0.99989104, 0, 0.99989104, 0.0147647, 2.6022491, 21.44821, 1.1753082)
 flip_faces = true
@@ -5319,7 +5431,589 @@ transform = Transform3D(-0.025560744, 0, 0.99967325, 0, 1, 0, -0.99967325, 0, -0
 [node name="Escalier" type="Node3D" parent="Architecture" unique_id=1760776275]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -26.611053, -81.836754)
 
-[node name="BriquePierre2" parent="Architecture/Escalier" unique_id=1546049385 instance=ExtResource("4_klhxk")]
+[node name="1" type="MultiMeshInstance3D" parent="Architecture/Escalier" unique_id=535115769]
+
+[node name="BriquePierreCoupe2" parent="Architecture/Escalier/1" unique_id=1171200153 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.55649, 16.804703, 17.565025)
+
+[node name="BriquePierreCoupe3" parent="Architecture/Escalier/1" unique_id=132015166 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.57584, 16.804703, 17.565025)
+
+[node name="BriquePierre2" parent="Architecture/Escalier/1" unique_id=1546049385 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14.817362, 17.41053)
+
+[node name="BriquePierre8" parent="Architecture/Escalier/1" unique_id=419636826 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.413662, 14.817362, 17.41053)
+
+[node name="BriquePierre10" parent="Architecture/Escalier/1" unique_id=754418148 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.782444, 14.817362, 17.41053)
+
+[node name="BriquePierre3" parent="Architecture/Escalier/1" unique_id=1044701521 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.407133, 14.817362, 17.41053)
+
+[node name="BriquePierre4" parent="Architecture/Escalier/1" unique_id=299176575 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.899744, 14.817362, 17.41053)
+
+[node name="BriquePierre5" parent="Architecture/Escalier/1" unique_id=1002631310 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.302011, 14.817362, 17.41053)
+
+[node name="BriquePierre6" parent="Architecture/Escalier/1" unique_id=727191355 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.61393, 14.817362, 17.41053)
+
+[node name="BriquePierre7" parent="Architecture/Escalier/1" unique_id=1046712658 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.92585, 14.817362, 17.41053)
+
+[node name="BriquePierre9" parent="Architecture/Escalier/1" unique_id=400030590 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.28414, 14.817362, 17.41053)
+
+[node name="BriquePierre11" parent="Architecture/Escalier/1" unique_id=1957475558 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2602043, 11.570366, 17.41053)
+
+[node name="BriquePierre12" parent="Architecture/Escalier/1" unique_id=1112700120 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.673866, 11.570366, 17.41053)
+
+[node name="BriquePierre14" parent="Architecture/Escalier/1" unique_id=1951154873 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.146929, 11.570366, 17.41053)
+
+[node name="BriquePierre15" parent="Architecture/Escalier/1" unique_id=2017431143 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.63954, 11.570366, 17.41053)
+
+[node name="BriquePierre16" parent="Architecture/Escalier/1" unique_id=543548726 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.041807, 11.570366, 17.41053)
+
+[node name="BriquePierre17" parent="Architecture/Escalier/1" unique_id=888925842 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.353725, 11.570366, 17.41053)
+
+[node name="BriquePierre18" parent="Architecture/Escalier/1" unique_id=914462630 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.665646, 11.570366, 17.41053)
+
+[node name="BriquePierre19" parent="Architecture/Escalier/1" unique_id=1126873365 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.023937, 11.570366, 17.41053)
+
+[node name="BriquePierreCoupe4" parent="Architecture/Escalier/1" unique_id=1819838437 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.55649, 13.221743, 12.409004)
+
+[node name="BriquePierreCoupe5" parent="Architecture/Escalier/1" unique_id=880412222 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.57584, 13.221743, 12.409004)
+
+[node name="BriquePierre13" parent="Architecture/Escalier/1" unique_id=1173686331 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2602043, 7.987404, 12.254509)
+
+[node name="BriquePierre29" parent="Architecture/Escalier/1" unique_id=324139641 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.673866, 7.987404, 12.254509)
+
+[node name="BriquePierre30" parent="Architecture/Escalier/1" unique_id=1831070419 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.146929, 7.987404, 12.254509)
+
+[node name="BriquePierre31" parent="Architecture/Escalier/1" unique_id=853743465 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.63954, 7.987404, 12.254509)
+
+[node name="BriquePierre32" parent="Architecture/Escalier/1" unique_id=1781178808 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.041807, 7.987404, 12.254509)
+
+[node name="BriquePierre33" parent="Architecture/Escalier/1" unique_id=1886661728 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.353725, 7.987404, 12.254509)
+
+[node name="BriquePierre34" parent="Architecture/Escalier/1" unique_id=1587896903 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.665646, 7.987404, 12.254509)
+
+[node name="BriquePierre35" parent="Architecture/Escalier/1" unique_id=2106278578 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.023937, 7.987404, 12.254509)
+
+[node name="BriquePierre20" parent="Architecture/Escalier/1" unique_id=2108430781 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.971428, 17.41053)
+
+[node name="BriquePierre21" parent="Architecture/Escalier/1" unique_id=1801425728 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.413662, 7.971428, 17.41053)
+
+[node name="BriquePierre22" parent="Architecture/Escalier/1" unique_id=1789131746 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.782444, 7.971428, 17.41053)
+
+[node name="BriquePierre23" parent="Architecture/Escalier/1" unique_id=45411890 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.407133, 7.971428, 17.41053)
+
+[node name="BriquePierre24" parent="Architecture/Escalier/1" unique_id=1382938217 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.899744, 7.971428, 17.41053)
+
+[node name="BriquePierre25" parent="Architecture/Escalier/1" unique_id=333977996 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.302011, 7.971428, 17.41053)
+
+[node name="BriquePierre26" parent="Architecture/Escalier/1" unique_id=1554695317 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.61393, 7.971428, 17.41053)
+
+[node name="BriquePierre27" parent="Architecture/Escalier/1" unique_id=1761291795 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.92585, 7.971428, 17.41053)
+
+[node name="BriquePierre28" parent="Architecture/Escalier/1" unique_id=1961930706 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.28414, 7.971428, 17.41053)
+
+[node name="2" type="MultiMeshInstance3D" parent="Architecture/Escalier" unique_id=197029917]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -6.9251785, -9.718163)
+
+[node name="BriquePierreCoupe2" parent="Architecture/Escalier/2" unique_id=635132698 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.55649, 16.804703, 17.565025)
+
+[node name="BriquePierreCoupe3" parent="Architecture/Escalier/2" unique_id=488288016 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.57584, 16.804703, 17.565025)
+
+[node name="BriquePierre2" parent="Architecture/Escalier/2" unique_id=2079809276 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14.817362, 17.41053)
+
+[node name="BriquePierre8" parent="Architecture/Escalier/2" unique_id=1183634778 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.413662, 14.817362, 17.41053)
+
+[node name="BriquePierre10" parent="Architecture/Escalier/2" unique_id=46777809 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.782444, 14.817362, 17.41053)
+
+[node name="BriquePierre3" parent="Architecture/Escalier/2" unique_id=654368468 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.407133, 14.817362, 17.41053)
+
+[node name="BriquePierre4" parent="Architecture/Escalier/2" unique_id=1157548699 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.899744, 14.817362, 17.41053)
+
+[node name="BriquePierre5" parent="Architecture/Escalier/2" unique_id=1324391684 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.302011, 14.817362, 17.41053)
+
+[node name="BriquePierre6" parent="Architecture/Escalier/2" unique_id=634537337 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.61393, 14.817362, 17.41053)
+
+[node name="BriquePierre7" parent="Architecture/Escalier/2" unique_id=1509970187 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.92585, 14.817362, 17.41053)
+
+[node name="BriquePierre9" parent="Architecture/Escalier/2" unique_id=580407653 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.28414, 14.817362, 17.41053)
+
+[node name="BriquePierre11" parent="Architecture/Escalier/2" unique_id=490098344 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2602043, 11.570366, 17.41053)
+
+[node name="BriquePierre12" parent="Architecture/Escalier/2" unique_id=610308444 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.673866, 11.570366, 17.41053)
+
+[node name="BriquePierre14" parent="Architecture/Escalier/2" unique_id=1754734083 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.146929, 11.570366, 17.41053)
+
+[node name="BriquePierre15" parent="Architecture/Escalier/2" unique_id=2086661354 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.63954, 11.570366, 17.41053)
+
+[node name="BriquePierre16" parent="Architecture/Escalier/2" unique_id=970107889 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.041807, 11.570366, 17.41053)
+
+[node name="BriquePierre17" parent="Architecture/Escalier/2" unique_id=317990098 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.353725, 11.570366, 17.41053)
+
+[node name="BriquePierre18" parent="Architecture/Escalier/2" unique_id=953946261 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.665646, 11.570366, 17.41053)
+
+[node name="BriquePierre19" parent="Architecture/Escalier/2" unique_id=1945336649 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.023937, 11.570366, 17.41053)
+
+[node name="BriquePierreCoupe4" parent="Architecture/Escalier/2" unique_id=2053177665 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.55649, 13.221743, 12.409004)
+
+[node name="BriquePierreCoupe5" parent="Architecture/Escalier/2" unique_id=740631749 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.57584, 13.221743, 12.409004)
+
+[node name="BriquePierre13" parent="Architecture/Escalier/2" unique_id=1794182241 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2602043, 7.987404, 12.254509)
+
+[node name="BriquePierre29" parent="Architecture/Escalier/2" unique_id=1465692665 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.673866, 7.987404, 12.254509)
+
+[node name="BriquePierre30" parent="Architecture/Escalier/2" unique_id=1635489835 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.146929, 7.987404, 12.254509)
+
+[node name="BriquePierre31" parent="Architecture/Escalier/2" unique_id=253883058 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.63954, 7.987404, 12.254509)
+
+[node name="BriquePierre32" parent="Architecture/Escalier/2" unique_id=27930108 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.041807, 7.987404, 12.254509)
+
+[node name="BriquePierre33" parent="Architecture/Escalier/2" unique_id=960821855 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.353725, 7.987404, 12.254509)
+
+[node name="BriquePierre34" parent="Architecture/Escalier/2" unique_id=69003510 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.665646, 7.987404, 12.254509)
+
+[node name="BriquePierre35" parent="Architecture/Escalier/2" unique_id=859095948 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.023937, 7.987404, 12.254509)
+
+[node name="BriquePierre20" parent="Architecture/Escalier/2" unique_id=996058527 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.971428, 17.41053)
+
+[node name="BriquePierre21" parent="Architecture/Escalier/2" unique_id=149464200 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.413662, 7.971428, 17.41053)
+
+[node name="BriquePierre22" parent="Architecture/Escalier/2" unique_id=2122037906 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.782444, 7.971428, 17.41053)
+
+[node name="BriquePierre23" parent="Architecture/Escalier/2" unique_id=2064938733 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.407133, 7.971428, 17.41053)
+
+[node name="BriquePierre24" parent="Architecture/Escalier/2" unique_id=65090259 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.899744, 7.971428, 17.41053)
+
+[node name="BriquePierre25" parent="Architecture/Escalier/2" unique_id=833453683 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.302011, 7.971428, 17.41053)
+
+[node name="BriquePierre26" parent="Architecture/Escalier/2" unique_id=207658512 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.61393, 7.971428, 17.41053)
+
+[node name="BriquePierre27" parent="Architecture/Escalier/2" unique_id=63291330 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.92585, 7.971428, 17.41053)
+
+[node name="BriquePierre28" parent="Architecture/Escalier/2" unique_id=958890902 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.28414, 7.971428, 17.41053)
+
+[node name="3" type="MultiMeshInstance3D" parent="Architecture/Escalier" unique_id=1101622655]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -13.790016, -19.45681)
+
+[node name="BriquePierreCoupe2" parent="Architecture/Escalier/3" unique_id=489031853 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.55649, 16.804703, 17.565025)
+
+[node name="BriquePierreCoupe3" parent="Architecture/Escalier/3" unique_id=1008304538 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.57584, 16.804703, 17.565025)
+
+[node name="BriquePierre2" parent="Architecture/Escalier/3" unique_id=302418257 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14.817362, 17.41053)
+
+[node name="BriquePierre8" parent="Architecture/Escalier/3" unique_id=1473256864 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.413662, 14.817362, 17.41053)
+
+[node name="BriquePierre10" parent="Architecture/Escalier/3" unique_id=452168952 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.782444, 14.817362, 17.41053)
+
+[node name="BriquePierre3" parent="Architecture/Escalier/3" unique_id=616383498 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.407133, 14.817362, 17.41053)
+
+[node name="BriquePierre4" parent="Architecture/Escalier/3" unique_id=627415733 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.899744, 14.817362, 17.41053)
+
+[node name="BriquePierre5" parent="Architecture/Escalier/3" unique_id=1423035225 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.302011, 14.817362, 17.41053)
+
+[node name="BriquePierre6" parent="Architecture/Escalier/3" unique_id=559476414 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.61393, 14.817362, 17.41053)
+
+[node name="BriquePierre7" parent="Architecture/Escalier/3" unique_id=1905030822 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.92585, 14.817362, 17.41053)
+
+[node name="BriquePierre9" parent="Architecture/Escalier/3" unique_id=142689569 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.28414, 14.817362, 17.41053)
+
+[node name="BriquePierre11" parent="Architecture/Escalier/3" unique_id=722385924 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2602043, 11.570366, 17.41053)
+
+[node name="BriquePierre12" parent="Architecture/Escalier/3" unique_id=2047270057 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.673866, 11.570366, 17.41053)
+
+[node name="BriquePierre14" parent="Architecture/Escalier/3" unique_id=251803317 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.146929, 11.570366, 17.41053)
+
+[node name="BriquePierre15" parent="Architecture/Escalier/3" unique_id=851743024 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.63954, 11.570366, 17.41053)
+
+[node name="BriquePierre16" parent="Architecture/Escalier/3" unique_id=1110520701 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.041807, 11.570366, 17.41053)
+
+[node name="BriquePierre17" parent="Architecture/Escalier/3" unique_id=1444374870 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.353725, 11.570366, 17.41053)
+
+[node name="BriquePierre18" parent="Architecture/Escalier/3" unique_id=1050990051 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.665646, 11.570366, 17.41053)
+
+[node name="BriquePierre19" parent="Architecture/Escalier/3" unique_id=1283119760 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.023937, 11.570366, 17.41053)
+
+[node name="BriquePierreCoupe4" parent="Architecture/Escalier/3" unique_id=1320671214 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.55649, 13.221743, 12.409004)
+
+[node name="BriquePierreCoupe5" parent="Architecture/Escalier/3" unique_id=608058433 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.57584, 13.221743, 12.409004)
+
+[node name="BriquePierre13" parent="Architecture/Escalier/3" unique_id=532080333 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2602043, 7.987404, 12.254509)
+
+[node name="BriquePierre29" parent="Architecture/Escalier/3" unique_id=1373734198 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.673866, 7.987404, 12.254509)
+
+[node name="BriquePierre30" parent="Architecture/Escalier/3" unique_id=792576503 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.146929, 7.987404, 12.254509)
+
+[node name="BriquePierre31" parent="Architecture/Escalier/3" unique_id=1925536885 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.63954, 7.987404, 12.254509)
+
+[node name="BriquePierre32" parent="Architecture/Escalier/3" unique_id=1640185 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.041807, 7.987404, 12.254509)
+
+[node name="BriquePierre33" parent="Architecture/Escalier/3" unique_id=1755224484 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.353725, 7.987404, 12.254509)
+
+[node name="BriquePierre34" parent="Architecture/Escalier/3" unique_id=1259148409 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.665646, 7.987404, 12.254509)
+
+[node name="BriquePierre35" parent="Architecture/Escalier/3" unique_id=126124082 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.023937, 7.987404, 12.254509)
+
+[node name="BriquePierre20" parent="Architecture/Escalier/3" unique_id=1893261310 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.971428, 17.41053)
+
+[node name="BriquePierre21" parent="Architecture/Escalier/3" unique_id=2134611917 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.413662, 7.971428, 17.41053)
+
+[node name="BriquePierre22" parent="Architecture/Escalier/3" unique_id=2080525243 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.782444, 7.971428, 17.41053)
+
+[node name="BriquePierre23" parent="Architecture/Escalier/3" unique_id=662471835 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.407133, 7.971428, 17.41053)
+
+[node name="BriquePierre24" parent="Architecture/Escalier/3" unique_id=1507423773 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.899744, 7.971428, 17.41053)
+
+[node name="BriquePierre25" parent="Architecture/Escalier/3" unique_id=1706596984 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.302011, 7.971428, 17.41053)
+
+[node name="BriquePierre26" parent="Architecture/Escalier/3" unique_id=1609260459 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.61393, 7.971428, 17.41053)
+
+[node name="BriquePierre27" parent="Architecture/Escalier/3" unique_id=699953776 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.92585, 7.971428, 17.41053)
+
+[node name="BriquePierre28" parent="Architecture/Escalier/3" unique_id=1920234152 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.28414, 7.971428, 17.41053)
+
+[node name="4" type="MultiMeshInstance3D" parent="Architecture/Escalier" unique_id=2079113241]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -20.673744, -29.497177)
+
+[node name="BriquePierreCoupe2" parent="Architecture/Escalier/4" unique_id=2139738276 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.55649, 16.804703, 17.565025)
+
+[node name="BriquePierreCoupe3" parent="Architecture/Escalier/4" unique_id=563658744 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.57584, 16.804703, 17.565025)
+
+[node name="BriquePierre2" parent="Architecture/Escalier/4" unique_id=77645357 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14.817362, 17.41053)
+
+[node name="BriquePierre8" parent="Architecture/Escalier/4" unique_id=1290572519 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.413662, 14.817362, 17.41053)
+
+[node name="BriquePierre10" parent="Architecture/Escalier/4" unique_id=231447923 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.782444, 14.817362, 17.41053)
+
+[node name="BriquePierre3" parent="Architecture/Escalier/4" unique_id=1842802370 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.407133, 14.817362, 17.41053)
+
+[node name="BriquePierre4" parent="Architecture/Escalier/4" unique_id=532176 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.899744, 14.817362, 17.41053)
+
+[node name="BriquePierre5" parent="Architecture/Escalier/4" unique_id=274811449 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.302011, 14.817362, 17.41053)
+
+[node name="BriquePierre6" parent="Architecture/Escalier/4" unique_id=793429307 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.61393, 14.817362, 17.41053)
+
+[node name="BriquePierre7" parent="Architecture/Escalier/4" unique_id=1761957587 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.92585, 14.817362, 17.41053)
+
+[node name="BriquePierre9" parent="Architecture/Escalier/4" unique_id=1690275369 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.28414, 14.817362, 17.41053)
+
+[node name="BriquePierre11" parent="Architecture/Escalier/4" unique_id=351204708 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2602043, 11.570366, 17.41053)
+
+[node name="BriquePierre12" parent="Architecture/Escalier/4" unique_id=1099268596 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.673866, 11.570366, 17.41053)
+
+[node name="BriquePierre14" parent="Architecture/Escalier/4" unique_id=2039727666 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.146929, 11.570366, 17.41053)
+
+[node name="BriquePierre15" parent="Architecture/Escalier/4" unique_id=1080136415 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.63954, 11.570366, 17.41053)
+
+[node name="BriquePierre16" parent="Architecture/Escalier/4" unique_id=152432969 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.041807, 11.570366, 17.41053)
+
+[node name="BriquePierre17" parent="Architecture/Escalier/4" unique_id=1329449238 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.353725, 11.570366, 17.41053)
+
+[node name="BriquePierre18" parent="Architecture/Escalier/4" unique_id=1509322793 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.665646, 11.570366, 17.41053)
+
+[node name="BriquePierre19" parent="Architecture/Escalier/4" unique_id=1608039108 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.023937, 11.570366, 17.41053)
+
+[node name="BriquePierreCoupe4" parent="Architecture/Escalier/4" unique_id=597364991 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.55649, 13.221743, 12.409004)
+
+[node name="BriquePierreCoupe5" parent="Architecture/Escalier/4" unique_id=979668286 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.57584, 13.221743, 12.409004)
+
+[node name="BriquePierre13" parent="Architecture/Escalier/4" unique_id=353415451 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2602043, 7.987404, 12.254509)
+
+[node name="BriquePierre29" parent="Architecture/Escalier/4" unique_id=809162002 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.673866, 7.987404, 12.254509)
+
+[node name="BriquePierre30" parent="Architecture/Escalier/4" unique_id=2003611430 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.146929, 7.987404, 12.254509)
+
+[node name="BriquePierre31" parent="Architecture/Escalier/4" unique_id=1417216446 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.63954, 7.987404, 12.254509)
+
+[node name="BriquePierre32" parent="Architecture/Escalier/4" unique_id=1689440139 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.041807, 7.987404, 12.254509)
+
+[node name="BriquePierre33" parent="Architecture/Escalier/4" unique_id=1314748423 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.353725, 7.987404, 12.254509)
+
+[node name="BriquePierre34" parent="Architecture/Escalier/4" unique_id=1803673425 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.665646, 7.987404, 12.254509)
+
+[node name="BriquePierre35" parent="Architecture/Escalier/4" unique_id=1642532169 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.023937, 7.987404, 12.254509)
+
+[node name="BriquePierre20" parent="Architecture/Escalier/4" unique_id=1699114401 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.971428, 17.41053)
+
+[node name="BriquePierre21" parent="Architecture/Escalier/4" unique_id=1610136093 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.413662, 7.971428, 17.41053)
+
+[node name="BriquePierre22" parent="Architecture/Escalier/4" unique_id=1715037784 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.782444, 7.971428, 17.41053)
+
+[node name="BriquePierre23" parent="Architecture/Escalier/4" unique_id=736089074 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.407133, 7.971428, 17.41053)
+
+[node name="BriquePierre24" parent="Architecture/Escalier/4" unique_id=234075428 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.899744, 7.971428, 17.41053)
+
+[node name="BriquePierre25" parent="Architecture/Escalier/4" unique_id=121420869 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.302011, 7.971428, 17.41053)
+
+[node name="BriquePierre26" parent="Architecture/Escalier/4" unique_id=1496186047 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.61393, 7.971428, 17.41053)
+
+[node name="BriquePierre27" parent="Architecture/Escalier/4" unique_id=658502349 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.92585, 7.971428, 17.41053)
+
+[node name="BriquePierre28" parent="Architecture/Escalier/4" unique_id=279861060 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.28414, 7.971428, 17.41053)
+
+[node name="5" type="MultiMeshInstance3D" parent="Architecture/Escalier" unique_id=1682032176]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -27.547455, -39.640083)
+
+[node name="BriquePierreCoupe2" parent="Architecture/Escalier/5" unique_id=460069234 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.55649, 16.804703, 17.565025)
+
+[node name="BriquePierreCoupe3" parent="Architecture/Escalier/5" unique_id=449661242 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.57584, 16.804703, 17.565025)
+
+[node name="BriquePierre2" parent="Architecture/Escalier/5" unique_id=510445907 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14.817362, 17.41053)
+
+[node name="BriquePierre8" parent="Architecture/Escalier/5" unique_id=2017266551 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.413662, 14.817362, 17.41053)
+
+[node name="BriquePierre10" parent="Architecture/Escalier/5" unique_id=966037593 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.782444, 14.817362, 17.41053)
+
+[node name="BriquePierre3" parent="Architecture/Escalier/5" unique_id=1886071975 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.407133, 14.817362, 17.41053)
+
+[node name="BriquePierre4" parent="Architecture/Escalier/5" unique_id=906833890 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.899744, 14.817362, 17.41053)
+
+[node name="BriquePierre5" parent="Architecture/Escalier/5" unique_id=902152456 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.302011, 14.817362, 17.41053)
+
+[node name="BriquePierre6" parent="Architecture/Escalier/5" unique_id=764127455 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.61393, 14.817362, 17.41053)
+
+[node name="BriquePierre7" parent="Architecture/Escalier/5" unique_id=1121915114 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.92585, 14.817362, 17.41053)
+
+[node name="BriquePierre9" parent="Architecture/Escalier/5" unique_id=1194663847 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.28414, 14.817362, 17.41053)
+
+[node name="BriquePierre11" parent="Architecture/Escalier/5" unique_id=2066869620 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2602043, 11.570366, 17.41053)
+
+[node name="BriquePierre12" parent="Architecture/Escalier/5" unique_id=1122074685 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.673866, 11.570366, 17.41053)
+
+[node name="BriquePierre14" parent="Architecture/Escalier/5" unique_id=157598610 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.146929, 11.570366, 17.41053)
+
+[node name="BriquePierre15" parent="Architecture/Escalier/5" unique_id=1365495013 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.63954, 11.570366, 17.41053)
+
+[node name="BriquePierre16" parent="Architecture/Escalier/5" unique_id=1459340825 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.041807, 11.570366, 17.41053)
+
+[node name="BriquePierre17" parent="Architecture/Escalier/5" unique_id=69985467 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.353725, 11.570366, 17.41053)
+
+[node name="BriquePierre18" parent="Architecture/Escalier/5" unique_id=1845997358 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.665646, 11.570366, 17.41053)
+
+[node name="BriquePierre19" parent="Architecture/Escalier/5" unique_id=352661587 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.023937, 11.570366, 17.41053)
+
+[node name="BriquePierreCoupe4" parent="Architecture/Escalier/5" unique_id=2040528213 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.55649, 13.221743, 12.409004)
+
+[node name="BriquePierreCoupe5" parent="Architecture/Escalier/5" unique_id=1434600121 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.57584, 13.221743, 12.409004)
+
+[node name="BriquePierre13" parent="Architecture/Escalier/5" unique_id=191403212 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2602043, 7.987404, 12.254509)
+
+[node name="BriquePierre29" parent="Architecture/Escalier/5" unique_id=603727992 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.673866, 7.987404, 12.254509)
+
+[node name="BriquePierre30" parent="Architecture/Escalier/5" unique_id=215409715 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.146929, 7.987404, 12.254509)
+
+[node name="BriquePierre31" parent="Architecture/Escalier/5" unique_id=367611186 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.63954, 7.987404, 12.254509)
+
+[node name="BriquePierre32" parent="Architecture/Escalier/5" unique_id=61689839 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.041807, 7.987404, 12.254509)
+
+[node name="BriquePierre33" parent="Architecture/Escalier/5" unique_id=283401687 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.353725, 7.987404, 12.254509)
+
+[node name="BriquePierre34" parent="Architecture/Escalier/5" unique_id=309022308 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.665646, 7.987404, 12.254509)
+
+[node name="BriquePierre35" parent="Architecture/Escalier/5" unique_id=2069145267 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.023937, 7.987404, 12.254509)
+
+[node name="BriquePierre20" parent="Architecture/Escalier/5" unique_id=820935338 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.971428, 17.41053)
+
+[node name="BriquePierre21" parent="Architecture/Escalier/5" unique_id=1979470136 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.413662, 7.971428, 17.41053)
+
+[node name="BriquePierre22" parent="Architecture/Escalier/5" unique_id=1155066322 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.782444, 7.971428, 17.41053)
+
+[node name="BriquePierre23" parent="Architecture/Escalier/5" unique_id=509114865 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.407133, 7.971428, 17.41053)
+
+[node name="BriquePierre24" parent="Architecture/Escalier/5" unique_id=1321830817 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.899744, 7.971428, 17.41053)
+
+[node name="BriquePierre25" parent="Architecture/Escalier/5" unique_id=989174471 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.302011, 7.971428, 17.41053)
+
+[node name="BriquePierre26" parent="Architecture/Escalier/5" unique_id=38042774 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.61393, 7.971428, 17.41053)
+
+[node name="BriquePierre27" parent="Architecture/Escalier/5" unique_id=1708590309 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.92585, 7.971428, 17.41053)
+
+[node name="BriquePierre28" parent="Architecture/Escalier/5" unique_id=1797893253 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.28414, 7.971428, 17.41053)
 
 [node name="MursLateraux" type="Node3D" parent="Architecture" unique_id=117047751]
 
@@ -5335,7 +6029,164 @@ mesh = SubResource("BoxMesh_uj04i")
 
 [node name="SolEscalier" type="MeshInstance3D" parent="Architecture/Sol" unique_id=1158866578]
 transform = Transform3D(1, 0, 0, 0, 0.80341285, 0.5954224, 0, -0.5954224, 0.80341285, 0, -18.71578, -87.47024)
+visible = false
 mesh = SubResource("BoxMesh_2uf65")
+
+[node name="Terasses" type="MultiMeshInstance3D" parent="Architecture/Sol" unique_id=1268800049]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -33.27159, -126.187515)
+
+[node name="Terasse" type="MultiMeshInstance3D" parent="Architecture/Sol/Terasses" unique_id=425270155]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -20.886917, -5.584671)
+
+[node name="BriquePierreCoupe4" parent="Architecture/Sol/Terasses/Terasse" unique_id=1525316731 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.55649, 13.221743, 12.409004)
+
+[node name="BriquePierreCoupe5" parent="Architecture/Sol/Terasses/Terasse" unique_id=678298242 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.57584, 13.221743, 12.409004)
+
+[node name="BriquePierre13" parent="Architecture/Sol/Terasses/Terasse" unique_id=1568012334 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2602043, 7.987404, 12.254509)
+
+[node name="BriquePierre29" parent="Architecture/Sol/Terasses/Terasse" unique_id=689521131 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.673866, 7.987404, 12.254509)
+
+[node name="BriquePierre30" parent="Architecture/Sol/Terasses/Terasse" unique_id=1197529475 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.146929, 7.987404, 12.254509)
+
+[node name="BriquePierre31" parent="Architecture/Sol/Terasses/Terasse" unique_id=951439883 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.63954, 7.987404, 12.254509)
+
+[node name="BriquePierre32" parent="Architecture/Sol/Terasses/Terasse" unique_id=619048762 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.041807, 7.987404, 12.254509)
+
+[node name="BriquePierre33" parent="Architecture/Sol/Terasses/Terasse" unique_id=1305799157 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.353725, 7.987404, 12.254509)
+
+[node name="BriquePierre34" parent="Architecture/Sol/Terasses/Terasse" unique_id=1887747150 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.665646, 7.987404, 12.254509)
+
+[node name="BriquePierre35" parent="Architecture/Sol/Terasses/Terasse" unique_id=1516370578 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.023937, 7.987404, 12.254509)
+
+[node name="BriquePierre20" parent="Architecture/Sol/Terasses/Terasse" unique_id=1078830349 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.971428, 17.41053)
+
+[node name="BriquePierre21" parent="Architecture/Sol/Terasses/Terasse" unique_id=1581603254 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.413662, 7.971428, 17.41053)
+
+[node name="BriquePierre22" parent="Architecture/Sol/Terasses/Terasse" unique_id=289850925 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.782444, 7.971428, 17.41053)
+
+[node name="BriquePierre23" parent="Architecture/Sol/Terasses/Terasse" unique_id=722163325 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.407133, 7.971428, 17.41053)
+
+[node name="BriquePierre24" parent="Architecture/Sol/Terasses/Terasse" unique_id=2750599 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.899744, 7.971428, 17.41053)
+
+[node name="BriquePierre25" parent="Architecture/Sol/Terasses/Terasse" unique_id=153529706 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.302011, 7.971428, 17.41053)
+
+[node name="BriquePierre26" parent="Architecture/Sol/Terasses/Terasse" unique_id=667656150 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.61393, 7.971428, 17.41053)
+
+[node name="BriquePierre27" parent="Architecture/Sol/Terasses/Terasse" unique_id=2133398427 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.92585, 7.971428, 17.41053)
+
+[node name="BriquePierre28" parent="Architecture/Sol/Terasses/Terasse" unique_id=1311943658 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.28414, 7.971428, 17.41053)
+
+[node name="BriquePierre36" parent="Architecture/Sol/Terasses/Terasse" unique_id=1072468809 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58.7162, 7.971428, 12.492714)
+
+[node name="BriquePierre38" parent="Architecture/Sol/Terasses/Terasse" unique_id=1336373329 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.876427, 11.464275, 12.492714)
+
+[node name="BriquePierre39" parent="Architecture/Sol/Terasses/Terasse" unique_id=397412424 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58.60224, 11.464275, 17.39074)
+
+[node name="BriquePierre37" parent="Architecture/Sol/Terasses/Terasse" unique_id=99012213 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.675247, 7.971428, 17.485886)
+
+[node name="BriquePierreCoupe6" parent="Architecture/Sol/Terasses/Terasse" unique_id=469372513 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.049427, 13.221741, 12.492142)
+
+[node name="BriquePierreCoupe8" parent="Architecture/Sol/Terasses/Terasse" unique_id=252703111 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.049427, 16.697392, 17.698112)
+
+[node name="BriquePierreCoupe9" parent="Architecture/Sol/Terasses/Terasse" unique_id=35991949 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54.993786, 16.697392, 12.5750885)
+
+[node name="BriquePierre40" parent="Architecture/Sol/Terasses/Terasse" unique_id=765696507 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58.7162, 7.971428, 12.492714)
+
+[node name="BriquePierre41" parent="Architecture/Sol/Terasses/Terasse" unique_id=1931073507 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.876427, 11.464275, 12.492714)
+
+[node name="BriquePierre42" parent="Architecture/Sol/Terasses/Terasse" unique_id=1095472611 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58.60224, 11.464275, 17.39074)
+
+[node name="BriquePierre43" parent="Architecture/Sol/Terasses/Terasse" unique_id=683371189 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.675247, 7.971428, 17.485886)
+
+[node name="BriquePierreCoupe10" parent="Architecture/Sol/Terasses/Terasse" unique_id=1793730797 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.049427, 13.221741, 12.492142)
+
+[node name="BriquePierreCoupe11" parent="Architecture/Sol/Terasses/Terasse" unique_id=1886926548 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.049427, 16.697392, 17.698112)
+
+[node name="BriquePierreCoupe12" parent="Architecture/Sol/Terasses/Terasse" unique_id=1583999556 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54.993786, 16.697392, 12.5750885)
+
+[node name="BriquePierreCoupe7" parent="Architecture/Sol/Terasses/Terasse" unique_id=445773216 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54.643467, 13.221741, 17.537079)
+
+[node name="BriquePierre44" parent="Architecture/Sol/Terasses/Terasse" unique_id=842984982 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58.7162, 15.019489, 12.492714)
+
+[node name="BriquePierre45" parent="Architecture/Sol/Terasses/Terasse" unique_id=1537836067 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.876427, 18.512337, 12.492714)
+
+[node name="BriquePierre46" parent="Architecture/Sol/Terasses/Terasse" unique_id=1535104950 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58.60224, 18.512337, 17.39074)
+
+[node name="BriquePierre47" parent="Architecture/Sol/Terasses/Terasse" unique_id=833417811 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.675247, 15.019489, 17.485886)
+
+[node name="BriquePierreCoupe13" parent="Architecture/Sol/Terasses/Terasse" unique_id=695343339 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.049427, 20.269802, 12.492142)
+
+[node name="BriquePierreCoupe14" parent="Architecture/Sol/Terasses/Terasse" unique_id=408799110 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.049427, 23.745453, 17.698112)
+
+[node name="BriquePierreCoupe15" parent="Architecture/Sol/Terasses/Terasse" unique_id=1279828427 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54.993786, 23.745453, 12.5750885)
+
+[node name="BriquePierreCoupe16" parent="Architecture/Sol/Terasses/Terasse" unique_id=862905471 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54.643467, 20.269802, 17.537079)
+
+[node name="BriquePierre48" parent="Architecture/Sol/Terasses/Terasse" unique_id=145036574 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58.7162, 22.06755, 12.492714)
+
+[node name="BriquePierre49" parent="Architecture/Sol/Terasses/Terasse" unique_id=270006789 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.876427, 25.560396, 12.492714)
+
+[node name="BriquePierre50" parent="Architecture/Sol/Terasses/Terasse" unique_id=1225576153 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58.60224, 25.560396, 17.39074)
+
+[node name="BriquePierre51" parent="Architecture/Sol/Terasses/Terasse" unique_id=1671115374 instance=ExtResource("4_klhxk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.675247, 22.06755, 17.485886)
+
+[node name="BriquePierreCoupe17" parent="Architecture/Sol/Terasses/Terasse" unique_id=1561940010 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.049427, 27.317862, 12.492142)
+
+[node name="BriquePierreCoupe18" parent="Architecture/Sol/Terasses/Terasse" unique_id=2124092097 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.049427, 30.793512, 17.698112)
+
+[node name="BriquePierreCoupe19" parent="Architecture/Sol/Terasses/Terasse" unique_id=949919252 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54.993786, 30.793512, 12.5750885)
+
+[node name="BriquePierreCoupe20" parent="Architecture/Sol/Terasses/Terasse" unique_id=302045031 instance=ExtResource("5_8m85n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54.643467, 27.317862, 17.537079)
 
 [node name="Vegetation" type="Node3D" parent="." unique_id=1201194792]
 
