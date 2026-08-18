@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://n6fcbgt1dtef"]
+
+[ext_resource type="PackedScene" uid="uid://d2vp3kb6avy21" path="res://assets/models/BriquePierre.glb" id="1_jkxo1"]
+
+[node name="BriquePierre2" unique_id=1047912440 instance=ExtResource("1_jkxo1")]
