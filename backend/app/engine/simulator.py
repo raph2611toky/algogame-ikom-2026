@@ -77,12 +77,15 @@ class Simulator:
                 from_elevation=Rules.elevation(self.state, chest_from),
                 to_elevation=Rules.elevation(self.state, chest_to),
             )
-        elif chest_to in self.state.holes:
-            self.state.lost_chests += 1
-            self._event(events, 'CHEST_LOST', 'Un coffre tombe dans un trou et est perdu.', actor=actor, position=chest_to)
+        # FAQ 19/08: un Excavator peut DIG sur un bush; le trou reste présent
+        # mais le bush conserve sa fonction de cachette.  La falaise >=5 reste
+        # l'unique priorité supérieure, conformément à l'Addendum.
         elif chest_to in self.state.game_map.bushes:
             self.state.secured_chests += 1
             self._event(events, 'CHEST_SECURED', 'Un coffre est placé dans une cachette.', actor=actor, position=chest_to)
+        elif chest_to in self.state.holes:
+            self.state.lost_chests += 1
+            self._event(events, 'CHEST_LOST', 'Un coffre tombe dans un trou et est perdu.', actor=actor, position=chest_to)
         else:
             self.state.chests.add(chest_to)
             self._event(events, 'CHEST_PUSHED', "Un coffre est poussé d'une case.", actor=actor, position=chest_to)

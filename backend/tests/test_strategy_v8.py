@@ -23,7 +23,7 @@ o##t#tX
 
 
 def test_default_v9_still_improves_official_sample_while_v8_unit_tests_remain() -> None:
-    assert StrategyOptions().name == "portfolio_v12"
+    assert StrategyOptions().name == "portfolio_v13"
     response = SimulationService().simulate(
         map_text=OFFICIAL,
         mission_name="official-v8",

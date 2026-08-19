@@ -600,7 +600,10 @@ class AddendumAwareParallelPortfolioStrategy(ProgressiveParallelPortfolioStrateg
                     )
                     break
 
-                if destination in simulation.holes:
+                # FAQ: DIG on a bush keeps the bush as a hiding spot.  Therefore
+                # bush has priority over a co-located hole; cliff destruction was
+                # already checked above and remains stronger than both.
+                if destination in simulation.holes and destination not in simulation.game_map.bushes:
                     result = _MachineHazard(
                         machine_id,
                         100000,

@@ -34,7 +34,7 @@ def _ticks_heuristic(chest: Position, bush: Position) -> int:
 def _score_heuristic_units(chest: Position, bush: Position) -> int:
     return 7 * chest.manhattan(bush)
 
-def plan_chest_to_bush(state: GameState, hero_id: HeroId, chest: Position, bush: Position, *, max_expansions: int=50000, optimize_for_score: bool=False) -> ChestPlan | None:
+def plan_chest_to_bush(state: GameState, hero_id: HeroId, chest: Position, bush: Position, *, max_expansions: int=50000, optimize_for_score: bool=False, avoid_machine_push_destinations: bool=False) -> ChestPlan | None:
     if chest not in state.chests or bush not in state.game_map.bushes:
         return None
     cellules = state.game_map.height * state.game_map.width
@@ -86,7 +86,17 @@ def plan_chest_to_bush(state: GameState, hero_id: HeroId, chest: Position, bush:
                 continue
             if coffre_arrivee in autres_coffres:
                 continue
-            if coffre_arrivee in state.holes:
+            # A chest may be pushed into a hole by the rules, but a direct plan
+            # must never intentionally lose it.  FAQ exception: when DIG happened
+            # on a bush, the bush remains a valid hiding spot even though the same
+            # cell is also present in state.holes.
+            if coffre_arrivee in state.holes and coffre_arrivee not in state.game_map.bushes:
+                continue
+            # Optional strict mode for predictive strategies. Legacy planners keep
+            # their existing behavior because a currently occupied machine cell may
+            # be vacated before the planned PUSH executes. V13 opts into the strict
+            # mode when it wants a collision-free immediate route.
+            if avoid_machine_push_destinations and state.machine_at(coffre_arrivee) is not None:
                 continue
             if Rules.hero_elevation_reason(state, noeud.hero, noeud.chest) is not None:
                 continue

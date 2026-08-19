@@ -1,6 +1,6 @@
 # AlgoGames 2 - GDD Addendum support
 
-Backend version: **0.12.0**
+Backend version: **0.13.0**
 
 This release adds the second-week `elevation.txt` and machine Look Ahead rules without removing the historical `map.txt` mode or the older strategies.
 
@@ -110,3 +110,14 @@ V12 adds only addendum-aware meta reasoning:
 ## 8. PUSH stamina clarification
 
 The written original GDD and the new Addendum both state **5 stamina per chest PUSH**. A Discord FAQ message quoted during development says 10 in one example, which conflicts with both written documents. This backend therefore keeps 5, matching the Addendum's explicit "still deplete 5 points of stamina per step" rule. If AlgoMada publishes a newer written correction, change this single rule and its tests together.
+
+## 9. FAQ DIG sur bush + V13
+
+Clarification appliquée : si un Excavator déclenche DIG alors qu'il se trouve sur un bush, le trou est ajouté à l'état mais le bush reste présent et continue à cacher les coffres. Pour la destination d'un coffre, l'ordre de résolution est :
+
+1. destruction par falaise >=5 ;
+2. sécurisation par bush ;
+3. perte dans un trou ;
+4. déplacement normal.
+
+La version 0.13.0 ajoute `portfolio_v13`, documenté dans `docs/PORTFOLIO_V13.md`. V12 et les stratégies historiques restent disponibles et utilisent toujours le même moteur de règles Addendum.

@@ -44,7 +44,7 @@ async def simulate_upload(
     file: Annotated[UploadFile, File(..., description='Fichier map.txt UTF-8 à simuler.')],
     elevation_file: Annotated[UploadFile | None, File(description='Fichier elevation.txt UTF-8 optionnel.')] = None,
     name: Annotated[str, Form(description='Nom de mission renvoyé à Godot.')] = 'mission',
-    strategy_json: Annotated[str | None, Form(description='JSON optionnel de StrategyOptions. Exemple: {"name":"portfolio_v12","max_unlock_obstacles":20}')] = None,
+    strategy_json: Annotated[str | None, Form(description='JSON optionnel de StrategyOptions. Exemple: {"name":"portfolio_v13","max_unlock_obstacles":20}')] = None,
 ) -> SimulationResponse:
     map_text = await _read_utf8_upload(file, label='map.txt')
     elevation_text = await _read_utf8_upload(elevation_file, label='elevation.txt') if elevation_file is not None else None

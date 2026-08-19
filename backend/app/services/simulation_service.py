@@ -19,6 +19,7 @@ from app.engine.strategy_v9 import StrategicRelayPortfolioStrategy
 from app.engine.strategy_v10 import OpportunityCommittedPortfolioStrategy
 from app.engine.strategy_v11 import StrictPriorityPortfolioStrategy
 from app.engine.strategy_v12 import AddendumAwareParallelPortfolioStrategy
+from app.engine.strategy_v13 import PredictiveGlobalPortfolioStrategy
 from app.engine.result_optimizer import trim_to_best_score_prefix
 from app.schemas.simulation import SimulationResponse, StrategyOptions
 
@@ -203,6 +204,62 @@ class SimulationService:
         )
         return Simulator(etat).run_strategy(strategie)
 
+    def _run_portfolio_v13(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        """Predictive competition portfolio used as the default.
+
+        Official evaluation maps are documented as at most roughly double the
+        reference map (10x14 = 140 cells).  On that envelope we can afford a
+        deterministic portfolio of several strong trajectories and keep the one
+        with the best *actual* score under the same Simulator.  Above that
+        envelope V13 deliberately switches to the bounded scalable strategy so a
+        user-supplied large map cannot trigger unbounded combinatorial planning.
+        """
+        cells = game_map.height * game_map.width
+        if self._is_stress_map(game_map) or cells > 160:
+            state = MapParser.build_initial_state(game_map)
+            strategy = ScalableStrategy(
+                max_stones_per_hero=min(12, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(6, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(16, min(48, options.stuck_end_threshold * 4)),
+                max_ticks=min(game_map.time_limit, max(options.scalable_max_ticks, 500)),
+            )
+            return trim_to_best_score_prefix(
+                Simulator(state).run_strategy(strategy),
+                time_limit=game_map.time_limit,
+            )
+
+        unlock_checks = min(72, max(24, options.max_unlock_obstacles * 3))
+        common = dict(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(24, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(36, options.stuck_end_threshold * 4),
+            max_unlock_checks=unlock_checks,
+        )
+
+        # Keep the portfolio deliberately compact. V12 already contains its own
+        # proven fallback, while V10 and V8 provide useful independent trajectories.
+        # This gives diversity without the pathological runtime of running every
+        # historical strategy on obstacle-dense 10x14 maps.
+        factories = [
+            lambda: PredictiveGlobalPortfolioStrategy(planning_bias='score', **common),
+            lambda: PredictiveGlobalPortfolioStrategy(planning_bias='balanced', **common),
+            lambda: PredictiveGlobalPortfolioStrategy(planning_bias='time', **common),
+            lambda: StaminaAwareCollaborativePortfolioStrategy(**common),
+        ]
+
+        results: list[SimulationResult] = []
+        for factory in factories:
+            state = MapParser.build_initial_state(game_map)
+            result = Simulator(state).run_strategy(factory())
+            results.append(trim_to_best_score_prefix(result, time_limit=game_map.time_limit))
+
+        # Include the exact V12 service result (including its proven fallback), not
+        # just a raw V12 instance. This makes V13 monotonic with respect to V12 on
+        # every evaluation-sized map under the same rules engine.
+        results.append(self._run_portfolio_v12(game_map, options))
+        return max(results, key=self._result_rank)
+
+
     def _run_portfolio_v12(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
         if self._is_stress_map(game_map):
             return self._run_portfolio_v10(game_map, options)
@@ -344,7 +401,9 @@ class SimulationService:
 
     def simulate(self, *, map_text: str, elevation_text: str | None = None, mission_name: str, strategy_options: StrategyOptions) -> SimulationResponse:
         carte_jeu = MapParser.parse(map_text, elevation_text=elevation_text)
-        if strategy_options.name == 'portfolio_v12':
+        if strategy_options.name == 'portfolio_v13':
+            resultat = self._run_portfolio_v13(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v12':
             resultat = self._run_portfolio_v12(carte_jeu, strategy_options)
         elif strategy_options.name == 'portfolio_v11':
             resultat = self._run_portfolio_v11(carte_jeu, strategy_options)

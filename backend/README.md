@@ -193,19 +193,35 @@ Le moteur implémente notamment :
 - score, snapshots, replay et `actions.txt`.
 
 
-## IA : `portfolio_v12` par défaut
+## IA : `portfolio_v13` par défaut
 
-`portfolio_v12` **n'écrase pas le cœur algorithmique existant**. Il hérite de la pile progressive V11/V10/V9/V8 et ajoute seulement l'adaptation au second-week addendum : raisonnement de relocation basé sur le Look Ahead officiel, prédiction des risques de coffre avec élévation/falaise et un échappement conjoint borné lorsque deux machines hackées se bloquent réellement à cause du nouveau périmètre de collision.
+`portfolio_v13` **conserve les mécaniques déjà validées** et ajoute une couche de décision globale/prédictive au-dessus de V12. Le moteur de règles reste l'unique source de vérité; V13 améliore surtout le choix des objectifs, routes et machines.
 
-Les stratégies V8, V9, V10 et V11 restent inchangées et sélectionnables pour comparaison. Toutes les stratégies, anciennes comme nouvelles, passent toutefois par le **même moteur de règles courant** : choisir V10 ne désactive donc ni l'élévation ni le Look Ahead officiel.
+Principales améliorations :
 
-Le catalogue dynamique reste disponible via `GET /api/v1/strategies`. Voir `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md` et `docs/VERIFICATION_V0.12.0.md`.
+- comparaison des routes avec la vraie perte de score (`2 × ticks + stamina + batterie`) plutôt qu'avec Manhattan ou le temps seul;
+- graphe de déplacement naturellement dirigé par l'élévation : une descente possible ne suppose jamais que le retour soit possible;
+- estimation des tâches X/G avec `find_score_path` + le vrai planner machine, donc détours, rotations, batterie, élévation et Look Ahead sont intégrés;
+- analyse complète `déblocage -> route coffre -> cachette`, bonus pour obstacles partagés et pierres récoltées sur le chemin;
+- prévision des dangers autonomes par copie de l'état + **Simulator de production**, afin que les autres machines bougent aussi pendant le forecast;
+- validation temporelle des micro-plans d'une machine déjà hackée pour détecter un Look Ahead qui deviendrait bloquant au second tick;
+- plans directs V13 conservateurs vis-à-vis d'une machine actuellement derrière le coffre, sans changer le comportement des anciennes stratégies;
+- arrêt immédiat lorsque les objectifs sont terminés, même si un ancien micro-plan machine est encore mémorisé;
+- portfolio final borné sur les cartes d'évaluation : trois biais V13 (`score`, `balanced`, `time`) + V12 + V8, tous rejoués sous le **même simulateur**, puis sélection du meilleur résultat réel;
+- au-delà de 160 cellules, bascule vers `scalable_v1` pour éviter un emballement combinatoire sur des cartes utilisateur hors enveloppe d'évaluation.
+
+La FAQ `DIG sur bush` est aussi prise en compte : le trou reste présent, mais le bush reste une cachette; seule une chute de coffre de 5 niveaux ou plus garde une priorité supérieure.
+
+Les stratégies V8 à V12 restent sélectionnables pour comparaison. Toutes utilisent toujours le même moteur de règles courant : choisir une ancienne stratégie ne désactive ni l'élévation ni le Look Ahead officiel.
+
+Le catalogue dynamique reste disponible via `GET /api/v1/strategies`. Voir `docs/PORTFOLIO_V13.md`, `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md` et `docs/VERIFICATION_V0.13.0.md`.
 
 ## IA historique : `portfolio_v9`
 
 Le catalogue est dynamique via `GET /api/v1/strategies`. Le frontend 2D peut donc choisir une stratégie sans modification de code côté menu.
 
 ```text
+portfolio_v13  global/predictif, score+elevation-aware, portfolio vérifié
 portfolio_v12  second-week, cœur v11/v10 préservé + méta-règles Addendum
 portfolio_v11  parallélisme progressif par rôles
 portfolio_v10  opportunités + micro-plans + protection coffres
@@ -332,7 +348,9 @@ La suite vérifie notamment :
 - `docs/API_CONTRACT.md` : contrat Godot ↔ FastAPI.
 - `docs/GDD_INTERPRETATIONS.md` : ambiguïtés du GDD documentées explicitement.
 - `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md` : implémentation du second-week addendum et compatibilité legacy.
-- `docs/VERIFICATION_V0.12.0.md` : matrice de tests et benchmarks vérifiés pour cette version.
+- `docs/PORTFOLIO_V13.md` : architecture de la stratégie globale/prédictive.
+- `docs/VERIFICATION_V0.13.0.md` : matrice de tests et vérifications de cette version.
+- `docs/VERIFICATION_V0.12.0.md` : historique de vérification de la version précédente.
 
 
 ## Intégration Godot 2D

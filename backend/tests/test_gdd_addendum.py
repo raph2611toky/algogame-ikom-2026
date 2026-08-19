@@ -563,3 +563,61 @@ def test_direct_chest_six_cell_geometry_matches_official_facing_left_diagram() -
     first_three, extra_three = Rules.machine_chest_lookahead_positions(g)
     assert set(first_three) == {Position(0, 2), Position(1, 1), Position(2, 2)}
     assert set(extra_three) == {Position(0, 1), Position(1, 0), Position(2, 1)}
+
+
+def test_faq_excavator_dig_on_bush_keeps_bush_as_chest_hiding_spot() -> None:
+    # X starts on @ and is due to DIG immediately. The bush must remain usable
+    # even though the same cell is then also a hole.
+    state = MapParser.build_initial_state(MapParser.parse('2 5 30\nX...M\nF..*@\n'))
+    x = state.machines['X1']
+    bush = Position(0, 0)
+    # Move the static bush to X's current cell for the edge-case state while
+    # keeping a second row for F/M and chest pushing setup.
+    state.game_map.bushes.clear()
+    state.game_map.bushes.add(bush)
+    x.steps_since_dig = 5
+    sim = Simulator(state)
+    sim.step(waits())
+    assert bush in state.holes
+    assert bush in state.game_map.bushes
+
+    # Put a chest immediately to the right and F on its right side, then push
+    # LEFT into the co-located hole+bush. Bush wins over hole; only a >=5 cliff
+    # would destroy it before the hiding rule.
+    state.chests = {Position(0, 1)}
+    # The excavator may leave the dug bush afterwards; move it away so the
+    # chest-push test isolates the hole+bush destination priority.
+    x.position = Position(1, 4)
+    f = state.heroes[HeroId.IKOTOFOSA]
+    f.position = Position(0, 2)
+    before_lost = state.lost_chests
+    before_secured = state.secured_chests
+    rec = sim.step({HeroId.IKOTOFOSA: HeroAction.PUSH_LEFT, HeroId.IMAHAKI: HeroAction.WAIT})
+    assert rec.effective_actions[HeroId.IKOTOFOSA] == HeroAction.PUSH_LEFT
+    assert state.secured_chests == before_secured + 1
+    assert state.lost_chests == before_lost
+    assert Position(0, 1) not in state.chests
+
+
+def test_direct_chest_planner_accepts_bush_that_is_also_a_hole() -> None:
+    state = MapParser.build_initial_state(MapParser.parse('2 5 30\nF*.@M\n.....\n'))
+    bush = Position(0, 3)
+    state.holes.add(bush)
+    plan = plan_chest_to_bush(state, HeroId.IKOTOFOSA, Position(0, 1), bush, optimize_for_score=True)
+    assert plan is not None
+    assert plan.actions[-1] == HeroAction.PUSH_RIGHT
+
+
+def test_direct_chest_planner_rejects_push_destination_occupied_by_machine() -> None:
+    state = MapParser.build_initial_state(MapParser.parse('2 6 30\nF*X.@M\n......\n'))
+    # The only straight push starts into X, so the planner must not return an
+    # optimistic direct plan that runtime would coerce to WAIT.
+    plan = plan_chest_to_bush(
+        state,
+        HeroId.IKOTOFOSA,
+        Position(0, 1),
+        Position(0, 4),
+        optimize_for_score=True,
+        avoid_machine_push_destinations=True,
+    )
+    assert plan is None or plan.actions[0] != HeroAction.PUSH_RIGHT
