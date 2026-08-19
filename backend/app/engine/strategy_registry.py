@@ -21,9 +21,9 @@ class StrategyDescriptor:
 STRATEGIES: tuple[StrategyDescriptor, ...] = (
     StrategyDescriptor(
         "portfolio_v12",
-        "Portfolio v12 — GDD addendum + elevation + parallelisme",
+        "Portfolio v12 — ScoreMax adaptatif + GDD addendum",
         "portfolio",
-        "Second-week strategy: conserve les fichiers/coeurs v8-v11, utilise le look-ahead officiel dans les relocalisations et anticipe les risques de coffres lies a l elevation/falaises.",
+        "Strategie ScoreMax recommandee: coeur v11/v10/v9/v8 + elevation/look-ahead officiel, puis portefeuille borne de trajectoires complementaires (heuristic, v4, v10) sur cartes calculables; le meilleur score reel est conserve et les grandes cartes basculent vers un profil scalable borne.",
         True,
         True,
     ),

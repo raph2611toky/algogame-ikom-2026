@@ -18,7 +18,7 @@ from app.engine.strategy_v8 import StaminaAwareCollaborativePortfolioStrategy
 from app.engine.strategy_v9 import StrategicRelayPortfolioStrategy
 from app.engine.strategy_v10 import OpportunityCommittedPortfolioStrategy
 from app.engine.strategy_v11 import StrictPriorityPortfolioStrategy
-from app.engine.strategy_v12 import AddendumAwareParallelPortfolioStrategy
+from app.engine.strategy_v12 import AddendumAwareParallelPortfolioStrategy, scoremax_portfolio_policy
 from app.engine.result_optimizer import trim_to_best_score_prefix
 from app.schemas.simulation import SimulationResponse, StrategyOptions
 
@@ -203,9 +203,8 @@ class SimulationService:
         )
         return Simulator(etat).run_strategy(strategie)
 
-    def _run_portfolio_v12(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
-        if self._is_stress_map(game_map):
-            return self._run_portfolio_v10(game_map, options)
+    def _run_v12_core(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        """Run the addendum-aware V11/V10/V9/V8 behavioural core once."""
         etat = MapParser.build_initial_state(game_map)
         cells = game_map.height * game_map.width
         if cells <= 160:
@@ -221,17 +220,76 @@ class SimulationService:
             max_unlock_checks=unlock_checks,
         )
         resultat = Simulator(etat).run_strategy(strategie)
-        resultat = trim_to_best_score_prefix(resultat, time_limit=game_map.time_limit)
-        # V12 is a portfolio wrapper around the preserved V10/V11 core. The new
-        # official look-ahead can invalidate an old micro-plan even on a legacy
-        # flat map. If the latest candidate does not finish a small evaluation-
-        # sized map, compare the proven V6 trajectory under the SAME current
-        # simulator/rules and keep the actually higher-ranked result. This does
-        # not modify V6 or V10/V11 and never bypasses addendum rules.
-        if game_map.height * game_map.width <= 160 and resultat.final_snapshot.get('end_reason') != 'OBJECTIVES_FINISHED':
-            fallback = self._run_portfolio_v6(game_map, options)
-            resultat = max((resultat, fallback), key=self._result_rank)
-        return resultat
+        return trim_to_best_score_prefix(resultat, time_limit=game_map.time_limit)
+
+    def _run_v12_scalable(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        """Bounded stress profile used before the historical timeout cliff."""
+        etat = MapParser.build_initial_state(game_map)
+        strategie = ScalableStrategy(
+            max_stones_per_hero=min(6, options.max_stones_per_hero),
+            max_chest_pairs_per_hero=min(2, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(10, min(28, options.stuck_end_threshold * 2)),
+            max_ticks=min(game_map.time_limit, max(180, options.scalable_max_ticks)),
+        )
+        resultat = Simulator(etat).run_strategy(strategie)
+        return trim_to_best_score_prefix(resultat, time_limit=game_map.time_limit)
+
+    def _run_v12_heuristic(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        etat = MapParser.build_initial_state(game_map)
+        strategie = HeuristicStrategy(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(12, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(10, options.stuck_end_threshold),
+        )
+        resultat = Simulator(etat).run_strategy(strategie)
+        return trim_to_best_score_prefix(resultat, time_limit=game_map.time_limit)
+
+    def _run_portfolio_v12(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        """Score-max supervisor over a bounded set of complementary strategies.
+
+        This is deliberately *not* action-level voting.  Mixing first actions from
+        independent planners caused oscillations in earlier experiments.  Instead,
+        each selected candidate runs a complete deterministic trajectory under the
+        same simulator/rules, every trajectory is peak-trimmed, and V12 returns the
+        one with the highest official score (then chest/stone/resource/time tie
+        breakers via ``_result_rank``).
+
+        On the small/medium envelope where several candidates are selected this
+        gives a concrete dominance property: V12 cannot score below any candidate
+        that completed successfully in that ensemble.
+        """
+        policy = scoremax_portfolio_policy(game_map)
+        if policy.stress_mode:
+            return self._run_v12_scalable(game_map, options)
+
+        resultats: list[SimulationResult] = []
+        for candidate in policy.candidates:
+            try:
+                if candidate == "v12_core":
+                    result = self._run_v12_core(game_map, options)
+                elif candidate == "heuristic":
+                    result = self._run_v12_heuristic(game_map, options)
+                elif candidate == "v4":
+                    result = self._run_portfolio_v4(game_map, options)
+                    result = trim_to_best_score_prefix(result, time_limit=game_map.time_limit)
+                elif candidate == "v10":
+                    result = self._run_portfolio_v10(game_map, options)
+                elif candidate == "scalable":
+                    result = self._run_v12_scalable(game_map, options)
+                else:
+                    continue
+            except Exception:
+                # A score-max portfolio must remain usable if an optional legacy
+                # probe rejects an edge case. The V12 core is first and is the
+                # authoritative fallback; if it itself failed, re-raise below.
+                if candidate == "v12_core" and not resultats:
+                    raise
+                continue
+            resultats.append(result)
+
+        if not resultats:
+            return self._run_v12_core(game_map, options)
+        return max(resultats, key=self._result_rank)
 
 
     def _run_portfolio_v11(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:

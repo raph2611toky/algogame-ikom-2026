@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from app.domain.enums import HeroId, Orientation
-from app.domain.models import Position
+from app.domain.enums import HeroId, MachineKind, Orientation
+from app.domain.models import GameMap, MachineState, Position
 from app.engine.map_parser import MapParser
 from app.engine.simulator import Simulator
 from app.engine.strategy_v11 import ProgressiveParallelPortfolioStrategy
-from app.engine.strategy_v12 import AddendumAwareParallelPortfolioStrategy
+from app.engine.strategy_v12 import AddendumAwareParallelPortfolioStrategy, scoremax_portfolio_policy
 
 
 def test_v12_keeps_v11_as_its_direct_parent() -> None:
@@ -180,3 +180,104 @@ def test_v12_joint_escape_resolves_real_side_lookahead_standoff_without_touching
             (Position(14, 9),),
         )
     )
+
+
+def _policy_map(
+    *,
+    height: int,
+    width: int,
+    chests: int = 1,
+    bushes: int = 1,
+    stones: int = 2,
+    holes: int = 0,
+    trees: int = 0,
+    machines: tuple[MachineKind, ...] = (),
+) -> GameMap:
+    points = [Position(r, c) for r in range(height) for c in range(width)]
+    cursor = 0
+
+    def take(n: int) -> set[Position]:
+        nonlocal cursor
+        out = set(points[cursor:cursor + n])
+        cursor += n
+        return out
+
+    chest_set = take(chests)
+    bush_set = take(bushes)
+    stone_set = take(stones)
+    hole_set = take(holes)
+    tree_set = take(trees)
+    machine_states = []
+    for index, kind in enumerate(machines, start=1):
+        pos = points[cursor]
+        cursor += 1
+        machine_states.append(
+            MachineState(
+                id=("X" if kind == MachineKind.EXCAVATOR else "G") + str(index),
+                kind=kind,
+                position=pos,
+                orientation=(
+                    Orientation.FACING_LEFT
+                    if kind == MachineKind.EXCAVATOR
+                    else Orientation.FACING_RIGHT
+                ),
+            )
+        )
+    return GameMap(
+        height=height,
+        width=width,
+        time_limit=300,
+        rows=tuple("." * width for _ in range(height)),
+        bushes=bush_set,
+        stones=stone_set,
+        chests=chest_set,
+        holes=hole_set,
+        trees=tree_set,
+        initial_machines=machine_states,
+    )
+
+
+def test_v12_scoremax_policy_uses_four_non_redundant_candidates_on_small_maps() -> None:
+    game_map = _policy_map(
+        height=10,
+        width=20,
+        chests=2,
+        bushes=2,
+        stones=4,
+        machines=(MachineKind.EXCAVATOR, MachineKind.GRAPPLER),
+    )
+    policy = scoremax_portfolio_policy(game_map)
+    assert not policy.stress_mode
+    assert policy.candidates == ("v12_core", "heuristic", "v4", "v10")
+
+
+def test_v12_scoremax_policy_avoids_expensive_legacy_probes_on_dual_unlock_medium_map() -> None:
+    game_map = _policy_map(
+        height=13,
+        width=21,
+        chests=2,
+        bushes=2,
+        stones=5,
+        holes=1,
+        trees=1,
+        machines=(MachineKind.EXCAVATOR, MachineKind.GRAPPLER),
+    )
+    policy = scoremax_portfolio_policy(game_map)
+    assert policy.cells == 273
+    assert policy.structural_obstacles == 2
+    assert policy.candidates == ("v12_core",)
+
+
+def test_v12_scoremax_policy_switches_before_the_30x40_timeout_cliff() -> None:
+    game_map = _policy_map(
+        height=30,
+        width=40,
+        chests=6,
+        bushes=3,
+        stones=8,
+        machines=(MachineKind.EXCAVATOR, MachineKind.GRAPPLER),
+    )
+    policy = scoremax_portfolio_policy(game_map)
+    assert policy.cells == 1200
+    assert policy.stress_mode
+    assert policy.candidates == ("scalable",)

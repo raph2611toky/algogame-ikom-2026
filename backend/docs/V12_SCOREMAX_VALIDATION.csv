@@ -1,0 +1,16 @@
+testcase,score_v12_scoremax,chests_secured,stones_collected,remaining_time,observed_seconds,status
+23_fill_hole_gate_for_chest,362,1,2,161,21.987,completed
+24_cut_tree_gate_for_chest,403,1,3,185,21.873,completed
+25_deadline_chest_vs_stone_cluster,413,1,7,7,0.461,completed
+26_let_grappler_auto_secure_chest,395,1,4,102,0.298,completed
+27_machine_harvest_then_intercept,384,1,4,91,0.269,completed
+28_two_autonomous_machine_chest_lanes,530,2,4,101,8.013,completed
+29_stop_one_machine_let_other_score,526,2,4,107,8.982,completed
+30_fill_hole_before_long_push,379,1,3,159,0.943,completed
+31_cut_gate_reward_chamber,568,2,4,175,1.053,completed
+32_parallel_dual_machine_unlock,590,2,5,205,12.536,completed
+33_machine_buffer_corridor_treasure,373,1,2,160,0.088,completed
+34_do_not_hack_before_grappler_work,408,1,4,134,0.197,completed
+36_two_machine_stone_harvest_and_steal,544,1,9,172,0.639,completed
+38_random_seed_26138_12x16,529,2,4,118,4.355,completed
+20_large_sparse_30x40,612,2,0,475,36.584,completed_observed_before_process_timeout

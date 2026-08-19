@@ -16,11 +16,122 @@ from app.domain.enums import (
     MachineKind,
     Orientation,
 )
-from app.domain.models import GameState, Position
+from app.domain.models import GameMap, GameState, Position
 from app.engine.machine_planner import MachineControlPlan, plan_machine_to_position
 from app.engine.rules import Rules
 from app.engine.strategy_v10 import _MachineHazard
 from app.engine.strategy_v11 import ProgressiveParallelPortfolioStrategy
+
+
+@dataclass(frozen=True, slots=True)
+class ScoreMaxPortfolioPolicy:
+    """Execution policy for the V12 score-max supervisor.
+
+    V12 deliberately keeps the *behavioural* core deterministic and uses a
+    second layer only when the map is small enough for meaningful portfolio
+    diversity.  The supervisor never mixes actions from incompatible plans:
+    each candidate is simulated independently by the official engine and the
+    trajectory with the highest real score is retained.
+
+    ``candidates`` contains symbolic candidate names understood by
+    ``SimulationService._run_portfolio_v12``.  Keeping the policy here makes
+    the strategy decision testable without coupling the engine to FastAPI.
+    """
+
+    candidates: tuple[str, ...]
+    cells: int
+    objective_pairs: int
+    structural_obstacles: int
+    machine_count: int
+    stress_mode: bool = False
+
+
+def scoremax_portfolio_policy(game_map: GameMap) -> ScoreMaxPortfolioPolicy:
+    """Choose a bounded set of *non-redundant* historical strengths for V12.
+
+    Benchmark analysis showed that four behaviours cover the observed score
+    winners particularly well:
+
+    - ``v12_core``: V11 parallel roles + V10 opportunities/hazards + V9/V8
+      stamina/handoff + the official elevation/look-ahead addendum;
+    - ``heuristic``: direct, low-overhead routes and useful autonomous-machine
+      timing (notably "do not hack too early" cases);
+    - ``v4``: chest-first/delegation behaviour that is strong when autonomous
+      machines can score before the heroes reach them;
+    - ``v10``: conservative opportunity commitments and machine-risk handling
+      when parallel V11 choices are not the best trade-off.
+
+    Running every historical version is both redundant and dangerous on the
+    exact maps that exposed the old timeout problem.  The policy therefore
+    expands the portfolio only while the map remains inside a bounded planning
+    envelope.  Large/stress maps use the explicitly bounded scalable profile.
+    """
+
+    cells = game_map.height * game_map.width
+    machine_count = len(game_map.initial_machines)
+    chests = len(game_map.chests)
+    bushes = len(game_map.bushes)
+    structural_obstacles = len(game_map.holes) + len(game_map.trees)
+    objective_pairs = chests * max(1, bushes)
+
+    # The previous benchmark's first hard timeout was already at 30x40=1200
+    # cells.  Switch much earlier than the historical 2500-cell threshold when
+    # the combinatorial objective/machine load is also high.
+    stress_mode = (
+        cells >= 700
+        or machine_count >= 9
+        or len(game_map.stones) >= 48
+        or objective_pairs >= 40
+    )
+    if stress_mode:
+        return ScoreMaxPortfolioPolicy(
+            candidates=("scalable",),
+            cells=cells,
+            objective_pairs=objective_pairs,
+            structural_obstacles=structural_obstacles,
+            machine_count=machine_count,
+            stress_mode=True,
+        )
+
+    candidates: list[str] = ["v12_core"]
+
+    # Small maps are exactly where the old strategies are cheap enough that an
+    # empirical score-max portfolio is superior to trying to guess which local
+    # heuristic will win.  These four candidates form the non-redundant core.
+    if cells <= 240 and machine_count <= 4 and objective_pairs <= 16:
+        candidates.extend(("heuristic", "v4", "v10"))
+
+    # Medium maps with *no structural unlock chain* are still safe for the two
+    # complementary cheap/direct probes.  This captures autonomous chest/stone
+    # delegation without triggering the expensive double-unlock search that made
+    # older portfolios explode on maps such as the dual X+G dependency case.
+    elif (
+        cells <= 320
+        and structural_obstacles == 0
+        and machine_count <= 2
+        and chests <= 3
+        and len(game_map.stones) <= 12
+    ):
+        candidates.extend(("heuristic", "v4"))
+
+    # A single-type unlock on a medium map can benefit from the heuristic probe
+    # without paying for another complete V10 opportunity search.
+    elif (
+        cells <= 300
+        and structural_obstacles <= 1
+        and machine_count <= 2
+        and objective_pairs <= 8
+    ):
+        candidates.append("heuristic")
+
+    return ScoreMaxPortfolioPolicy(
+        candidates=tuple(dict.fromkeys(candidates)),
+        cells=cells,
+        objective_pairs=objective_pairs,
+        structural_obstacles=structural_obstacles,
+        machine_count=machine_count,
+        stress_mode=False,
+    )
 
 
 @dataclass(slots=True)

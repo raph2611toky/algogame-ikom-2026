@@ -13,7 +13,7 @@ class MissionInput(APIModel):
     model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP, 'elevation_text': OFFICIAL_SAMPLE_ELEVATION}}}
 
 class StrategyOptions(APIModel):
-    name: Literal['portfolio_v12', 'portfolio_v11', 'portfolio_v10', 'portfolio_v9', 'portfolio_v8', 'portfolio_v7', 'portfolio_v6', 'portfolio_v5', 'portfolio_v4', 'portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v12', description='portfolio_v12 est le profil second-week: coeur v10/v11 conserve, regles elevation + look-ahead officiel et protections associees. Les anciennes strategies restent disponibles.')
+    name: Literal['portfolio_v12', 'portfolio_v11', 'portfolio_v10', 'portfolio_v9', 'portfolio_v8', 'portfolio_v7', 'portfolio_v6', 'portfolio_v5', 'portfolio_v4', 'portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v12', description='portfolio_v12 est le profil ScoreMax: coeur v11/v10/v9/v8 + addendum elevation/look-ahead, complete sur les cartes calculables par des trajectoires heuristic/v4/v10 independantes dont le meilleur score reel est conserve; stress maps => profil scalable borne.')
     max_stones_per_hero: int = Field(default=16, ge=1, le=100)
     max_chest_pairs_per_hero: int = Field(default=12, ge=1, le=100)
     max_unlock_obstacles: int = Field(default=20, ge=1, le=100, description='Nombre maximal de trous/arbres candidats analysés pour leur valeur de déblocage.')
