@@ -8,10 +8,13 @@ from app.engine.actions_parser import ActionsFormatError, parse_actions_text
 from app.engine.map_parser import MapFormatError, MapParser
 from app.schemas.simulation import ReplayRequest, ReplayTextRequest, SimulationRequest, SimulationResponse, StrategyOptions
 from app.services.simulation_service import SimulationNotFound, simulation_service
+
 router = APIRouter(prefix='/simulations', tags=['simulations'])
+
 
 def _handle_domain_error(exc: Exception) -> HTTPException:
     return HTTPException(status_code=422, detail=str(exc))
+
 
 async def _read_utf8_upload(file: UploadFile, *, label: str) -> str:
     raw = await file.read(settings.max_upload_bytes + 1)
@@ -22,49 +25,95 @@ async def _read_utf8_upload(file: UploadFile, *, label: str) -> str:
     except UnicodeDecodeError as exc:
         raise HTTPException(status_code=422, detail=f'{label} doit être encodé en UTF-8.') from exc
 
-@router.post('', response_model=SimulationResponse, summary='Calculer une simulation IA depuis du JSON', description="Route principale Godot → FastAPI. Le backend valide map.txt, construit l'état, calcule les actions de F/M avec la stratégie choisie, exécute chaque tick dans le moteur de règles puis renvoie l'historique complet et actions.txt.", operation_id='simulate_mission')
+
+@router.post('', response_model=SimulationResponse, summary='Calculer une simulation IA depuis du JSON', description="Route principale Godot → FastAPI. elevation_text est optionnel; s il est absent, le moteur conserve le mode historique plat (elevation 0 partout).", operation_id='simulate_mission')
 def simulate(payload: SimulationRequest) -> SimulationResponse:
     try:
-        return simulation_service.simulate(map_text=payload.mission.map_text, mission_name=payload.mission.name, strategy_options=payload.strategy)
+        return simulation_service.simulate(
+            map_text=payload.mission.map_text,
+            elevation_text=payload.mission.elevation_text,
+            mission_name=payload.mission.name,
+            strategy_options=payload.strategy,
+        )
     except (MapFormatError, ValueError) as exc:
         raise _handle_domain_error(exc) from exc
 
-@router.post('/upload', response_model=SimulationResponse, summary='Calculer une simulation depuis map.txt', description='Équivalent multipart synchrone de `POST /simulations`, pratique pour les petites cartes. Pour les cartes complexes, préférer `POST /simulation-jobs/upload`: il répond immédiatement avec un job_id et évite de garder Swagger/Godot bloqué pendant le calcul. Dans Swagger `/docs`, `file` reste un vrai sélecteur de fichier (`type: file`) et `name`/`strategy_json` sont des paramètres `formData`, sans bloc Request Body.', operation_id='simulate_uploaded_map')
-async def simulate_upload(file: Annotated[UploadFile, File(..., description='Fichier map.txt UTF-8 à simuler.')], name: Annotated[str, Form(description='Nom de mission renvoyé à Godot.')]='mission', strategy_json: Annotated[str | None, Form(description='JSON optionnel de StrategyOptions. Exemple: {"name":"portfolio_v10","max_unlock_obstacles":20}')]=None) -> SimulationResponse:
+
+@router.post('/upload', response_model=SimulationResponse, summary='Calculer une simulation depuis map.txt + elevation.txt optionnel', description='Équivalent multipart synchrone de POST /simulations. elevation_file est facultatif et les anciennes intégrations qui envoient seulement map.txt continuent de fonctionner.', operation_id='simulate_uploaded_map')
+async def simulate_upload(
+    file: Annotated[UploadFile, File(..., description='Fichier map.txt UTF-8 à simuler.')],
+    elevation_file: Annotated[UploadFile | None, File(description='Fichier elevation.txt UTF-8 optionnel.')] = None,
+    name: Annotated[str, Form(description='Nom de mission renvoyé à Godot.')] = 'mission',
+    strategy_json: Annotated[str | None, Form(description='JSON optionnel de StrategyOptions. Exemple: {"name":"portfolio_v12","max_unlock_obstacles":20}')] = None,
+) -> SimulationResponse:
     map_text = await _read_utf8_upload(file, label='map.txt')
+    elevation_text = await _read_utf8_upload(elevation_file, label='elevation.txt') if elevation_file is not None else None
     try:
         strategy = StrategyOptions.model_validate_json(strategy_json) if strategy_json else StrategyOptions()
-        return simulation_service.simulate(map_text=map_text, mission_name=name or file.filename or 'mission', strategy_options=strategy)
+        return simulation_service.simulate(
+            map_text=map_text,
+            elevation_text=elevation_text,
+            mission_name=name or file.filename or 'mission',
+            strategy_options=strategy,
+        )
     except (MapFormatError, ValueError) as exc:
         raise _handle_domain_error(exc) from exc
 
-@router.post('/replay', response_model=SimulationResponse, summary="Rejouer une liste d'actions JSON", description="Exécute exactement les couples d'actions F/M fournis dans le moteur de règles. Les actions invalides deviennent WAIT conformément au GDD.", operation_id='replay_actions_json')
+
+@router.post('/replay', response_model=SimulationResponse, summary="Rejouer une liste d'actions JSON", description="Exécute exactement les couples d'actions F/M fournis dans le moteur de règles, avec elevation.txt si présent dans mission.elevation_text.", operation_id='replay_actions_json')
 def replay(payload: ReplayRequest) -> SimulationResponse:
     actions = [{HeroId.IKOTOFOSA: paire.F, HeroId.IMAHAKI: paire.M} for paire in payload.actions]
     try:
-        return simulation_service.replay(map_text=payload.mission.map_text, mission_name=payload.mission.name, actions=actions, stop_when_objectives_finished=payload.stop_when_objectives_finished)
+        return simulation_service.replay(
+            map_text=payload.mission.map_text,
+            elevation_text=payload.mission.elevation_text,
+            mission_name=payload.mission.name,
+            actions=actions,
+            stop_when_objectives_finished=payload.stop_when_objectives_finished,
+        )
     except (MapFormatError, ValueError) as exc:
         raise _handle_domain_error(exc) from exc
 
-@router.post('/replay-text', response_model=SimulationResponse, summary="Rejouer le texte d'un actions.txt", description='Valide le format `ACTION_F | ACTION_M`, exige `END_GAME`, puis rejoue les actions tick par tick sur la mission fournie.', operation_id='replay_actions_text')
+
+@router.post('/replay-text', response_model=SimulationResponse, summary="Rejouer le texte d'un actions.txt", description='Valide actions.txt puis rejoue les actions sur map.txt + elevation.txt optionnel.', operation_id='replay_actions_text')
 def replay_text(payload: ReplayTextRequest) -> SimulationResponse:
     try:
-        game_map = MapParser.parse(payload.mission.map_text)
+        game_map = MapParser.parse(payload.mission.map_text, elevation_text=payload.mission.elevation_text)
         actions = parse_actions_text(payload.actions_text, time_limit=game_map.time_limit)
-        return simulation_service.replay(map_text=payload.mission.map_text, mission_name=payload.mission.name, actions=actions)
+        return simulation_service.replay(
+            map_text=payload.mission.map_text,
+            elevation_text=payload.mission.elevation_text,
+            mission_name=payload.mission.name,
+            actions=actions,
+        )
     except (MapFormatError, ActionsFormatError, ValueError) as exc:
         raise _handle_domain_error(exc) from exc
 
-@router.post('/replay-upload', response_model=SimulationResponse, summary='Rejouer map.txt + actions.txt uploadés', description='Route multipart pratique pour les tests de compétition. Dans Swagger `/docs`, les deux fichiers et options sont des paramètres `formData` manuels.', operation_id='replay_uploaded_files')
-async def replay_upload(map_file: Annotated[UploadFile, File(..., description='Fichier map.txt UTF-8.')], actions_file: Annotated[UploadFile, File(..., description='Fichier actions.txt UTF-8 terminé par END_GAME.')], name: Annotated[str, Form(description='Nom de mission pour le résultat du replay.')]='replay', stop_when_objectives_finished: Annotated[bool, Form(description='Arrêter le replay dès que tous les objectifs sont terminés.')]=False) -> SimulationResponse:
+
+@router.post('/replay-upload', response_model=SimulationResponse, summary='Rejouer map.txt + actions.txt + elevation.txt optionnel', description='Route multipart de replay. elevation_file est facultatif pour rester compatible avec les anciennes maps.', operation_id='replay_uploaded_files')
+async def replay_upload(
+    map_file: Annotated[UploadFile, File(..., description='Fichier map.txt UTF-8.')],
+    actions_file: Annotated[UploadFile, File(..., description='Fichier actions.txt UTF-8 terminé par END_GAME.')],
+    elevation_file: Annotated[UploadFile | None, File(description='Fichier elevation.txt UTF-8 optionnel.')] = None,
+    name: Annotated[str, Form(description='Nom de mission pour le résultat du replay.')] = 'replay',
+    stop_when_objectives_finished: Annotated[bool, Form(description='Arrêter le replay dès que tous les objectifs sont terminés.')] = False,
+) -> SimulationResponse:
     map_text = await _read_utf8_upload(map_file, label='map.txt')
     actions_text = await _read_utf8_upload(actions_file, label='actions.txt')
+    elevation_text = await _read_utf8_upload(elevation_file, label='elevation.txt') if elevation_file is not None else None
     try:
-        game_map = MapParser.parse(map_text)
+        game_map = MapParser.parse(map_text, elevation_text=elevation_text)
         actions = parse_actions_text(actions_text, time_limit=game_map.time_limit)
-        return simulation_service.replay(map_text=map_text, mission_name=name or map_file.filename or 'replay', actions=actions, stop_when_objectives_finished=stop_when_objectives_finished)
+        return simulation_service.replay(
+            map_text=map_text,
+            elevation_text=elevation_text,
+            mission_name=name or map_file.filename or 'replay',
+            actions=actions,
+            stop_when_objectives_finished=stop_when_objectives_finished,
+        )
     except (MapFormatError, ActionsFormatError, ValueError) as exc:
         raise _handle_domain_error(exc) from exc
+
 
 @router.get('/{simulation_id}', response_model=SimulationResponse, summary='Relire une simulation en mémoire', description='Retourne exactement le même objet SimulationResponse que la route de calcul.', operation_id='get_simulation')
 def get_simulation(simulation_id: str) -> SimulationResponse:
@@ -72,6 +121,7 @@ def get_simulation(simulation_id: str) -> SimulationResponse:
         return simulation_service.get(simulation_id)
     except SimulationNotFound as exc:
         raise HTTPException(status_code=404, detail='Simulation inconnue.') from exc
+
 
 @router.get('/{simulation_id}/actions.txt', response_class=PlainTextResponse, summary='Télécharger actions.txt', description="Retourne uniquement le fichier officiel d'actions: une paire F|M par tick, puis END_GAME.", operation_id='download_actions_txt', responses={200: {'description': 'Fichier actions.txt généré par la simulation.', 'content': {'text/plain': {'schema': {'type': 'string'}, 'example': 'LEFT | LEFT\nUP | LEFT\nRIGHT | HACK\nEND_GAME\n'}}}, 404: {'description': 'Simulation inconnue.'}})
 def get_actions_txt(simulation_id: str) -> PlainTextResponse:

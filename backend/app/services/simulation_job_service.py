@@ -21,6 +21,7 @@ class _Job:
     job_id: str
     mission_name: str
     map_text: str
+    elevation_text: str | None
     strategy: StrategyOptions
     status: str = "queued"
     created_at: str = ""
@@ -46,11 +47,12 @@ class SimulationJobService:
         self._jobs: dict[str, _Job] = {}
         self._executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="kakafandodo-sim")
 
-    def submit(self, *, map_text: str, mission_name: str, strategy: StrategyOptions) -> SimulationJobStatus:
+    def submit(self, *, map_text: str, elevation_text: str | None = None, mission_name: str, strategy: StrategyOptions) -> SimulationJobStatus:
         job = _Job(
             job_id=str(uuid4()),
             mission_name=mission_name,
             map_text=map_text,
+            elevation_text=elevation_text,
             strategy=strategy.model_copy(deep=True),
             created_at=_iso_now(),
         )
@@ -68,6 +70,7 @@ class SimulationJobService:
         try:
             response = simulation_service.simulate(
                 map_text=job.map_text,
+                elevation_text=job.elevation_text,
                 mission_name=job.mission_name,
                 strategy_options=job.strategy,
             )

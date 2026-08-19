@@ -1,6 +1,6 @@
 [project]
 name = "kakafandodo-backend"
-version = "0.10.0"
+version = "0.12.0"
 description = "Local FastAPI simulation/AI backend for KAKAFANDODO - AlgoGames 2"
 requires-python = ">=3.11"
 dependencies = [

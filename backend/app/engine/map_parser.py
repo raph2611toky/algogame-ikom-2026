@@ -6,17 +6,71 @@ from app.domain.models import GameMap, GameState, HeroState, MachineState, Posit
 class MapFormatError(ValueError):
     pass
 
+class ElevationFormatError(MapFormatError):
+    pass
+
 class MapParser:
     MAX_DIMENSION = 500
     MAX_CELLS = 100000
     MAX_TIME_LIMIT = 100000
 
-    @classmethod
-    def parse(cls, text: str) -> GameMap:
+    @staticmethod
+    def _normalize_lines(text: str, *, label: str) -> list[str]:
         if not isinstance(text, str) or not text.strip():
-            raise MapFormatError('Le contenu de map.txt est vide.')
+            raise MapFormatError(f'Le contenu de {label} est vide.')
         normalise = text.replace('\r\n', '\n').replace('\r', '\n').rstrip('\n')
-        lignes = normalise.split('\n')
+        if normalise.startswith('\ufeff'):
+            normalise = normalise[1:]
+        return normalise.split('\n')
+
+    @classmethod
+    def _parse_elevation(
+        cls,
+        elevation_text: str | None,
+        *,
+        height: int,
+        width: int,
+        rocks: set[Position],
+    ) -> tuple[tuple[tuple[int, ...], ...], bool]:
+        # Legacy maps remain perfectly flat and keep every previous route legal.
+        if elevation_text is None or not str(elevation_text).strip():
+            return tuple(tuple(0 for _ in range(width)) for _ in range(height)), False
+
+        raw_lines = cls._normalize_lines(elevation_text, label='elevation.txt')
+        if len(raw_lines) != height:
+            raise ElevationFormatError(
+                f'Nombre de lignes invalide dans elevation.txt: attendu {height}, reçu {len(raw_lines)}.'
+            )
+
+        rows: list[tuple[int, ...]] = []
+        for row_idx, raw in enumerate(raw_lines):
+            line = raw.strip()
+            if len(line) != width:
+                raise ElevationFormatError(
+                    f'Largeur invalide dans elevation.txt à la ligne {row_idx + 1}: attendu {width}, reçu {len(line)}.'
+                )
+            if not line.isdigit():
+                raise ElevationFormatError(
+                    f'elevation.txt doit contenir uniquement des chiffres 0..9 (ligne {row_idx + 1}).'
+                )
+            values = tuple(int(char) for char in line)
+            for col_idx, value in enumerate(values):
+                pos = Position(row_idx, col_idx)
+                if pos in rocks:
+                    if value != 0:
+                        raise ElevationFormatError(
+                            f'Le rocher en ({row_idx},{col_idx}) doit avoir une élévation 0, reçu {value}.'
+                        )
+                elif value == 0:
+                    raise ElevationFormatError(
+                        f'La cellule accessible ({row_idx},{col_idx}) doit avoir une élévation entre 1 et 9; 0 est réservé aux rochers.'
+                    )
+            rows.append(values)
+        return tuple(rows), True
+
+    @classmethod
+    def parse(cls, text: str, elevation_text: str | None = None) -> GameMap:
+        lignes = cls._normalize_lines(text, label='map.txt')
         if not lignes:
             raise MapFormatError('map.txt ne contient aucune ligne.')
         entete = lignes[0].strip().split()
@@ -90,7 +144,29 @@ class MapParser:
         manquants = [heros.value for heros in HeroId if heros not in positions_heros]
         if manquants:
             raise MapFormatError(f"Héros manquant(s): {', '.join(manquants)}.")
-        return GameMap(height=hauteur, width=largeur, time_limit=limite_temps, rows=tuple(lignes_carte), rocks=rochers, trees=arbres, holes=trous, bushes=cachettes, stones=pierres, chests=coffres, initial_hero_positions=positions_heros, initial_machines=machines)
+
+        elevations, has_elevation = cls._parse_elevation(
+            elevation_text,
+            height=hauteur,
+            width=largeur,
+            rocks=rochers,
+        )
+        return GameMap(
+            height=hauteur,
+            width=largeur,
+            time_limit=limite_temps,
+            rows=tuple(lignes_carte),
+            elevations=elevations,
+            has_elevation=has_elevation,
+            rocks=rochers,
+            trees=arbres,
+            holes=trous,
+            bushes=cachettes,
+            stones=pierres,
+            chests=coffres,
+            initial_hero_positions=positions_heros,
+            initial_machines=machines,
+        )
 
     @staticmethod
     def build_initial_state(game_map: GameMap) -> GameState:

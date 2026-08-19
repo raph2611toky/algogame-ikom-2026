@@ -66,7 +66,18 @@ class Simulator:
 
     def _apply_chest_destination(self, chest_from: Position, chest_to: Position, events: list[Event], actor: str) -> None:
         self.state.chests.discard(chest_from)
-        if chest_to in self.state.holes:
+        if Rules.chest_destroyed_by_cliff(self.state, chest_from, chest_to):
+            self.state.lost_chests += 1
+            self._event(
+                events,
+                'CHEST_DESTROYED_CLIFF',
+                'Un coffre chute de 5 niveaux ou plus et est détruit.',
+                actor=actor,
+                position=chest_to,
+                from_elevation=Rules.elevation(self.state, chest_from),
+                to_elevation=Rules.elevation(self.state, chest_to),
+            )
+        elif chest_to in self.state.holes:
             self.state.lost_chests += 1
             self._event(events, 'CHEST_LOST', 'Un coffre tombe dans un trou et est perdu.', actor=actor, position=chest_to)
         elif chest_to in self.state.game_map.bushes:
@@ -98,12 +109,20 @@ class Simulator:
         self._event(events, 'MACHINE_MOVE_BLOCKED', f'{machine.id} reste sur place.', actor=machine.id, position=machine.position, reason=reason)
 
     def _build_machine_intent(self, machine: MachineState, *, controlled: bool) -> tuple[MachineIntent | None, str | None]:
-        raison_buffer = Rules.machine_buffer_reason(self.state, machine)
-        if raison_buffer is not None:
-            return None, raison_buffer
+        # GDD Addendum: collision look-ahead is hardcoded and has priority over
+        # elevation checks, even for hacked machines.
+        lookahead_reason = Rules.machine_lookahead_reason(self.state, machine)
+        if lookahead_reason is not None:
+            return None, lookahead_reason
+
         cible = Rules.machine_forward(machine)
         if not Rules.machine_cell_passable(self.state, machine, cible):
+            if self.state.game_map.in_bounds(cible):
+                elevation_reason = Rules.machine_elevation_reason(self.state, machine.position, cible)
+                if elevation_reason is not None:
+                    return None, elevation_reason
             return None, 'terrain_blocked'
+
         coffre_depart: Position | None = None
         coffre_arrivee: Position | None = None
         if cible in self.state.chests:
@@ -118,6 +137,11 @@ class Simulator:
                 return None, 'chest_tree'
             if destination in self.state.chests:
                 return None, 'another_chest'
+            if self.state.machine_at(destination) is not None:
+                return None, 'machine_behind_chest'
+            elevation_reason = Rules.machine_chest_elevation_reason(self.state, cible, destination)
+            if elevation_reason is not None:
+                return None, elevation_reason
             coffre_depart = cible
             coffre_arrivee = destination
         return MachineIntent(machine_id=machine.id, target=cible, controlled=controlled, chest_from=coffre_depart, chest_to=coffre_arrivee), None
@@ -224,15 +248,26 @@ class Simulator:
         for id_machine, intention in machine_intents.items():
             if intention.chest_from is not None and intention.chest_to is not None:
                 acteurs_par_coffre[intention.chest_from].append((f'machine:{id_machine}', intention.chest_to))
+
         for acteurs in acteurs_par_coffre.values():
             destinations = {destination for _acteur, destination in acteurs}
             if len(destinations) <= 1:
                 continue
-            for acteur, _destination in acteurs:
-                if acteur.startswith('hero:'):
+            hero_entries = [(acteur, dest) for acteur, dest in acteurs if acteur.startswith('hero:')]
+            machine_entries = [(acteur, dest) for acteur, dest in acteurs if acteur.startswith('machine:')]
+            hero_destinations = {dest for _acteur, dest in hero_entries}
+            if len(hero_destinations) > 1:
+                for acteur, _dest in hero_entries:
                     heros_bloques[HeroId(acteur.split(':', 1)[1])] = 'opposite_chest_push'
-                else:
+            if hero_entries:
+                # Addendum / hero priority: a machine must yield to a hero push
+                # that would otherwise collide with the machine/chest movement.
+                for acteur, _dest in machine_entries:
+                    machines_bloquees[acteur.split(':', 1)[1]] = 'hero_chest_priority'
+            else:
+                for acteur, _dest in machine_entries:
                     machines_bloquees[acteur.split(':', 1)[1]] = 'opposite_chest_push'
+
         for id_heros, poussee in hero_pushes.items():
             if id_heros in heros_bloques or poussee.chest_to is None:
                 continue
@@ -240,8 +275,8 @@ class Simulator:
                 if intention.machine_id in machines_bloquees:
                     continue
                 if intention.target == poussee.chest_to and intention.chest_from != poussee.chest_from:
-                    heros_bloques[id_heros] = 'machine_crossing_chest_destination'
-                    break
+                    # Hero/chest gets the destination; machine yields.
+                    machines_bloquees[intention.machine_id] = 'hero_chest_destination_priority'
         return heros_bloques, machines_bloquees
 
     def _apply_pushes(self, hero_pushes: dict[HeroId, ChestPush], machine_intents: dict[str, MachineIntent], hero_blocked: dict[HeroId, str], machine_blocked: dict[str, str], effective: dict[HeroId, HeroAction], events: list[Event]) -> None:

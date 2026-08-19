@@ -1,22 +1,36 @@
 from __future__ import annotations
 from collections import deque
-from app.domain.enums import DIRECTION_VECTORS, Direction, MachineKind
+from app.domain.enums import DIRECTION_TO_ORIENTATION, DIRECTION_VECTORS, Direction, MachineKind
 from app.domain.models import GameState, MachineState, Position
+from app.engine.rules import Rules
 
-def _base_passable(state: GameState, machine: MachineState, pos: Position) -> bool:
+
+def _base_passable(state: GameState, machine: MachineState, current: Position, pos: Position, direction: Direction) -> bool:
     if not state.game_map.in_bounds(pos):
         return False
     if pos in state.game_map.rocks:
+        return False
+    if Rules.machine_elevation_reason(state, current, pos) is not None:
         return False
     if machine.kind == MachineKind.EXCAVATOR and pos in state.trees:
         return False
     if machine.kind == MachineKind.GRAPPLER and pos in state.holes:
         return False
-    if any((machine_locale.id != machine.id and machine_locale.position == pos for machine_locale in state.machines.values())):
-        return False
     if pos in state.chests:
         return False
+    # The static planner uses the same four-cell machine look-ahead as runtime.
+    # Heroes are intentionally ignored here because they can move and because
+    # normal machine movement may share a cell with a hero.
+    if Rules.machine_lookahead_reason(
+        state,
+        machine,
+        position=current,
+        orientation=DIRECTION_TO_ORIENTATION[direction],
+        check_heroes=False,
+    ) is not None:
+        return False
     return True
+
 
 def find_machine_path(state: GameState, machine: MachineState, goals: set[Position], *, max_expansions: int=100000) -> list[Position] | None:
     if machine.position in goals:
@@ -31,14 +45,7 @@ def find_machine_path(state: GameState, machine: MachineState, goals: set[Positi
         for direction in Direction:
             delta_ligne, delta_col = DIRECTION_VECTORS[direction]
             suivant = courant.moved(delta_ligne, delta_col)
-            if suivant in precedents or not _base_passable(state, machine, suivant):
-                continue
-            case_2 = suivant.moved(delta_ligne, delta_col)
-            case_3 = case_2.moved(delta_ligne, delta_col)
-            positions_machines = {autre.position for autre in state.machines.values() if autre.id != machine.id}
-            if case_2 in positions_machines:
-                continue
-            if case_3 in positions_machines and case_2 in state.chests:
+            if suivant in precedents or not _base_passable(state, machine, courant, suivant, direction):
                 continue
             precedents[suivant] = courant
             if suivant in goals:
@@ -55,6 +62,7 @@ def find_machine_path(state: GameState, machine: MachineState, goals: set[Positi
         courant = precedents[courant]
     chemin.reverse()
     return chemin
+
 
 def direction_between(a: Position, b: Position) -> Direction:
     delta_ligne = b.row - a.row

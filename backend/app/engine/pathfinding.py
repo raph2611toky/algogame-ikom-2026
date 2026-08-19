@@ -4,6 +4,7 @@ from heapq import heappop, heappush
 from itertools import count
 from app.domain.enums import DIRECTION_TO_MOVE_ACTION, DIRECTION_VECTORS, Direction, HeroAction, HeroId
 from app.domain.models import GameState, Position
+from app.engine.rules import Rules
 
 @dataclass(frozen=True, slots=True)
 class PathStep:
@@ -36,6 +37,8 @@ def hero_neighbors(state: GameState, hero_id: HeroId, position: Position) -> lis
                 continue
             if atterrissage in state.game_map.rocks or atterrissage in state.trees or atterrissage in state.holes:
                 continue
+            if Rules.hero_elevation_reason(state, position, atterrissage) is not None:
+                continue
             resultat.append(PathStep(DIRECTION_TO_MOVE_ACTION[direction], atterrissage, stamina_cost=10, special=True))
             continue
         if hero_id == HeroId.IMAHAKI and adjacent in state.trees:
@@ -44,11 +47,21 @@ def hero_neighbors(state: GameState, hero_id: HeroId, position: Position) -> lis
                 continue
             if atterrissage in state.game_map.rocks or atterrissage in state.trees or atterrissage in state.holes:
                 continue
+            if Rules.hero_elevation_reason(state, position, atterrissage) is not None:
+                continue
             resultat.append(PathStep(DIRECTION_TO_MOVE_ACTION[direction], atterrissage, stamina_cost=10, special=True))
             continue
         if adjacent in state.trees or adjacent in state.holes:
             continue
-        resultat.append(PathStep(DIRECTION_TO_MOVE_ACTION[direction], adjacent, stamina_cost=1))
+        if Rules.hero_elevation_reason(state, position, adjacent) is not None:
+            continue
+        resultat.append(
+            PathStep(
+                DIRECTION_TO_MOVE_ACTION[direction],
+                adjacent,
+                stamina_cost=Rules.hero_walk_stamina_cost(state, position, adjacent),
+            )
+        )
     return resultat
 
 def _heuristic(a: Position, b: Position) -> int:

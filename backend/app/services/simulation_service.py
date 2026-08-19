@@ -18,6 +18,7 @@ from app.engine.strategy_v8 import StaminaAwareCollaborativePortfolioStrategy
 from app.engine.strategy_v9 import StrategicRelayPortfolioStrategy
 from app.engine.strategy_v10 import OpportunityCommittedPortfolioStrategy
 from app.engine.strategy_v11 import StrictPriorityPortfolioStrategy
+from app.engine.strategy_v12 import AddendumAwareParallelPortfolioStrategy
 from app.engine.result_optimizer import trim_to_best_score_prefix
 from app.schemas.simulation import SimulationResponse, StrategyOptions
 
@@ -33,7 +34,15 @@ class SimulationService:
 
     @staticmethod
     def map_summary(game_map: GameMap) -> dict[str, object]:
-        return {'height': game_map.height, 'width': game_map.width, 'time_limit': game_map.time_limit, 'rows': list(game_map.rows), 'coordinate_system': {'origin': 'top-left', 'row_increases': 'down', 'col_increases': 'right'}}
+        return {
+            'height': game_map.height,
+            'width': game_map.width,
+            'time_limit': game_map.time_limit,
+            'rows': list(game_map.rows),
+            'elevation_rows': [''.join(str(value) for value in row) for row in game_map.elevations],
+            'has_elevation': game_map.has_elevation,
+            'coordinate_system': {'origin': 'top-left', 'row_increases': 'down', 'col_increases': 'right'},
+        }
 
     @staticmethod
     def _event_to_dict(event) -> dict[str, object]:
@@ -194,6 +203,37 @@ class SimulationService:
         )
         return Simulator(etat).run_strategy(strategie)
 
+    def _run_portfolio_v12(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            return self._run_portfolio_v10(game_map, options)
+        etat = MapParser.build_initial_state(game_map)
+        cells = game_map.height * game_map.width
+        if cells <= 160:
+            unlock_checks = min(64, max(20, options.max_unlock_obstacles * 2))
+        elif cells <= 400:
+            unlock_checks = min(24, max(12, options.max_unlock_obstacles))
+        else:
+            unlock_checks = min(18, max(10, options.max_unlock_obstacles // 2 + 8))
+        strategie = AddendumAwareParallelPortfolioStrategy(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(20, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(32, options.stuck_end_threshold * 4),
+            max_unlock_checks=unlock_checks,
+        )
+        resultat = Simulator(etat).run_strategy(strategie)
+        resultat = trim_to_best_score_prefix(resultat, time_limit=game_map.time_limit)
+        # V12 is a portfolio wrapper around the preserved V10/V11 core. The new
+        # official look-ahead can invalidate an old micro-plan even on a legacy
+        # flat map. If the latest candidate does not finish a small evaluation-
+        # sized map, compare the proven V6 trajectory under the SAME current
+        # simulator/rules and keep the actually higher-ranked result. This does
+        # not modify V6 or V10/V11 and never bypasses addendum rules.
+        if game_map.height * game_map.width <= 160 and resultat.final_snapshot.get('end_reason') != 'OBJECTIVES_FINISHED':
+            fallback = self._run_portfolio_v6(game_map, options)
+            resultat = max((resultat, fallback), key=self._result_rank)
+        return resultat
+
+
     def _run_portfolio_v11(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
         if self._is_stress_map(game_map):
             return self._run_portfolio_v10(game_map, options)
@@ -302,9 +342,11 @@ class SimulationService:
         return trim_to_best_score_prefix(resultat, time_limit=game_map.time_limit)
 
 
-    def simulate(self, *, map_text: str, mission_name: str, strategy_options: StrategyOptions) -> SimulationResponse:
-        carte_jeu = MapParser.parse(map_text)
-        if strategy_options.name == 'portfolio_v11':
+    def simulate(self, *, map_text: str, elevation_text: str | None = None, mission_name: str, strategy_options: StrategyOptions) -> SimulationResponse:
+        carte_jeu = MapParser.parse(map_text, elevation_text=elevation_text)
+        if strategy_options.name == 'portfolio_v12':
+            resultat = self._run_portfolio_v12(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v11':
             resultat = self._run_portfolio_v11(carte_jeu, strategy_options)
         elif strategy_options.name == 'portfolio_v10':
             resultat = self._run_portfolio_v10(carte_jeu, strategy_options)
@@ -340,8 +382,8 @@ class SimulationService:
         self._persist(reponse)
         return reponse
 
-    def replay(self, *, map_text: str, mission_name: str, actions: list[dict[HeroId, HeroAction]], stop_when_objectives_finished: bool=False) -> SimulationResponse:
-        carte_jeu = MapParser.parse(map_text)
+    def replay(self, *, map_text: str, elevation_text: str | None = None, mission_name: str, actions: list[dict[HeroId, HeroAction]], stop_when_objectives_finished: bool=False) -> SimulationResponse:
+        carte_jeu = MapParser.parse(map_text, elevation_text=elevation_text)
         if len(actions) > carte_jeu.time_limit:
             raise ValueError(f'Nombre de ticks {len(actions)} supérieur au TIME_LIMIT {carte_jeu.time_limit}.')
         etat = MapParser.build_initial_state(carte_jeu)

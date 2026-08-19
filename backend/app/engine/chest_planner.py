@@ -5,6 +5,7 @@ from itertools import count
 from app.domain.enums import DIRECTION_TO_PUSH_ACTION, DIRECTION_VECTORS, Direction, HeroAction, HeroId
 from app.domain.models import GameState, Position
 from app.engine.pathfinding import hero_neighbors
+from app.engine.rules import Rules
 from app.engine.score_pathfinding import score_cost_units
 
 @dataclass(frozen=True, slots=True)
@@ -86,6 +87,13 @@ def plan_chest_to_bush(state: GameState, hero_id: HeroId, chest: Position, bush:
             if coffre_arrivee in autres_coffres:
                 continue
             if coffre_arrivee in state.holes:
+                continue
+            if Rules.hero_elevation_reason(state, noeud.hero, noeud.chest) is not None:
+                continue
+            if Rules.hero_chest_elevation_reason(state, noeud.chest, coffre_arrivee) is not None:
+                continue
+            # A direct chest plan must never choose a cliff-destruction push.
+            if Rules.chest_destroyed_by_cliff(state, noeud.chest, coffre_arrivee):
                 continue
             action = DIRECTION_TO_PUSH_ACTION[direction]
             if coffre_arrivee == bush:

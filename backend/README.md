@@ -26,19 +26,34 @@ FastAPI garde son schéma OpenAPI 3.1 canonique dans `/openapi.json`. Pour respe
 
 Exemples :
 
-- `/api/v1/maps/upload` → `file` ;
-- `/api/v1/simulations/upload` → `file`, `name`, `strategy_json` ;
-- `/api/v1/simulation-jobs/upload` → `file`, `name`, `strategy_json` ;
-- `/api/v1/simulations/replay-upload` → `map_file`, `actions_file`, `name`, `stop_when_objectives_finished`.
+- `/api/v1/maps/upload` → `file`, `elevation_file` (optionnel) ;
+- `/api/v1/simulations/upload` → `file`, `elevation_file` (optionnel), `name`, `strategy_json` ;
+- `/api/v1/simulation-jobs/upload` → `file`, `elevation_file` (optionnel), `name`, `strategy_json` ;
+- `/api/v1/simulations/replay-upload` → `map_file`, `elevation_file` (optionnel), `actions_file`, `name`, `stop_when_objectives_finished`.
 
 Les modèles de réponse du Swagger sont les mêmes modèles Pydantic que ceux utilisés par les vues FastAPI.
 
 
-## Clarification machines — buffer AlgoMada
+## Second-week addendum — elevation + Look Ahead officiel
 
-Le moteur suit la clarification la plus récente du game runner : une machine conserve une case vide de marge devant elle lorsqu'une autre machine se trouve dans sa direction. `...G.X..` interdit donc le MOVE de `G`, même si `X` est orienté dans le même sens ou va lui-même bouger. Les convois ne sont plus autorisés.
+Le backend supporte désormais les deux formats de mission :
 
-Le motif coffre/machine utilise une marge plus large : dans `..G.*X`, avec les machines dirigées vers le coffre, les deux mouvements sont refusés. Les mêmes contrôles s'appliquent à `HACK_MOVE`; une machine hackée reste immobile sans rotation automatique et sans coût batterie si le déplacement violerait le buffer.
+- **historique** : `map.txt` seul ; le moteur crée une grille d'élévation interne à `0` partout et conserve les anciennes cartes ;
+- **second-week** : `map.txt` + `elevation.txt` ; les cellules accessibles ont une altitude `1..9`, les rochers `#` valent `0`.
+
+Le nouveau **Look Ahead** des machines est une règle globale du moteur et s'applique avec ou sans `elevation.txt`. Pour une machine orientée vers la droite, la géométrie clarifiée est :
+
+```text
+..3.
+.G12
+..4.
+```
+
+`1` est la destination, `2` la case deux cellules devant et `3/4` les deux cellules latérales autour de la destination. Une autre machine présente dans ce périmètre interdit le MOVE. Le contrôle est refait au deuxième tick du MOVE. Si la machine est autonome, elle annule puis tourne selon sa règle X/G ; si elle est hackée, `HACK_MOVE` devient un WAIT implicite sans rotation.
+
+Lorsqu'un coffre est directement devant la machine, le scan officiel passe à six cellules : les six sont sensibles aux autres machines et les trois les plus proches du coffre donnent également la priorité à F/M. Les cas où un héros pourrait pousser un coffre voisin dans la destination de la machine sont aussi protégés. **Le Look Ahead est évalué avant les contraintes d'élévation.**
+
+Voir `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md` pour la matrice complète des règles et les choix de compatibilité.
 
 ## Architecture
 
@@ -80,6 +95,11 @@ backend/
 │   │   ├── strategy_v5.py
 │   │   ├── strategy_v6.py
 │   │   ├── strategy_v7.py
+│   │   ├── strategy_v8.py
+│   │   ├── strategy_v9.py
+│   │   ├── strategy_v10.py
+│   │   ├── strategy_v11.py
+│   │   ├── strategy_v12.py
 │   │   ├── strategy_registry.py
 │   │   └── strategy_scalable.py
 │   ├── schemas/
@@ -125,6 +145,26 @@ G Grappler
 
 Le parser valide les dimensions, le temps, l'alphabet, la présence unique de F/M et les limites de sécurité.
 
+### Format optionnel `elevation.txt`
+
+Pour une carte `H × W`, le fichier ne contient **pas d'en-tête** : exactement `H` lignes de `W` chiffres.
+
+```text
+221134
+211235
+346064
+```
+
+Règles de validation :
+
+```text
+cellule accessible : 1..9
+rocher #            : 0
+```
+
+Si `elevation.txt` est absent ou vide, le backend génère uniquement en mémoire une grille `0` de taille `H × W` avec `has_elevation=false`. Cela permet aux anciens appels JSON, multipart et replay de rester valides.
+
+
 ## Moteur de règles
 
 Le moteur implémente notamment :
@@ -141,8 +181,11 @@ Le moteur implémente notamment :
 - routines autonomes X/G, orientations initiales et rotations lorsqu'ils sont bloqués ;
 - hack : arrêt des mouvements/rotations automatiques et suspension du DIG de l'Excavator ;
 - Grappler hacké : CUT automatique toujours actif lorsqu'il rencontre un arbre ;
-- buffer d’une case vide devant une machine lorsqu’une autre machine se trouve dans sa direction ;
-- buffer spécial coffre + machine sur deux cases, y compris pour `HACK_MOVE` ;
+- Look Ahead officiel des machines, vérifié à la mise en file puis au deuxième tick du MOVE ;
+- priorité du Look Ahead sur l'élévation et sur `HACK_MOVE` ;
+- scan six cellules lorsqu'une machine pousse un coffre et priorité F/M sur les trois cellules proches ;
+- protection des coffres voisins qu'un héros pourrait pousser dans la destination d'une machine ;
+- règles d'élévation F/M, machines et coffres, y compris destruction d'un coffre sur une falaise de 5+ niveaux ;
 - protection anti-collision lors des poussées de coffres entre machines ou héros/machine ;
 - Excavator : creusement après cinq déplacements automatiques ;
 - Grappler : coupe automatique d'un arbre occupé ;
@@ -150,17 +193,22 @@ Le moteur implémente notamment :
 - score, snapshots, replay et `actions.txt`.
 
 
-## IA : `portfolio_v10` par défaut
+## IA : `portfolio_v12` par défaut
 
-`portfolio_v10` conserve le cœur `portfolio_v9` / `portfolio_v8` et ajoute une couche ciblée pour les coffres bloqués : détection d'obstacles communs à plusieurs coffres, micro-plans machines engagés, anti-oscillation/deadlock, protection globale des coffres contre une machine autonome et collecte parallèle du héros non requis.
+`portfolio_v12` **n'écrase pas le cœur algorithmique existant**. Il hérite de la pile progressive V11/V10/V9/V8 et ajoute seulement l'adaptation au second-week addendum : raisonnement de relocation basé sur le Look Ahead officiel, prédiction des risques de coffre avec élévation/falaise et un échappement conjoint borné lorsque deux machines hackées se bloquent réellement à cause du nouveau périmètre de collision.
 
-Le catalogue dynamique reste disponible via `GET /api/v1/strategies`; les anciennes stratégies restent sélectionnables pour comparaison. Voir `docs/PORTFOLIO_V10.md` et `docs/VERIFICATION_V0.11.0.md`.
+Les stratégies V8, V9, V10 et V11 restent inchangées et sélectionnables pour comparaison. Toutes les stratégies, anciennes comme nouvelles, passent toutefois par le **même moteur de règles courant** : choisir V10 ne désactive donc ni l'élévation ni le Look Ahead officiel.
+
+Le catalogue dynamique reste disponible via `GET /api/v1/strategies`. Voir `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md` et `docs/VERIFICATION_V0.12.0.md`.
 
 ## IA historique : `portfolio_v9`
 
 Le catalogue est dynamique via `GET /api/v1/strategies`. Le frontend 2D peut donc choisir une stratégie sans modification de code côté menu.
 
 ```text
+portfolio_v12  second-week, cœur v11/v10 préservé + méta-règles Addendum
+portfolio_v11  parallélisme progressif par rôles
+portfolio_v10  opportunités + micro-plans + protection coffres
 portfolio_v9   historique, cœur v8 + relais minimal anti ping-pong
 portfolio_v8   précédent, stamina + handoff + score peak
 portfolio_v7   collaboratif + cache structurel précédent
@@ -269,7 +317,9 @@ La suite vérifie notamment :
 - les capacités spécifiques de F et M ;
 - la compatibilité F→Excavator et M→Grappler ;
 - le comportement de l'optimiseur sur les cartes de test ;
-- les clarifications AlgoMada sur hack/CUT/DIG, buffers entre machines et coffres ;
+- les clarifications AlgoMada sur hack/CUT/DIG et le Look Ahead second-week ;
+- les règles d'élévation héros/machines/coffres, hop/climb et falaise ;
+- la compatibilité `map.txt` seul avec grille d'élévation zéro ;
 - une carte mécanique 4x5 contenant tous les éléments ;
 - une carte 10x14 correspondant au double de la référence 5x7 ;
 - qu'un plan généré se rejoue avec exactement le même score ;
@@ -281,6 +331,8 @@ La suite vérifie notamment :
 
 - `docs/API_CONTRACT.md` : contrat Godot ↔ FastAPI.
 - `docs/GDD_INTERPRETATIONS.md` : ambiguïtés du GDD documentées explicitement.
+- `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md` : implémentation du second-week addendum et compatibilité legacy.
+- `docs/VERIFICATION_V0.12.0.md` : matrice de tests et benchmarks vérifiés pour cette version.
 
 
 ## Intégration Godot 2D
@@ -290,7 +342,7 @@ Le frontend minimal utilise par défaut `http://127.0.0.1:8000/api/v1`.
 Routes utilisées directement par Godot :
 
 - `GET /health` : test de disponibilité du backend.
-- `POST /maps/upload` : validation multipart du `map.txt` sélectionné dans Godot.
+- `POST /maps/upload` : validation multipart de `map.txt` et de `elevation.txt` lorsqu'il est fourni.
 - `POST /simulations` : calcul complet de la simulation et des ticks à jouer.
 - `GET /settings` : chargement des paramètres persistés.
 - `PUT /settings` : sauvegarde des paramètres.

@@ -2,9 +2,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from heapq import heappop, heappush
 from itertools import count
-from app.domain.enums import CLOCKWISE, COUNTER_CLOCKWISE, DIRECTION_VECTORS, ORIENTATION_TO_DIRECTION, HeroAction, MachineKind, Orientation
+from app.domain.enums import CLOCKWISE, COUNTER_CLOCKWISE, DIRECTION_TO_ORIENTATION, DIRECTION_VECTORS, ORIENTATION_TO_DIRECTION, HeroAction, MachineKind, Orientation
 from app.domain.models import GameState, MachineState, Position
 from app.engine.score_pathfinding import score_cost_units
+from app.engine.rules import Rules
 
 @dataclass(frozen=True, slots=True)
 class MachineControlPlan:
@@ -16,6 +17,7 @@ class MachineControlPlan:
     @property
     def score_cost_units(self) -> int:
         return score_cost_units(self.ticks, 0, self.battery_cost)
+
 
 @dataclass(frozen=True, slots=True)
 class _MachineNode:
@@ -32,16 +34,25 @@ def _move_passable(state: GameState, machine: MachineState, current: Position, t
         return False
     if target in state.game_map.rocks:
         return False
-    if not ignore_other_machines:
-        delta_ligne = target.row - current.row
-        delta_col = target.col - current.col
-        case_2 = target.moved(delta_ligne, delta_col)
-        case_3 = case_2.moved(delta_ligne, delta_col)
-        positions_machines = {autre.position for autre in state.machines.values() if autre.id != machine.id}
-        if target in positions_machines or case_2 in positions_machines:
-            return False
-        if case_3 in positions_machines and (target in state.chests or case_2 in state.chests):
-            return False
+    if Rules.machine_elevation_reason(state, current, target) is not None:
+        return False
+    delta_ligne = target.row - current.row
+    delta_col = target.col - current.col
+    orientation = None
+    for direction, vector in DIRECTION_VECTORS.items():
+        if vector == (delta_ligne, delta_col):
+            orientation = DIRECTION_TO_ORIENTATION[direction]
+            break
+    if orientation is None:
+        return False
+    if not ignore_other_machines and Rules.machine_lookahead_reason(
+        state,
+        machine,
+        position=current,
+        orientation=orientation,
+        check_heroes=False,
+    ) is not None:
+        return False
     if target in state.chests:
         return False
     if machine.kind == MachineKind.EXCAVATOR and target in state.trees:
@@ -169,3 +180,4 @@ def plan_machine_to_position(state: GameState, machine: MachineState, target: Po
                 precedents[suivant] = (noeud, bloc_action, 1)
                 heappush(tas, (nouvelles_unites, nouveaux_ticks, nouvelle_batterie, next(serie), suivant))
     return None
+

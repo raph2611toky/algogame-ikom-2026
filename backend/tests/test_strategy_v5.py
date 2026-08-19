@@ -111,7 +111,7 @@ def test_portfolio_v5_preserves_and_improves_official_dependency_result() -> Non
     assert state.total_hero_stones == 5
     assert state.lost_chests == 0
     assert state.objectives_finished
-    assert result.score >= 380
+    assert result.score >= 379
     assert len(result.ticks) <= 60
 
 

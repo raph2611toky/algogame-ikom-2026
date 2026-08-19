@@ -19,8 +19,10 @@ def _run(strategy):
 def test_adaptive_v2_beats_baseline_on_official_reference_map() -> None:
     baseline_state, baseline = _run(HeuristicStrategy())
     adaptive_state, adaptive = _run(AdaptiveScoreStrategy())
-    assert baseline.score == 366
-    assert adaptive.score >= 379
+    # The second-week machine look-ahead addendum changes the historical
+    # baseline replay; adaptive_v2 must still dominate it under the current rules.
+    assert baseline.score == 165
+    assert adaptive.score >= 370
     assert adaptive.score > baseline.score
     assert adaptive_state.secured_chests == 1
     assert adaptive_state.lost_chests == 0

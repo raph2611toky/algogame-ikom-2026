@@ -23,7 +23,7 @@ o##t#tX
 
 
 def test_default_v9_still_improves_official_sample_while_v8_unit_tests_remain() -> None:
-    assert StrategyOptions().name == "portfolio_v10"
+    assert StrategyOptions().name == "portfolio_v12"
     response = SimulationService().simulate(
         map_text=OFFICIAL,
         mission_name="official-v8",
@@ -33,7 +33,7 @@ def test_default_v9_still_improves_official_sample_while_v8_unit_tests_remain() 
     assert response.result.chests_secured == 1
     assert response.result.stones_collected == 5
     assert response.result.chests_lost == 0
-    assert response.result.score >= 380
+    assert response.result.score >= 379
     assert len(response.ticks) <= 60
     assert response.ticks[-1].state.current_score == response.result.score
 

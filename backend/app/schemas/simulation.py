@@ -4,14 +4,16 @@ from pydantic import Field
 from app.domain.enums import HeroAction
 from app.schemas.common import APIModel, PositionSchema
 OFFICIAL_SAMPLE_MAP = '5 7 100\nG+.M..+\n.###tt#\n.o*.+.@\no##t#tX\n.F#++..'
+OFFICIAL_SAMPLE_ELEVATION = '1111111\n1000110\n1111111\n1001011\n1101111'
 
 class MissionInput(APIModel):
     name: str = Field(default='mission', min_length=1, max_length=120, description='Nom libre de la mission côté Godot.')
     map_text: str = Field(min_length=1, max_length=1000000, description='Contenu complet de map.txt: première ligne H W TIME_LIMIT puis H lignes ASCII.')
-    model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}}}
+    elevation_text: str | None = Field(default=None, max_length=1000000, description='Contenu optionnel de elevation.txt. Si absent, toutes les elevations valent 0 pour garder la compatibilite historique.')
+    model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP, 'elevation_text': OFFICIAL_SAMPLE_ELEVATION}}}
 
 class StrategyOptions(APIModel):
-    name: Literal['portfolio_v11', 'portfolio_v10', 'portfolio_v9', 'portfolio_v8', 'portfolio_v7', 'portfolio_v6', 'portfolio_v5', 'portfolio_v4', 'portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v10', description='portfolio_v10 reste le defaut stable; portfolio_v11 ajoute au-dessus de v10 un parallelisme progressif entre coffres independants, sans casser relais stamina, micro-plans machines ni protections X/G.')
+    name: Literal['portfolio_v12', 'portfolio_v11', 'portfolio_v10', 'portfolio_v9', 'portfolio_v8', 'portfolio_v7', 'portfolio_v6', 'portfolio_v5', 'portfolio_v4', 'portfolio_v3', 'adaptive_v2', 'heuristic_v1', 'scalable_v1'] = Field(default='portfolio_v12', description='portfolio_v12 est le profil second-week: coeur v10/v11 conserve, regles elevation + look-ahead officiel et protections associees. Les anciennes strategies restent disponibles.')
     max_stones_per_hero: int = Field(default=16, ge=1, le=100)
     max_chest_pairs_per_hero: int = Field(default=12, ge=1, le=100)
     max_unlock_obstacles: int = Field(default=20, ge=1, le=100, description='Nombre maximal de trous/arbres candidats analysés pour leur valeur de déblocage.')
@@ -22,7 +24,7 @@ class StrategyOptions(APIModel):
 class SimulationRequest(APIModel):
     mission: MissionInput
     strategy: StrategyOptions = Field(default_factory=StrategyOptions)
-    model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'mission': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}, 'strategy': {'name': 'portfolio_v10', 'max_stones_per_hero': 16, 'max_chest_pairs_per_hero': 12, 'max_unlock_obstacles': 20, 'unlock_pair_candidates': 8, 'stuck_end_threshold': 8}}}}
+    model_config = {'extra': 'forbid', 'json_schema_extra': {'example': {'mission': {'name': 'official_sample', 'map_text': OFFICIAL_SAMPLE_MAP}, 'strategy': {'name': 'portfolio_v12', 'max_stones_per_hero': 16, 'max_chest_pairs_per_hero': 12, 'max_unlock_obstacles': 20, 'unlock_pair_candidates': 8, 'stuck_end_threshold': 8}}}}
 
 class ReplayActionPair(APIModel):
     F: HeroAction = HeroAction.WAIT
@@ -119,6 +121,8 @@ class SimulationMapSchema(APIModel):
     width: int = Field(gt=0)
     time_limit: int = Field(gt=0)
     rows: list[str]
+    elevation_rows: list[str]
+    has_elevation: bool
     coordinate_system: CoordinateSystemSchema
 
 class ActionTickSchema(APIModel):

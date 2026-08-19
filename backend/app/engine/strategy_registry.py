@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict
 
-DEFAULT_STRATEGY = "portfolio_v10"
+DEFAULT_STRATEGY = "portfolio_v12"
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,6 +19,14 @@ class StrategyDescriptor:
 
 
 STRATEGIES: tuple[StrategyDescriptor, ...] = (
+    StrategyDescriptor(
+        "portfolio_v12",
+        "Portfolio v12 — GDD addendum + elevation + parallelisme",
+        "portfolio",
+        "Second-week strategy: conserve les fichiers/coeurs v8-v11, utilise le look-ahead officiel dans les relocalisations et anticipe les risques de coffres lies a l elevation/falaises.",
+        True,
+        True,
+    ),
     StrategyDescriptor(
         "portfolio_v10",
         "Portfolio v10 — opportunites + micro-plans machines",

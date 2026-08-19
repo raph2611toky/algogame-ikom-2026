@@ -6,7 +6,7 @@ from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.responses import HTMLResponse, JSONResponse
 JSON_MEDIA = 'application/json'
 MULTIPART_MEDIA = 'multipart/form-data'
-FILE_FORM_FIELDS = {'file', 'map_file', 'actions_file'}
+FILE_FORM_FIELDS = {'file', 'map_file', 'actions_file', 'elevation_file'}
 
 def _rewrite_refs(value: Any) -> Any:
     if isinstance(value, dict):

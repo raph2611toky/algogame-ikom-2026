@@ -24,7 +24,7 @@ def test_custom_swagger_is_complete_and_uses_real_routes() -> None:
 
 def test_multipart_routes_are_manual_formdata_parameters_not_request_bodies() -> None:
     swagger = client.get('/swagger.json').json()
-    expected = {'/api/v1/maps/upload': {'file': ('file', True)}, '/api/v1/simulations/upload': {'file': ('file', True), 'name': ('string', False), 'strategy_json': ('string', False)}, '/api/v1/simulations/replay-upload': {'map_file': ('file', True), 'actions_file': ('file', True), 'name': ('string', False), 'stop_when_objectives_finished': ('boolean', False)}, '/api/v1/simulation-jobs/upload': {'file': ('file', True), 'name': ('string', False), 'strategy_json': ('string', False)}}
+    expected = {'/api/v1/maps/upload': {'file': ('file', True), 'elevation_file': ('file', False)}, '/api/v1/simulations/upload': {'file': ('file', True), 'elevation_file': ('file', False), 'name': ('string', False), 'strategy_json': ('string', False)}, '/api/v1/simulations/replay-upload': {'map_file': ('file', True), 'actions_file': ('file', True), 'elevation_file': ('file', False), 'name': ('string', False), 'stop_when_objectives_finished': ('boolean', False)}, '/api/v1/simulation-jobs/upload': {'file': ('file', True), 'elevation_file': ('file', False), 'name': ('string', False), 'strategy_json': ('string', False)}}
     for chemin, fields in expected.items():
         operation = swagger['paths'][chemin]['post']
         assert 'requestBody' not in operation

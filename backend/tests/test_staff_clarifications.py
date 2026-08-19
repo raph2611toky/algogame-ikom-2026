@@ -85,7 +85,7 @@ def test_buffer_depends_only_on_machine_presence_not_other_machine_orientation()
         assert not g.auto_move_pending
 
 
-def test_two_machine_chest_squeeze_is_detected_before_queueing() -> None:
+def test_two_machine_chest_squeeze_follows_new_lookahead_before_queueing() -> None:
     state = MapParser.build_initial_state(MapParser.parse('2 6 20\nG.*X..\nF....M\n'))
     g = state.machines['G1']
     x = state.machines['X1']
@@ -93,13 +93,16 @@ def test_two_machine_chest_squeeze_is_detected_before_queueing() -> None:
     assert state.chests == {Position(0, 2)}
     assert g.position == Position(0, 0)
     assert x.position == Position(0, 3)
-    assert g.orientation == Orientation.FACING_DOWN
+    # G may queue one step toward the chest: X is not yet in G's 4-cell
+    # look-ahead. X has the chest directly ahead and sees G in its extended
+    # six-cell chest look-ahead, therefore X rotates.
+    assert g.orientation == Orientation.FACING_RIGHT
     assert x.orientation == Orientation.FACING_DOWN
-    assert not g.auto_move_pending
+    assert g.auto_move_pending
     assert not x.auto_move_pending
 
 
-def test_two_machine_chest_squeeze_is_detected_when_moves_are_ready() -> None:
+def test_two_machine_chest_squeeze_rechecks_new_lookahead_when_moves_are_ready() -> None:
     state = MapParser.build_initial_state(MapParser.parse('2 6 20\nG.*X..\nF....M\n'))
     g = state.machines['G1']
     x = state.machines['X1']
@@ -107,9 +110,9 @@ def test_two_machine_chest_squeeze_is_detected_when_moves_are_ready() -> None:
     x.auto_move_pending = True
     Simulator(state).step(waits())
     assert state.chests == {Position(0, 2)}
-    assert g.position == Position(0, 0)
+    assert g.position == Position(0, 1)
     assert x.position == Position(0, 3)
-    assert g.orientation == Orientation.FACING_DOWN
+    assert g.orientation == Orientation.FACING_RIGHT
     assert x.orientation == Orientation.FACING_DOWN
 
 
@@ -217,7 +220,7 @@ def test_adaptive_strategy_chooses_only_one_hero_to_push_same_chest() -> None:
     assert len(pushes) == 1
 
 
-def test_two_cell_chest_machine_buffer_rotates_both_automatic_machines() -> None:
+def test_chest_lookahead_supersedes_old_two_cell_buffer_rule() -> None:
     state = MapParser.build_initial_state(MapParser.parse('2 6 20\nG.*X..\nF....M\n'))
     g = state.machines['G1']
     x = state.machines['X1']
@@ -225,9 +228,9 @@ def test_two_cell_chest_machine_buffer_rotates_both_automatic_machines() -> None
     assert g.position == Position(0, 0)
     assert x.position == Position(0, 3)
     assert state.chests == {Position(0, 2)}
-    assert g.orientation == Orientation.FACING_DOWN
+    assert g.orientation == Orientation.FACING_RIGHT
     assert x.orientation == Orientation.FACING_DOWN
-    assert not g.auto_move_pending
+    assert g.auto_move_pending
     assert not x.auto_move_pending
 
 

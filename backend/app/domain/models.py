@@ -52,6 +52,11 @@ class GameMap:
     width: int
     time_limit: int
     rows: tuple[str, ...]
+    # Backward-compatible flat mode: when elevation.txt is not supplied every
+    # cell is represented as elevation 0 and has_elevation=False.  In explicit
+    # elevation mode, reachable cells are 1..9 and rocks are 0.
+    elevations: tuple[tuple[int, ...], ...] = field(default_factory=tuple)
+    has_elevation: bool = False
     rocks: set[Position] = field(default_factory=set)
     trees: set[Position] = field(default_factory=set)
     holes: set[Position] = field(default_factory=set)
@@ -68,6 +73,13 @@ class GameMap:
         for ligne in range(self.height):
             for colonne in range(self.width):
                 yield Position(ligne, colonne)
+
+    def elevation_at(self, pos: Position) -> int:
+        if not self.in_bounds(pos):
+            raise IndexError(f'Position hors carte: {pos}')
+        if not self.elevations:
+            return 0
+        return self.elevations[pos.row][pos.col]
 
 @dataclass(slots=True)
 class GameState:
