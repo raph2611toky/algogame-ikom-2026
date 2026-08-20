@@ -1,0 +1,93 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/tests/single_sloped_tile_preview.gd" id="1_preview"]
+
+[sub_resource type="Environment" id="Environment_preview"]
+background_mode = 1
+background_color = Color(0.055, 0.032, 0.02, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.66, 0.52, 0.4, 1)
+ambient_light_energy = 0.72
+tonemap_mode = 2
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
+size = Vector2(30, 30)
+
+[sub_resource type="StandardMaterial3D" id="Material_ground"]
+albedo_color = Color(0.045, 0.027, 0.019, 1)
+roughness = 1.0
+
+[sub_resource type="StyleBoxFlat" id="Style_title"]
+bg_color = Color(0.055, 0.032, 0.02, 0.86)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.36, 0.18, 0.75)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+
+[node name="SingleSlopedTilePreview" type="Node3D"]
+script = ExtResource("1_preview")
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_preview")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-52, -38, 0)
+light_color = Color(1, 0.82, 0.62, 1)
+light_energy = 1.55
+shadow_enabled = true
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-32, 138, 0)
+light_color = Color(0.62, 0.74, 0.86, 1)
+light_energy = 0.42
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.025, 0)
+mesh = SubResource("PlaneMesh_ground")
+material_override = SubResource("Material_ground")
+
+[node name="TileAnchor" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.4, 5.1, 6.4)
+projection = 1
+size = 7.3
+near = 0.05
+far = 200.0
+current = true
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Title" type="Label" parent="UI"]
+offset_left = 24.0
+offset_top = 22.0
+offset_right = 420.0
+offset_bottom = 68.0
+theme_override_colors/font_color = Color(0.98, 0.89, 0.72, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("Style_title")
+text = "ÉTAPE 1 — UNE SEULE CASE"
+
+[node name="Shape" type="Label" parent="UI"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -62.0
+offset_right = -24.0
+offset_bottom = -22.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.9, 0.82, 0.7, 1)
+theme_override_font_sizes/font_size = 17
+text = "Dessus plat • 4 côtés inclinés • aucune rampe ajoutée"
+horizontal_alignment = 1

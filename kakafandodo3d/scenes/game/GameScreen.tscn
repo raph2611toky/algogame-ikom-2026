@@ -1,0 +1,424 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/game_screen.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/game/game_board.gd" id="2"]
+[ext_resource type="Texture2D" path="res://assets/menu/logo_kakafandodo.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/game/characters/ikotofosa_portrait.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/game/characters/imahaki_portrait.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/menu/main_menu_background.png" id="6"]
+
+[node name="GameScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.035, 0.025, 0.018, 0.38)
+
+[node name="BoardPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 22.0
+offset_top = 166.0
+offset_right = -22.0
+offset_bottom = -112.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Board" type="Control" parent="BoardPanel"]
+layout_mode = 2
+script = ExtResource("2")
+
+[node name="TopLayer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="FPanel" type="PanelContainer" parent="TopLayer"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 18.0
+offset_right = 468.0
+offset_bottom = 148.0
+
+[node name="Margin" type="MarginContainer" parent="TopLayer/FPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 8
+
+[node name="HBox" type="HBoxContainer" parent="TopLayer/FPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Portrait" type="TextureRect" parent="TopLayer/FPanel/Margin/HBox"]
+custom_minimum_size = Vector2(104, 104)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="VBox" type="VBoxContainer" parent="TopLayer/FPanel/Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="TopLayer/FPanel/Margin/HBox/VBox"]
+layout_mode = 2
+text = "IKOTOFOSA  [F]"
+theme_override_colors/font_color = Color(0.96, 0.84, 0.66, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="Stamina" type="ProgressBar" parent="TopLayer/FPanel/Margin/HBox/VBox"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="Battery" type="ProgressBar" parent="TopLayer/FPanel/Margin/HBox/VBox"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="Info" type="Label" parent="TopLayer/FPanel/Margin/HBox/VBox"]
+layout_mode = 2
+text = "STA 100 • BAT 100 • (0,0) • WAIT"
+theme_override_font_sizes/font_size = 14
+
+[node name="CenterPanel" type="PanelContainer" parent="TopLayer"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 10.0
+offset_right = 300.0
+offset_bottom = 150.0
+grow_horizontal = 2
+
+[node name="VBox" type="VBoxContainer" parent="TopLayer/CenterPanel"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 0
+
+[node name="Logo" type="TextureRect" parent="TopLayer/CenterPanel/VBox"]
+custom_minimum_size = Vector2(390, 82)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Stats" type="HBoxContainer" parent="TopLayer/CenterPanel/VBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 24
+
+[node name="Time" type="Label" parent="TopLayer/CenterPanel/VBox/Stats"]
+layout_mode = 2
+text = "◷ 100"
+theme_override_colors/font_color = Color(0.95, 0.82, 0.55, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="Score" type="Label" parent="TopLayer/CenterPanel/VBox/Stats"]
+layout_mode = 2
+text = "★ 0"
+theme_override_colors/font_color = Color(1, 0.76, 0.25, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="Tick" type="Label" parent="TopLayer/CenterPanel/VBox/Stats"]
+layout_mode = 2
+text = "TICK 0"
+theme_override_colors/font_color = Color(0.86, 0.84, 0.78, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="MPanel" type="PanelContainer" parent="TopLayer"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -468.0
+offset_top = 18.0
+offset_right = -22.0
+offset_bottom = 148.0
+grow_horizontal = 0
+
+[node name="Margin" type="MarginContainer" parent="TopLayer/MPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="HBox" type="HBoxContainer" parent="TopLayer/MPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VBox" type="VBoxContainer" parent="TopLayer/MPanel/Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="TopLayer/MPanel/Margin/HBox/VBox"]
+layout_mode = 2
+text = "IMAHAKI  [M]"
+horizontal_alignment = 2
+theme_override_colors/font_color = Color(0.96, 0.84, 0.66, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="Stamina" type="ProgressBar" parent="TopLayer/MPanel/Margin/HBox/VBox"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="Battery" type="ProgressBar" parent="TopLayer/MPanel/Margin/HBox/VBox"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="Info" type="Label" parent="TopLayer/MPanel/Margin/HBox/VBox"]
+layout_mode = 2
+text = "STA 100 • BAT 100 • (0,0) • WAIT"
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="Portrait" type="TextureRect" parent="TopLayer/MPanel/Margin/HBox"]
+custom_minimum_size = Vector2(104, 104)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("5")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ObjectivesPanel" type="PanelContainer" parent="TopLayer"]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 174.0
+offset_right = 318.0
+offset_bottom = 252.0
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="TopLayer/ObjectivesPanel"]
+layout_mode = 2
+text = "◆ PIERRES 0/0\n▣ COFFRES 0/0"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.94, 0.82, 0.62, 1)
+theme_override_font_sizes/font_size = 17
+
+[node name="StatusLabel" type="Label" parent="TopLayer"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -470.0
+offset_top = -104.0
+offset_right = 470.0
+offset_bottom = -80.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Initialisation..."
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.86, 0.82, 0.74, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="SettingsButton" type="Button" parent="TopLayer"]
+layout_mode = 1
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -82.0
+offset_right = 94.0
+offset_bottom = -18.0
+grow_vertical = 0
+text = "⚙"
+
+[node name="PlaybackPanel" type="PanelContainer" parent="TopLayer"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -600.0
+offset_top = -82.0
+offset_right = -24.0
+offset_bottom = -18.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="HBox" type="HBoxContainer" parent="TopLayer/PlaybackPanel"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="LastActions" type="Label" parent="TopLayer/PlaybackPanel/HBox"]
+custom_minimum_size = Vector2(240, 48)
+layout_mode = 2
+text = "F WAIT | M WAIT"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 15
+
+[node name="PauseButton" type="Button" parent="TopLayer/PlaybackPanel/HBox"]
+custom_minimum_size = Vector2(72, 50)
+layout_mode = 2
+text = "Ⅱ"
+
+[node name="PlayButton" type="Button" parent="TopLayer/PlaybackPanel/HBox"]
+custom_minimum_size = Vector2(72, 50)
+layout_mode = 2
+text = "▶"
+
+[node name="SpeedButton" type="Button" parent="TopLayer/PlaybackPanel/HBox"]
+custom_minimum_size = Vector2(78, 50)
+layout_mode = 2
+text = "≫"
+
+[node name="SpeedLabel" type="Label" parent="TopLayer/PlaybackPanel/HBox"]
+custom_minimum_size = Vector2(52, 48)
+layout_mode = 2
+text = "x1"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 20
+
+[node name="EffectFlash" type="ColorRect" parent="TopLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="EventBanner" type="Label" parent="TopLayer"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.20
+anchor_right = 0.5
+anchor_bottom = 0.20
+offset_left = -320.0
+offset_top = -34.0
+offset_right = 320.0
+offset_bottom = 34.0
+grow_horizontal = 2
+mouse_filter = 2
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.88, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0.14, 0.07, 0.03, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 32
+
+[node name="QuickSettings" type="PanelContainer" parent="TopLayer"]
+visible = false
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -230.0
+offset_right = 300.0
+offset_bottom = 230.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="TopLayer/QuickSettings"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="TopLayer/QuickSettings/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="TopLayer/QuickSettings/Margin/VBox"]
+layout_mode = 2
+text = "PARAMÈTRES RAPIDES"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.96, 0.84, 0.66, 1)
+theme_override_font_sizes/font_size = 28
+
+[node name="SoundLabel" type="Label" parent="TopLayer/QuickSettings/Margin/VBox"]
+layout_mode = 2
+text = "SON"
+theme_override_font_sizes/font_size = 18
+
+[node name="Sound" type="HSlider" parent="TopLayer/QuickSettings/Margin/VBox"]
+layout_mode = 2
+max_value = 100.0
+step = 1.0
+value = 80.0
+
+[node name="MusicLabel" type="Label" parent="TopLayer/QuickSettings/Margin/VBox"]
+layout_mode = 2
+text = "MUSIQUE"
+theme_override_font_sizes/font_size = 18
+
+[node name="Music" type="HSlider" parent="TopLayer/QuickSettings/Margin/VBox"]
+layout_mode = 2
+max_value = 100.0
+step = 1.0
+value = 60.0
+
+[node name="EffectsLabel" type="Label" parent="TopLayer/QuickSettings/Margin/VBox"]
+layout_mode = 2
+text = "EFFETS"
+theme_override_font_sizes/font_size = 18
+
+[node name="Effects" type="HSlider" parent="TopLayer/QuickSettings/Margin/VBox"]
+layout_mode = 2
+max_value = 100.0
+step = 1.0
+value = 80.0
+
+[node name="Buttons" type="HBoxContainer" parent="TopLayer/QuickSettings/Margin/VBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 14
+
+[node name="CloseButton" type="Button" parent="TopLayer/QuickSettings/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+text = "REPRENDRE"
+
+[node name="MenuButton" type="Button" parent="TopLayer/QuickSettings/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+text = "MENU"

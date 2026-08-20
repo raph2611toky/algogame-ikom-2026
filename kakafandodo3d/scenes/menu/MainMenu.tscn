@@ -1,0 +1,244 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/menu/main_menu.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/menu/main_menu_background.png" id="2_background"]
+[ext_resource type="Texture2D" path="res://assets/menu/logo_kakafandodo.png" id="3_logo"]
+[ext_resource type="Texture2D" path="res://assets/menu/ikotofosa.png" id="4_ikotofosa"]
+[ext_resource type="Texture2D" path="res://assets/menu/imahaki.png" id="5_imahaki"]
+[ext_resource type="Texture2D" path="res://assets/menu/ui/contact_shadow.svg" id="6_contact_shadow"]
+[ext_resource type="Texture2D" path="res://assets/game/props/chest.svg" id="7_chest"]
+[ext_resource type="Texture2D" path="res://assets/game/props/gem_blue.svg" id="8_gem"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_background")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.05, 0.03, 0.02, 0.16)
+
+[node name="Logo" type="TextureRect" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.045
+anchor_right = 0.5
+anchor_bottom = 0.045
+offset_left = -490.0
+offset_top = 0.0
+offset_right = 490.0
+offset_bottom = 258.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = ExtResource("3_logo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LeftContactShadow" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0.62)
+layout_mode = 1
+anchor_left = 0.112
+anchor_top = 0.835
+anchor_right = 0.112
+anchor_bottom = 0.835
+offset_left = -22.0
+offset_top = -12.0
+offset_right = 174.0
+offset_bottom = 30.0
+mouse_filter = 2
+texture = ExtResource("6_contact_shadow")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RightContactShadow" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0.82)
+layout_mode = 1
+anchor_left = 0.81
+anchor_top = 0.92
+anchor_right = 0.81
+anchor_bottom = 0.92
+offset_left = -22.0
+offset_top = -10.0
+offset_right = 176.0
+offset_bottom = 26.0
+mouse_filter = 2
+texture = ExtResource("6_contact_shadow")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ChestDeco" type="TextureRect" parent="."]
+layout_mode = 1
+anchor_left = 0.045
+anchor_top = 0.81
+anchor_right = 0.045
+anchor_bottom = 0.81
+offset_left = -20.0
+offset_top = 0.0
+offset_right = 140.0
+offset_bottom = 120.0
+mouse_filter = 2
+texture = ExtResource("7_chest")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CrystalDeco" type="TextureRect" parent="."]
+layout_mode = 1
+anchor_left = 0.07
+anchor_top = 0.29
+anchor_right = 0.07
+anchor_bottom = 0.29
+offset_left = -18.0
+offset_top = 0.0
+offset_right = 50.0
+offset_bottom = 90.0
+mouse_filter = 2
+texture = ExtResource("8_gem")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="IkotofosaShadow" type="TextureRect" parent="."]
+modulate = Color(0, 0, 0, 0.15)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.46
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 74.0
+offset_top = 18.0
+offset_right = 474.0
+offset_bottom = 30.0
+mouse_filter = 2
+texture = ExtResource("4_ikotofosa")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Ikotofosa" type="TextureRect" parent="."]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.45
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 60.0
+offset_top = 0.0
+offset_right = 460.0
+offset_bottom = 12.0
+mouse_filter = 2
+texture = ExtResource("4_ikotofosa")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ImahakiShadow" type="TextureRect" parent="."]
+modulate = Color(0, 0, 0, 0.18)
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 0.54
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -470.0
+offset_top = 14.0
+offset_right = -112.0
+offset_bottom = 54.0
+grow_horizontal = 0
+mouse_filter = 2
+texture = ExtResource("5_imahaki")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Imahaki" type="TextureRect" parent="."]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 0.53
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -486.0
+offset_top = 0.0
+offset_right = -128.0
+offset_bottom = 36.0
+grow_horizontal = 0
+mouse_filter = 2
+texture = ExtResource("5_imahaki")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CenterButtons" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.605
+anchor_right = 0.5
+anchor_bottom = 0.605
+offset_left = -360.0
+offset_top = -74.0
+offset_right = 360.0
+offset_bottom = 154.0
+grow_horizontal = 2
+alignment = 1
+theme_override_constants/separation = 18
+
+[node name="PlayButton" type="Button" parent="CenterButtons"]
+custom_minimum_size = Vector2(620, 122)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "JOUER"
+
+[node name="BottomButtons" type="HBoxContainer" parent="CenterButtons"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 20
+
+[node name="MissionsButton" type="Button" parent="CenterButtons/BottomButtons"]
+custom_minimum_size = Vector2(180, 92)
+layout_mode = 2
+text = "MISSIONS"
+
+[node name="SettingsButton" type="Button" parent="CenterButtons/BottomButtons"]
+custom_minimum_size = Vector2(220, 92)
+layout_mode = 2
+text = "PARAMÈTRES"
+
+[node name="CreditsButton" type="Button" parent="CenterButtons/BottomButtons"]
+custom_minimum_size = Vector2(180, 92)
+layout_mode = 2
+text = "CRÉDITS"
+
+[node name="QuitButton" type="Button" parent="CenterButtons/BottomButtons"]
+custom_minimum_size = Vector2(170, 92)
+layout_mode = 2
+text = "QUITTER"
+
+[node name="VersionLabel" type="Label" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.963
+anchor_right = 0.5
+anchor_bottom = 0.963
+offset_left = -240.0
+offset_top = -10.0
+offset_right = 240.0
+offset_bottom = 16.0
+grow_horizontal = 2
+text = "VERSION COMPÉTITION • ALGOGAMES 2"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.96, 0.84, 0.66, 0.92)
+theme_override_font_sizes/font_size = 18

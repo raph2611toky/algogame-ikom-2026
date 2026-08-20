@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9a7047"/>
+      <stop offset="1" stop-color="#5d402c"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" fill="url(#stone)"/>
+  <g stroke="#4c3425" stroke-width="4" opacity=".65" fill="none">
+    <path d="M0 51 H256 M0 103 H256 M0 155 H256 M0 207 H256"/>
+    <path d="M42 0 V51 M132 0 V51 M218 0 V51 M83 51 V103 M174 51 V103 M39 103 V155 M126 103 V155 M218 103 V155 M78 155 V207 M169 155 V207 M31 207 V256 M119 207 V256 M209 207 V256"/>
+  </g>
+  <path d="M0 12 C55 26 103 3 159 18 C196 28 220 18 256 24 V0 H0 Z" fill="#5d7734" opacity=".34"/>
+  <path d="M17 23 C32 18 45 25 57 18 M177 17 C190 9 205 23 220 13" fill="none" stroke="#7f9948" stroke-width="4" opacity=".45"/>
+</svg>
