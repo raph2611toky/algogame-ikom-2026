@@ -1,0 +1,515 @@
+from __future__ import annotations
+from dataclasses import asdict
+from pathlib import Path
+from threading import Lock
+from app.core.config import settings
+from app.domain.enums import HeroAction, HeroId
+from app.domain.models import GameMap, SimulationResult
+from app.engine.map_parser import MapParser
+from app.engine.simulator import Simulator
+from app.engine.strategy import HeuristicStrategy
+from app.engine.strategy_v2 import AdaptiveScoreStrategy
+from app.engine.strategy_scalable import ScalableStrategy
+from app.engine.strategy_v4 import ChestFirstPortfolioStrategy
+from app.engine.strategy_v5 import CollaborativePortfolioStrategy
+from app.engine.strategy_v6 import OptimizedCollaborativePortfolioStrategy
+from app.engine.strategy_v7 import CachedCollaborativePortfolioStrategy
+from app.engine.strategy_v8 import StaminaAwareCollaborativePortfolioStrategy
+from app.engine.strategy_v9 import StrategicRelayPortfolioStrategy
+from app.engine.strategy_v10 import OpportunityCommittedPortfolioStrategy
+from app.engine.strategy_v11 import StrictPriorityPortfolioStrategy
+from app.engine.strategy_v12 import AddendumAwareParallelPortfolioStrategy
+from app.engine.strategy_v13 import PredictiveGlobalPortfolioStrategy
+from app.engine.strategy_v14 import GlobalMissionPortfolioStrategy
+from app.engine.result_optimizer import trim_to_best_score_prefix
+from app.schemas.simulation import SimulationResponse, StrategyOptions
+
+class SimulationNotFound(KeyError):
+    pass
+
+class SimulationService:
+
+    def __init__(self) -> None:
+        self._lock = Lock()
+        self._responses: dict[str, SimulationResponse] = {}
+        settings.output_dir.mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def map_summary(game_map: GameMap) -> dict[str, object]:
+        return {
+            'height': game_map.height,
+            'width': game_map.width,
+            'time_limit': game_map.time_limit,
+            'rows': list(game_map.rows),
+            'elevation_rows': [''.join(str(value) for value in row) for row in game_map.elevations],
+            'has_elevation': game_map.has_elevation,
+            'coordinate_system': {'origin': 'top-left', 'row_increases': 'down', 'col_increases': 'right'},
+        }
+
+    @staticmethod
+    def _event_to_dict(event) -> dict[str, object]:
+        return {'type': event.type, 'message': event.message, 'actor': event.actor, 'position': {'row': event.position.row, 'col': event.position.col} if event.position is not None else None, 'data': event.data}
+
+    def _response_from_result(self, *, result: SimulationResult, game_map: GameMap, mission_name: str) -> SimulationResponse:
+        etat_final = result.final_snapshot
+        entrees_score_final = etat_final['score_inputs']
+        props_finaux = etat_final['props']
+        ticks = []
+        actions = []
+        for tick in result.ticks:
+            requested = {id_heros.value: action.value for id_heros, action in tick.requested_actions.items()}
+            effectif = {id_heros.value: action.value for id_heros, action in tick.effective_actions.items()}
+            ticks.append({'tick': tick.tick, 'requested_actions': requested, 'effective_actions': effectif, 'machine_actions': {id_machine: action.value for id_machine, action in tick.machine_actions.items()}, 'events': [self._event_to_dict(evenement) for evenement in tick.events], 'state': tick.snapshot})
+            actions.append({'tick': tick.tick, 'F': effectif[HeroId.IKOTOFOSA.value], 'M': effectif[HeroId.IMAHAKI.value]})
+        reponse = SimulationResponse.model_validate({'simulation_id': result.simulation_id, 'mission_name': mission_name, 'map': self.map_summary(game_map), 'initial_state': result.initial_snapshot, 'ticks': ticks, 'result': {'score': result.score, 'stones_collected': entrees_score_final['hero_stones'], 'chests_secured': entrees_score_final['secured_chests'], 'chests_lost': props_finaux['lost_chests'], 'remaining_time': etat_final['remaining_time'], 'total_stamina': entrees_score_final['total_stamina'], 'total_battery': entrees_score_final['total_battery'], 'end_reason': etat_final['end_reason']}, 'actions': actions, 'actions_txt': result.actions_text, 'actions_download_url': f'{settings.api_prefix}/simulations/{result.simulation_id}/actions.txt'})
+        return reponse
+
+    def _persist(self, response: SimulationResponse) -> None:
+        with self._lock:
+            self._responses[response.simulation_id] = response
+        chemin = settings.output_dir / f'{response.simulation_id}_actions.txt'
+        chemin.write_text(response.actions_txt, encoding='utf-8')
+
+    @staticmethod
+    def _result_rank(result: SimulationResult) -> tuple[int, int, int, int, int, int, int]:
+        etat_final = result.final_snapshot
+        entrees_score = etat_final['score_inputs']
+        proprietes_etat = etat_final['props']
+        return (result.score, int(entrees_score['secured_chests']), int(entrees_score['hero_stones']), -int(proprietes_etat['lost_chests']), int(etat_final['remaining_time']), int(entrees_score['total_stamina']) + int(entrees_score['total_battery']), -len(result.ticks))
+
+    @staticmethod
+    def _adaptive_from_options(options: StrategyOptions, *, breadth_multiplier: int=1, stuck_bonus: int=0) -> AdaptiveScoreStrategy:
+        return AdaptiveScoreStrategy(max_stones_per_hero=min(100, options.max_stones_per_hero * breadth_multiplier), max_chest_pairs_per_hero=min(100, options.max_chest_pairs_per_hero * breadth_multiplier), max_unlock_obstacles=min(100, options.max_unlock_obstacles * breadth_multiplier), unlock_pair_candidates=min(20, max(2, options.unlock_pair_candidates * breadth_multiplier)), stuck_end_threshold=min(100, options.stuck_end_threshold + stuck_bonus))
+
+    @staticmethod
+    def _is_stress_map(game_map: GameMap) -> bool:
+        cellules = game_map.height * game_map.width
+        charge_coffres = len(game_map.chests) * max(1, len(game_map.bushes))
+        return cellules > 2500 or len(game_map.initial_machines) > 12 or len(game_map.stones) > 64 or charge_coffres > 96
+
+    def _run_portfolio(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            etat = MapParser.build_initial_state(game_map)
+            strategie = ScalableStrategy(
+                max_stones_per_hero=min(6, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(2, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(8, min(24, options.stuck_end_threshold * 2)),
+                max_ticks=min(game_map.time_limit, options.scalable_max_ticks),
+            )
+            return Simulator(etat).run_strategy(strategie)
+
+        fabriques_base = [
+            lambda: self._adaptive_from_options(options),
+            lambda: HeuristicStrategy(
+                max_stones_per_hero=options.max_stones_per_hero,
+                max_chest_pairs_per_hero=options.max_chest_pairs_per_hero,
+                stuck_end_threshold=options.stuck_end_threshold,
+            ),
+        ]
+        resultats: list[SimulationResult] = []
+        for fabrique in fabriques_base:
+            etat = MapParser.build_initial_state(game_map)
+            resultats.append(Simulator(etat).run_strategy(fabrique()))
+
+        meilleur = max(resultats, key=self._result_rank)
+        etat_final = meilleur.final_snapshot
+        props_finaux = etat_final.get('props', {})
+        coffre_encore_present = bool(props_finaux.get('chests'))
+        coffre_perdu = int(props_finaux.get('lost_chests', 0)) > 0
+
+        if meilleur.final_snapshot.get('end_reason') != 'OBJECTIVES_FINISHED' and (coffre_perdu or not coffre_encore_present):
+            cellules = game_map.height * game_map.width
+            charge_paires_objectifs = len(game_map.chests) * max(1, len(game_map.bushes))
+            if cellules <= 2500 and game_map.time_limit <= 2000 and len(game_map.initial_machines) <= 4 and charge_paires_objectifs <= 8 and len(game_map.stones) <= 12:
+                etat = MapParser.build_initial_state(game_map)
+                resultats.append(Simulator(etat).run_strategy(self._adaptive_from_options(options, breadth_multiplier=2, stuck_bonus=4)))
+                meilleur = max(resultats, key=self._result_rank)
+        return meilleur
+
+    def _run_portfolio_v4(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            etat = MapParser.build_initial_state(game_map)
+            strategie = ScalableStrategy(
+                max_stones_per_hero=min(6, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(2, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(8, min(24, options.stuck_end_threshold * 2)),
+                max_ticks=min(game_map.time_limit, options.scalable_max_ticks),
+            )
+            return Simulator(etat).run_strategy(strategie)
+        etat = MapParser.build_initial_state(game_map)
+        strategie = ChestFirstPortfolioStrategy(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(12, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(12, options.stuck_end_threshold * 2),
+            max_unlock_checks=min(64, max(16, options.max_unlock_obstacles * 2)),
+        )
+        return Simulator(etat).run_strategy(strategie)
+
+
+    def _run_portfolio_v5(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            etat = MapParser.build_initial_state(game_map)
+            strategie = ScalableStrategy(
+                max_stones_per_hero=min(6, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(2, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(8, min(24, options.stuck_end_threshold * 2)),
+                max_ticks=min(game_map.time_limit, options.scalable_max_ticks),
+            )
+            return Simulator(etat).run_strategy(strategie)
+        etat = MapParser.build_initial_state(game_map)
+        strategie = CollaborativePortfolioStrategy(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(16, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(14, options.stuck_end_threshold * 2),
+            max_unlock_checks=min(64, max(16, options.max_unlock_obstacles * 2)),
+        )
+        return Simulator(etat).run_strategy(strategie)
+
+
+    def _run_portfolio_v6(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            etat = MapParser.build_initial_state(game_map)
+            strategie = ScalableStrategy(
+                max_stones_per_hero=min(8, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(3, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(10, min(32, options.stuck_end_threshold * 3)),
+                max_ticks=min(game_map.time_limit, options.scalable_max_ticks),
+            )
+            return Simulator(etat).run_strategy(strategie)
+        etat = MapParser.build_initial_state(game_map)
+        strategie = OptimizedCollaborativePortfolioStrategy(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(20, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(20, options.stuck_end_threshold * 3),
+            max_unlock_checks=min(80, max(24, options.max_unlock_obstacles * 3)),
+        )
+        return Simulator(etat).run_strategy(strategie)
+
+
+    def _run_portfolio_v7(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            etat = MapParser.build_initial_state(game_map)
+            strategie = ScalableStrategy(
+                max_stones_per_hero=min(10, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(4, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(12, min(40, options.stuck_end_threshold * 3)),
+                max_ticks=min(game_map.time_limit, max(options.scalable_max_ticks, 350)),
+            )
+            return Simulator(etat).run_strategy(strategie)
+        etat = MapParser.build_initial_state(game_map)
+        strategie = CachedCollaborativePortfolioStrategy(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(20, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(24, options.stuck_end_threshold * 3),
+            max_unlock_checks=min(64, max(20, options.max_unlock_obstacles * 2)),
+        )
+        return Simulator(etat).run_strategy(strategie)
+
+
+    def _run_portfolio_v14(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        """Global mission portfolio with machine-assisted chest planning.
+
+        <=160 cells: compare V14 with the proven V13 portfolio to make the new
+        default monotonic on the official evaluation envelope.
+        161..400 cells: use V14's bounded medium planner directly; this is the
+        range where V13 previously fell back to scalable_v1 and missed uphill
+        machine-chest missions.
+        >400/stress: keep the bounded scalable safety profile.
+        """
+        cells = game_map.height * game_map.width
+        if self._is_stress_map(game_map) or cells > 400:
+            state = MapParser.build_initial_state(game_map)
+            strategy = ScalableStrategy(
+                max_stones_per_hero=min(12, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(6, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(18, min(56, options.stuck_end_threshold * 5)),
+                max_ticks=min(game_map.time_limit, max(options.scalable_max_ticks, 600)),
+            )
+            return trim_to_best_score_prefix(
+                Simulator(state).run_strategy(strategy),
+                time_limit=game_map.time_limit,
+            )
+
+        unlock_checks = min(72, max(24, options.max_unlock_obstacles * 3)) if cells <= 160 else min(32, max(16, options.max_unlock_obstacles + 8))
+        common = dict(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(24, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(40, options.stuck_end_threshold * 5),
+            max_unlock_checks=unlock_checks,
+        )
+        state = MapParser.build_initial_state(game_map)
+        v14 = Simulator(state).run_strategy(
+            GlobalMissionPortfolioStrategy(
+                planning_bias='score',
+                medium_mode=cells > 160,
+                **common,
+            )
+        )
+        v14 = trim_to_best_score_prefix(v14, time_limit=game_map.time_limit)
+
+        if cells <= 160:
+            # Preserve the strongest historical trajectory as a verified fallback.
+            v13 = self._run_portfolio_v13(game_map, options)
+            return max((v14, v13), key=self._result_rank)
+        return v14
+
+    def _run_portfolio_v13(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        """Predictive V13 competition portfolio preserved as a historical fallback.
+
+        Official evaluation maps are documented as at most roughly double the
+        reference map (10x14 = 140 cells).  On that envelope we can afford a
+        deterministic portfolio of several strong trajectories and keep the one
+        with the best *actual* score under the same Simulator.  Above that
+        envelope V13 deliberately switches to the bounded scalable strategy so a
+        user-supplied large map cannot trigger unbounded combinatorial planning.
+        """
+        cells = game_map.height * game_map.width
+        if self._is_stress_map(game_map) or cells > 160:
+            state = MapParser.build_initial_state(game_map)
+            strategy = ScalableStrategy(
+                max_stones_per_hero=min(12, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(6, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(16, min(48, options.stuck_end_threshold * 4)),
+                max_ticks=min(game_map.time_limit, max(options.scalable_max_ticks, 500)),
+            )
+            return trim_to_best_score_prefix(
+                Simulator(state).run_strategy(strategy),
+                time_limit=game_map.time_limit,
+            )
+
+        unlock_checks = min(72, max(24, options.max_unlock_obstacles * 3))
+        common = dict(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(24, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(36, options.stuck_end_threshold * 4),
+            max_unlock_checks=unlock_checks,
+        )
+
+        # Keep the portfolio deliberately compact. V12 already contains its own
+        # proven fallback, while V10 and V8 provide useful independent trajectories.
+        # This gives diversity without the pathological runtime of running every
+        # historical strategy on obstacle-dense 10x14 maps.
+        factories = [
+            lambda: PredictiveGlobalPortfolioStrategy(planning_bias='score', **common),
+            lambda: PredictiveGlobalPortfolioStrategy(planning_bias='balanced', **common),
+            lambda: PredictiveGlobalPortfolioStrategy(planning_bias='time', **common),
+            lambda: StaminaAwareCollaborativePortfolioStrategy(**common),
+        ]
+
+        results: list[SimulationResult] = []
+        for factory in factories:
+            state = MapParser.build_initial_state(game_map)
+            result = Simulator(state).run_strategy(factory())
+            results.append(trim_to_best_score_prefix(result, time_limit=game_map.time_limit))
+
+        # Include the exact V12 service result (including its proven fallback), not
+        # just a raw V12 instance. This makes V13 monotonic with respect to V12 on
+        # every evaluation-sized map under the same rules engine.
+        results.append(self._run_portfolio_v12(game_map, options))
+        return max(results, key=self._result_rank)
+
+
+    def _run_portfolio_v12(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            return self._run_portfolio_v10(game_map, options)
+        etat = MapParser.build_initial_state(game_map)
+        cells = game_map.height * game_map.width
+        if cells <= 160:
+            unlock_checks = min(64, max(20, options.max_unlock_obstacles * 2))
+        elif cells <= 400:
+            unlock_checks = min(24, max(12, options.max_unlock_obstacles))
+        else:
+            unlock_checks = min(18, max(10, options.max_unlock_obstacles // 2 + 8))
+        strategie = AddendumAwareParallelPortfolioStrategy(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(20, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(32, options.stuck_end_threshold * 4),
+            max_unlock_checks=unlock_checks,
+        )
+        resultat = Simulator(etat).run_strategy(strategie)
+        resultat = trim_to_best_score_prefix(resultat, time_limit=game_map.time_limit)
+        # V12 is a portfolio wrapper around the preserved V10/V11 core. The new
+        # official look-ahead can invalidate an old micro-plan even on a legacy
+        # flat map. If the latest candidate does not finish a small evaluation-
+        # sized map, compare the proven V6 trajectory under the SAME current
+        # simulator/rules and keep the actually higher-ranked result. This does
+        # not modify V6 or V10/V11 and never bypasses addendum rules.
+        if game_map.height * game_map.width <= 160 and resultat.final_snapshot.get('end_reason') != 'OBJECTIVES_FINISHED':
+            fallback = self._run_portfolio_v6(game_map, options)
+            resultat = max((resultat, fallback), key=self._result_rank)
+        return resultat
+
+
+    def _run_portfolio_v11(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            return self._run_portfolio_v10(game_map, options)
+        etat = MapParser.build_initial_state(game_map)
+        cells = game_map.height * game_map.width
+        if cells <= 160:
+            unlock_checks = min(64, max(20, options.max_unlock_obstacles * 2))
+        elif cells <= 400:
+            unlock_checks = min(24, max(12, options.max_unlock_obstacles))
+        else:
+            unlock_checks = min(18, max(10, options.max_unlock_obstacles // 2 + 8))
+        strategie = StrictPriorityPortfolioStrategy(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(20, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(32, options.stuck_end_threshold * 4),
+            max_unlock_checks=unlock_checks,
+        )
+        resultat = Simulator(etat).run_strategy(strategie)
+        return trim_to_best_score_prefix(resultat, time_limit=game_map.time_limit)
+
+
+    def _run_portfolio_v10(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            etat = MapParser.build_initial_state(game_map)
+            strategie = ScalableStrategy(
+                max_stones_per_hero=min(10, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(4, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(12, min(40, options.stuck_end_threshold * 3)),
+                max_ticks=min(game_map.time_limit, max(options.scalable_max_ticks, 350)),
+            )
+            resultat = Simulator(etat).run_strategy(strategie)
+        else:
+            etat = MapParser.build_initial_state(game_map)
+            cells = game_map.height * game_map.width
+            if cells <= 160:
+                unlock_checks = min(64, max(20, options.max_unlock_obstacles * 2))
+            elif cells <= 400:
+                unlock_checks = min(24, max(12, options.max_unlock_obstacles))
+            else:
+                unlock_checks = min(18, max(10, options.max_unlock_obstacles // 2 + 8))
+            strategie = OpportunityCommittedPortfolioStrategy(
+                max_stones_per_hero=options.max_stones_per_hero,
+                max_chest_pairs_per_hero=max(20, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(32, options.stuck_end_threshold * 4),
+                max_unlock_checks=unlock_checks,
+            )
+            resultat = Simulator(etat).run_strategy(strategie)
+        return trim_to_best_score_prefix(resultat, time_limit=game_map.time_limit)
+
+
+    def _run_portfolio_v9(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            etat = MapParser.build_initial_state(game_map)
+            strategie = ScalableStrategy(
+                max_stones_per_hero=min(10, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(4, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(12, min(40, options.stuck_end_threshold * 3)),
+                max_ticks=min(game_map.time_limit, max(options.scalable_max_ticks, 350)),
+            )
+            resultat = Simulator(etat).run_strategy(strategie)
+        else:
+            etat = MapParser.build_initial_state(game_map)
+            cells = game_map.height * game_map.width
+            if cells <= 160:
+                unlock_checks = min(64, max(20, options.max_unlock_obstacles * 2))
+            elif cells <= 400:
+                unlock_checks = min(24, max(12, options.max_unlock_obstacles))
+            else:
+                unlock_checks = min(18, max(10, options.max_unlock_obstacles // 2 + 8))
+            strategie = StrategicRelayPortfolioStrategy(
+                max_stones_per_hero=options.max_stones_per_hero,
+                max_chest_pairs_per_hero=max(20, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(24, options.stuck_end_threshold * 3),
+                max_unlock_checks=unlock_checks,
+            )
+            resultat = Simulator(etat).run_strategy(strategie)
+        return trim_to_best_score_prefix(resultat, time_limit=game_map.time_limit)
+
+
+    def _run_portfolio_v8(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        if self._is_stress_map(game_map):
+            etat = MapParser.build_initial_state(game_map)
+            strategie = ScalableStrategy(
+                max_stones_per_hero=min(10, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(4, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(12, min(40, options.stuck_end_threshold * 3)),
+                max_ticks=min(game_map.time_limit, max(options.scalable_max_ticks, 350)),
+            )
+            resultat = Simulator(etat).run_strategy(strategie)
+        else:
+            etat = MapParser.build_initial_state(game_map)
+            cells = game_map.height * game_map.width
+            if cells <= 160:
+                unlock_checks = min(64, max(20, options.max_unlock_obstacles * 2))
+            elif cells <= 400:
+                unlock_checks = min(24, max(12, options.max_unlock_obstacles))
+            else:
+                unlock_checks = min(18, max(10, options.max_unlock_obstacles // 2 + 8))
+            strategie = StaminaAwareCollaborativePortfolioStrategy(
+                max_stones_per_hero=options.max_stones_per_hero,
+                max_chest_pairs_per_hero=max(20, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(24, options.stuck_end_threshold * 3),
+                max_unlock_checks=unlock_checks,
+            )
+            resultat = Simulator(etat).run_strategy(strategie)
+        return trim_to_best_score_prefix(resultat, time_limit=game_map.time_limit)
+
+
+    def simulate(self, *, map_text: str, elevation_text: str | None = None, mission_name: str, strategy_options: StrategyOptions) -> SimulationResponse:
+        carte_jeu = MapParser.parse(map_text, elevation_text=elevation_text)
+        if strategy_options.name == 'portfolio_v14':
+            resultat = self._run_portfolio_v14(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v13':
+            resultat = self._run_portfolio_v13(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v12':
+            resultat = self._run_portfolio_v12(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v11':
+            resultat = self._run_portfolio_v11(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v10':
+            resultat = self._run_portfolio_v10(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v9':
+            resultat = self._run_portfolio_v9(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v8':
+            resultat = self._run_portfolio_v8(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v7':
+            resultat = self._run_portfolio_v7(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v6':
+            resultat = self._run_portfolio_v6(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v5':
+            resultat = self._run_portfolio_v5(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v4':
+            resultat = self._run_portfolio_v4(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v3':
+            resultat = self._run_portfolio(carte_jeu, strategy_options)
+        else:
+            etat = MapParser.build_initial_state(carte_jeu)
+            if strategy_options.name == 'heuristic_v1':
+                strategie = HeuristicStrategy(max_stones_per_hero=strategy_options.max_stones_per_hero, max_chest_pairs_per_hero=strategy_options.max_chest_pairs_per_hero, stuck_end_threshold=strategy_options.stuck_end_threshold)
+            elif strategy_options.name == 'scalable_v1':
+                strategie = ScalableStrategy(
+                    max_stones_per_hero=min(6, strategy_options.max_stones_per_hero),
+                    max_chest_pairs_per_hero=min(2, strategy_options.max_chest_pairs_per_hero),
+                    stuck_end_threshold=max(8, min(24, strategy_options.stuck_end_threshold * 2)),
+                    max_ticks=min(carte_jeu.time_limit, strategy_options.scalable_max_ticks),
+                )
+            else:
+                strategie = self._adaptive_from_options(strategy_options)
+            resultat = Simulator(etat).run_strategy(strategie)
+        reponse = self._response_from_result(result=resultat, game_map=carte_jeu, mission_name=mission_name)
+        self._persist(reponse)
+        return reponse
+
+    def replay(self, *, map_text: str, elevation_text: str | None = None, mission_name: str, actions: list[dict[HeroId, HeroAction]], stop_when_objectives_finished: bool=False) -> SimulationResponse:
+        carte_jeu = MapParser.parse(map_text, elevation_text=elevation_text)
+        if len(actions) > carte_jeu.time_limit:
+            raise ValueError(f'Nombre de ticks {len(actions)} supérieur au TIME_LIMIT {carte_jeu.time_limit}.')
+        etat = MapParser.build_initial_state(carte_jeu)
+        resultat = Simulator(etat).run_actions(actions, stop_when_objectives_finished=stop_when_objectives_finished)
+        reponse = self._response_from_result(result=resultat, game_map=carte_jeu, mission_name=mission_name)
+        self._persist(reponse)
+        return reponse
+
+    def get(self, simulation_id: str) -> SimulationResponse:
+        with self._lock:
+            reponse = self._responses.get(simulation_id)
+        if reponse is None:
+            raise SimulationNotFound(simulation_id)
+        return reponse
+
+    def actions_path(self, simulation_id: str) -> Path:
+        self.get(simulation_id)
+        return settings.output_dir / f'{simulation_id}_actions.txt'
+simulation_service = SimulationService()

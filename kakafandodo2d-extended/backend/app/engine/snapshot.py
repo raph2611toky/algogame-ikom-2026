@@ -1,0 +1,14 @@
+from __future__ import annotations
+from app.domain.models import GameState, Position
+
+def pos_dict(pos: Position) -> dict[str, int]:
+    return {'row': pos.row, 'col': pos.col}
+
+def snapshot_state(state: GameState) -> dict[str, object]:
+    current_score = (
+        state.secured_chests * 150
+        + state.total_hero_stones * 25
+        + (state.total_stamina + state.total_battery) // 4
+        + state.remaining_time // 2
+    )
+    return {'elapsed': state.elapsed, 'remaining_time': state.remaining_time, 'current_score': current_score, 'score_inputs': {'secured_chests': state.secured_chests, 'hero_stones': state.total_hero_stones, 'total_stamina': state.total_stamina, 'total_battery': state.total_battery}, 'heroes': {id_heros.value: {'position': pos_dict(heros.position), 'stamina': heros.stamina, 'battery': heros.battery, 'stones': heros.stones, 'hacking_machine_id': heros.hacking_machine_id} for id_heros, heros in state.heroes.items()}, 'machines': {id_machine: {'kind': machine.kind.value, 'position': pos_dict(machine.position), 'orientation': machine.orientation.value, 'hacked_by': machine.hacked_by.value if machine.hacked_by else None, 'carried_stones': machine.carried_stones, 'pending_move': machine.pending_move, 'auto_move_pending': machine.auto_move_pending, 'steps_since_dig': machine.steps_since_dig, 'last_action': machine.last_action.value} for id_machine, machine in state.machines.items()}, 'props': {'stones': [pos_dict(point) for point in sorted(state.stones)], 'chests': [pos_dict(point) for point in sorted(state.chests)], 'trees': [pos_dict(point) for point in sorted(state.trees)], 'holes': [pos_dict(point) for point in sorted(state.holes)], 'bushes': [pos_dict(point) for point in sorted(state.game_map.bushes)], 'rocks': [pos_dict(point) for point in sorted(state.game_map.rocks)], 'secured_chests': state.secured_chests, 'lost_chests': state.lost_chests}, 'ended': state.ended, 'end_reason': state.end_reason}

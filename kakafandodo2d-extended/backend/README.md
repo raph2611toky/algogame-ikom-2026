@@ -1,0 +1,376 @@
+# KAKAFANDODO Backend — FastAPI + moteur de règles + IA
+
+Backend local pour KAKAFANDODO / AlgoGames 2. Il est conçu pour que Godot reste responsable du rendu, tandis que FastAPI calcule la carte logique, les règles, les actions, les ressources, le score et le replay.
+
+## Démarrage
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Interfaces de documentation :
+
+```text
+Swagger complet : http://127.0.0.1:8000/docs
+Swagger JSON     : http://127.0.0.1:8000/swagger.json
+OpenAPI FastAPI  : http://127.0.0.1:8000/openapi.json
+ReDoc            : http://127.0.0.1:8000/redoc
+```
+
+### Pourquoi `/swagger.json` est en Swagger 2.0
+
+FastAPI garde son schéma OpenAPI 3.1 canonique dans `/openapi.json`. Pour respecter le besoin UI du projet, `/docs` consomme une vue documentaire Swagger 2.0 générée **à partir du vrai schéma FastAPI** : les routes multipart n'y ont aucun `requestBody`; chaque fichier/champ est affiché comme paramètre manuel `formData`.
+
+Exemples :
+
+- `/api/v1/maps/upload` → `file`, `elevation_file` (optionnel) ;
+- `/api/v1/simulations/upload` → `file`, `elevation_file` (optionnel), `name`, `strategy_json` ;
+- `/api/v1/simulation-jobs/upload` → `file`, `elevation_file` (optionnel), `name`, `strategy_json` ;
+- `/api/v1/simulations/replay-upload` → `map_file`, `elevation_file` (optionnel), `actions_file`, `name`, `stop_when_objectives_finished`.
+
+Les modèles de réponse du Swagger sont les mêmes modèles Pydantic que ceux utilisés par les vues FastAPI.
+
+
+## Second-week addendum — elevation + Look Ahead officiel
+
+Le backend supporte désormais les deux formats de mission :
+
+- **historique** : `map.txt` seul ; le moteur crée une grille d'élévation interne à `0` partout et conserve les anciennes cartes ;
+- **second-week** : `map.txt` + `elevation.txt` ; les cellules accessibles ont une altitude `1..9`, les rochers `#` valent `0`.
+
+Le nouveau **Look Ahead** des machines est une règle globale du moteur et s'applique avec ou sans `elevation.txt`. Pour une machine orientée vers la droite, la géométrie clarifiée est :
+
+```text
+..3.
+.G12
+..4.
+```
+
+`1` est la destination, `2` la case deux cellules devant et `3/4` les deux cellules latérales autour de la destination. Une autre machine présente dans ce périmètre interdit le MOVE. Le contrôle est refait au deuxième tick du MOVE. Si la machine est autonome, elle annule puis tourne selon sa règle X/G ; si elle est hackée, `HACK_MOVE` devient un WAIT implicite sans rotation.
+
+Lorsqu'un coffre est directement devant la machine, le scan officiel passe à six cellules : les six sont sensibles aux autres machines et les trois les plus proches du coffre donnent également la priorité à F/M. Les cas où un héros pourrait pousser un coffre voisin dans la destination de la machine sont aussi protégés. **Le Look Ahead est évalué avant les contraintes d'élévation.**
+
+Voir `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md` pour la matrice complète des règles et les choix de compatibilité.
+
+## Architecture
+
+```text
+backend/
+├── app/
+│   ├── api/
+│   │   ├── router.py
+│   │   ├── swagger.py
+│   │   └── routes/
+│   │       ├── contracts.py
+│   │       ├── health.py
+│   │       ├── maps.py
+│   │       ├── settings.py
+│   │       ├── strategies.py
+│   │       ├── simulation_jobs.py
+│   │       └── simulations.py
+│   ├── core/
+│   ├── domain/
+│   │   ├── enums.py
+│   │   ├── mappings.py
+│   │   └── models.py
+│   ├── engine/
+│   │   ├── actions_parser.py
+│   │   ├── actions_writer.py
+│   │   ├── chest_planner.py
+│   │   ├── machine_pathfinding.py
+│   │   ├── machine_planner.py
+│   │   ├── map_parser.py
+│   │   ├── pathfinding.py
+│   │   ├── score_pathfinding.py
+│   │   ├── rules.py
+│   │   ├── scoring.py
+│   │   ├── simulator.py
+│   │   ├── snapshot.py
+│   │   ├── strategy.py
+│   │   ├── strategy_v2.py
+│   │   ├── strategy_v4.py
+│   │   ├── strategy_v5.py
+│   │   ├── strategy_v6.py
+│   │   ├── strategy_v7.py
+│   │   ├── strategy_v8.py
+│   │   ├── strategy_v9.py
+│   │   ├── strategy_v10.py
+│   │   ├── strategy_v11.py
+│   │   ├── strategy_v12.py
+│   │   ├── strategy_registry.py
+│   │   └── strategy_scalable.py
+│   ├── schemas/
+│   ├── services/
+│   │   ├── settings_service.py
+│   │   ├── simulation_job_service.py
+│   │   └── simulation_service.py
+│   └── main.py
+├── docs/
+├── maps/
+├── output/
+├── scripts/
+├── tests/
+├── requirements.txt
+├── pyproject.toml
+└── run.sh
+```
+
+## Format `map.txt`
+
+```text
+H W TIME_LIMIT
+<row 1>
+...
+<row H>
+```
+
+Alphabet :
+
+```text
+. vide
+F Ikotofosa
+M Imahaki
+# rocher
+t arbre
+o trou
+X Excavator
+G Grappler
+* coffre
++ pierre
+@ cachette
+```
+
+Le parser valide les dimensions, le temps, l'alphabet, la présence unique de F/M et les limites de sécurité.
+
+### Format optionnel `elevation.txt`
+
+Pour une carte `H × W`, le fichier ne contient **pas d'en-tête** : exactement `H` lignes de `W` chiffres.
+
+```text
+221134
+211235
+346064
+```
+
+Règles de validation :
+
+```text
+cellule accessible : 1..9
+rocher #            : 0
+```
+
+Si `elevation.txt` est absent ou vide, le backend génère uniquement en mémoire une grille `0` de taille `H × W` avec `has_elevation=false`. Cela permet aux anciens appels JSON, multipart et replay de rester valides.
+
+
+## Moteur de règles
+
+Le moteur implémente notamment :
+
+- déplacements orthogonaux et WAIT ;
+- Ikotofosa : saut d'un seul trou, contrôle des Excavators, `HACK_FILL` ;
+- Imahaki : franchissement d'un seul arbre, contrôle des Grapplers ;
+- stamina, batterie et récupération ;
+- pierres, coffres, cachettes, trous, arbres et rochers ;
+- poussées simultanées et pertes/sécurisation de coffres ;
+- pierres ramassées par les machines puis récupérables par F/M ;
+- `HACK`, `HACK_MOVE`, `HACK_CW`, `HACK_CCW`, `HACK_FILL` et compatibilité `HACK_CUT` ;
+- MOVE machine en deux ticks ;
+- routines autonomes X/G, orientations initiales et rotations lorsqu'ils sont bloqués ;
+- hack : arrêt des mouvements/rotations automatiques et suspension du DIG de l'Excavator ;
+- Grappler hacké : CUT automatique toujours actif lorsqu'il rencontre un arbre ;
+- Look Ahead officiel des machines, vérifié à la mise en file puis au deuxième tick du MOVE ;
+- priorité du Look Ahead sur l'élévation et sur `HACK_MOVE` ;
+- scan six cellules lorsqu'une machine pousse un coffre et priorité F/M sur les trois cellules proches ;
+- protection des coffres voisins qu'un héros pourrait pousser dans la destination d'une machine ;
+- règles d'élévation F/M, machines et coffres, y compris destruction d'un coffre sur une falaise de 5+ niveaux ;
+- protection anti-collision lors des poussées de coffres entre machines ou héros/machine ;
+- Excavator : creusement après cinq déplacements automatiques ;
+- Grappler : coupe automatique d'un arbre occupé ;
+- collisions entre machines ;
+- score, snapshots, replay et `actions.txt`.
+
+
+## IA : `portfolio_v14` par défaut
+
+`portfolio_v14` conserve le moteur de règles Addendum et les protections V12/V13, mais ajoute la couche qui manquait pour raisonner **en missions globales** plutôt qu'en objectifs locaux. F et M évaluent ensemble les coffres directs, les coffres nécessitant une machine, les pierres et les pierres transportées par les machines.
+
+Principales améliorations :
+
+- `MachineChestPlanner` dédié : une machine hackée peut être volontairement placée derrière un coffre, orientée puis utilisée pour le pousser jusqu'à une cachette, y compris pour les montées de coffre autorisées aux machines mais interdites aux héros ;
+- recherche A* au niveau `(position machine, orientation, position coffre)` avec le planner machine existant pour les repositionnements ;
+- allocation conjointe F+M : les paires de missions sont comparées avec leur temps réellement parallèle, conflits de coffre/machine, chevauchement géographique et valeur de score ;
+- plus de phase forcée « beaucoup de pierres => pierres d'abord » : coffres, pierres et missions machines concourent toujours sur la même échelle de valeur ;
+- utilité en quarts de point de score : `coffre=600`, `pierre=100`, `tick=-2`, `stamina=-1`, `battery=-1`, plus une pénalité de réserve non linéaire lorsque la stamina devient critique ;
+- les pierres proches d'une trajectoire coffre deviennent des bonus opportunistes plutôt que des détours systématiques ;
+- poursuite/interception bornée d'une machine autonome avec rollout du vrai `Simulator` lorsque sa position actuelle ne suffit pas ;
+- chaque `HACK_MOVE` est revalidé juste avant exécution, et un MOVE annulé au deuxième tick par Look Ahead provoque un replan au lieu d'une dérive silencieuse ;
+- suivi de l'identité physique du coffre pendant ses déplacements afin qu'un héros ne vole pas la mission mobile de l'autre ;
+- réservation dynamique des coffres et machines entre F et M ;
+- release sûr d'une machine lorsqu'une mission est abandonnée, pour éviter qu'elle ne pousse ensuite automatiquement le coffre dans une position irrécupérable ;
+- utilisation volontaire de la batterie lorsque son coût est inférieur au gain attendu, avec récupération/préservation de stamina pendant le contrôle d'une machine ;
+- pour `161..400` cellules, V14 reste prédictif en mode borné au lieu de basculer brutalement vers `scalable_v1` ; au-delà, le fallback scalable conserve désormais lui aussi une comparaison coffres/pierres sans priorité rigide aux pierres ;
+- pour les cartes `<=160` cellules, le service compare V14 au résultat exact V13 et conserve le meilleur, ce qui préserve le meilleur comportement historique sous le même simulateur.
+
+La FAQ `DIG sur bush` reste respectée : le trou peut coexister avec la cachette, le bush reste valide pour sécuriser un coffre, sauf si le coffre subit une chute de 5 niveaux ou plus. Les protections Look Ahead, élévation, collisions et replay restent centralisées dans `Rules`/`Simulator`; V14 ne les duplique pas.
+
+Une régression compétition `15x20` est fournie dans `maps/regression/`. Sur cette carte, l'ancien résultat observé avec le fallback V13 était `818`, `2/5` coffres, `10/10` pierres, stamina totale `7`, batterie `200`. Le benchmark V14 déterministe termine actuellement avec `5/5` coffres, `10/10` pierres, `0` coffre perdu, score local `1214`, `176` ticks, stamina totale `122` et batterie restante `86`. Exécuter `python scripts/benchmark_v14.py` pour le revérifier localement.
+
+Le catalogue dynamique reste disponible via `GET /api/v1/strategies`. Voir `docs/PORTFOLIO_V14.md`, `docs/VERIFICATION_V0.14.0.md`, `docs/PORTFOLIO_V13.md` et `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md`.
+
+## IA historique : `portfolio_v9`
+
+Le catalogue est dynamique via `GET /api/v1/strategies`. Le frontend 2D peut donc choisir une stratégie sans modification de code côté menu.
+
+```text
+portfolio_v14  missions globales F/M + coffres assistés par machines + prédiction
+portfolio_v13  global/predictif, score+elevation-aware, fallback historique
+portfolio_v12  second-week, cœur v11/v10 préservé + méta-règles Addendum
+portfolio_v11  parallélisme progressif par rôles
+portfolio_v10  opportunités + micro-plans + protection coffres
+portfolio_v9   historique, cœur v8 + relais minimal anti ping-pong
+portfolio_v8   précédent, stamina + handoff + score peak
+portfolio_v7   collaboratif + cache structurel précédent
+portfolio_v6   collaboratif optimisé précédent
+portfolio_v5   collaboratif précédent
+portfolio_v4   chest-first précédent
+portfolio_v3   portfolio score historique
+adaptive_v2    planificateur score-aware/ability-aware
+heuristic_v1   baseline historique
+scalable_v1    grandes cartes / stress tests
+```
+
+
+### `portfolio_v9`
+
+`portfolio_v9` est désormais une **couche minimale au-dessus de `portfolio_v8`**. Les choix de coffres, le cache/validation des routes, le déblocage X/G, les pierres, les machines et le score peak restent ceux de v8. V9 ajoute seulement une affinité de pousseur pour éviter le ping-pong F/M sur le même coffre, un filtrage de relais lorsque le dernier coffre est manipulé avec très peu de stamina, et un staging très conservateur uniquement à la place d'un WAIT de réserve déjà décidé par v8. Voir `docs/PORTFOLIO_V9.md`.
+
+### `portfolio_v8`
+
+`portfolio_v8` conserve les priorités de v7 mais ajoute quatre protections : relais de pousseur en fonction de la stamina, invalidation immédiate d'une route coffre lorsque DIG/CUT modifie le terrain, orientation sûre d'une machine avant tout UNHACK, et conservation du meilleur préfixe de score lorsque poursuivre la trajectoire ferait baisser le score final. Chaque snapshot expose aussi `current_score`, calculé avec la formule officielle. Voir `docs/PORTFOLIO_V8.md`.
+
+### `portfolio_v7`
+
+Version précédente gardée pour comparaison dynamique depuis Godot. Elle conserve le cache structurel et l'orchestration collaborative de v6, mais ne possède pas les protections stamina/route dynamique/score peak de v8. Voir `docs/PORTFOLIO_V7.md`.
+
+### `adaptive_v2`
+
+Le planificateur tient directement compte de la formule de score : en quarts de point, un tick coûte `2`, une stamina dépensée coûte `1` et une batterie dépensée coûte `1`. Il combine :
+
+- A* score-aware pour F/M ;
+- capacité spéciale de F sur les trous et de M sur les arbres ;
+- planification Sokoban des coffres ;
+- routeur de machines avec orientation + rotations + MOVE 2 ticks ;
+- analyse marginale des obstacles : un trou/arbre n'est traité que s'il débloque réellement du score ;
+- coopération croisée F/X ↔ M/G ;
+- anticipation des coffres que les machines autonomes risquent de perdre ;
+- interception/hacking préventif ;
+- repositionnement sécurisé d'une machine contrôlée lorsqu'elle bloque le plan du partenaire ;
+- immobilisation coopérative d'une machine dangereuse pendant qu'une autre termine un déblocage critique ;
+- réévaluation à chaque tick.
+
+### `portfolio_v6`
+
+Version précédente de la stratégie chest-first collaborative : plusieurs coffres directs sont répartis entre F et M, les obstacles sont traités par le héros/machine adapté, et tout héros non requis pour un déblocage collecte une pierre ou prépare un autre coffre au lieu d'attendre. Lorsqu'il ne reste que des pierres, les cibles sont affectées conjointement aux deux héros. Les coffres géométriquement impossibles sont écartés afin d'éviter les hacks sans objectif. Voir `docs/PORTFOLIO_V5.md`.
+
+### `portfolio_v3`
+
+Le jeu permet de pré-calculer les actions. `portfolio_v3` exploite cela : il exécute plusieurs planificateurs depuis exactement le même état initial dans le moteur de règles, calcule leur score réel local, puis conserve **le meilleur plan vérifié**. Il inclut toujours `adaptive_v2` et `heuristic_v1`, et ajoute des recherches adaptatives plus larges sur les cartes de taille raisonnable.
+
+Cela garantit dans le moteur local que `portfolio_v3` ne choisit jamais un plan moins bien scoré que les stratégies incluses. Il ne prétend pas résoudre mathématiquement l'optimum global d'un espace d'état arbitrairement grand ; il fournit un optimiseur pratique, déterministe et vérifié par simulation.
+
+## Routes
+
+```text
+GET  /api/v1/health
+GET  /api/v1/contracts
+GET  /api/v1/strategies
+GET  /api/v1/settings
+PUT  /api/v1/settings
+POST /api/v1/settings/reset
+
+POST /api/v1/maps/parse
+POST /api/v1/maps/upload
+
+POST /api/v1/simulation-jobs
+POST /api/v1/simulation-jobs/upload
+GET  /api/v1/simulation-jobs/{job_id}
+GET  /api/v1/simulation-jobs/{job_id}/result
+
+POST /api/v1/simulations
+POST /api/v1/simulations/upload
+POST /api/v1/simulations/replay
+POST /api/v1/simulations/replay-text
+POST /api/v1/simulations/replay-upload
+GET  /api/v1/simulations/{simulation_id}
+GET  /api/v1/simulations/{simulation_id}/actions.txt
+```
+
+## `actions.txt`
+
+```text
+LEFT | LEFT
+UP | RIGHT
+WAIT | HACK
+HACK_MOVE | WAIT
+WAIT | WAIT
+END_GAME
+```
+
+Chaque simulation persiste également :
+
+```text
+output/<simulation_id>_actions.txt
+```
+
+## Tests et vérifications
+
+```bash
+pytest -q
+```
+
+La suite vérifie notamment :
+
+- le replay tick-par-tick de l'annexe officielle ;
+- parsing/collisions/stamina/batterie/machines/coffres ;
+- les capacités spécifiques de F et M ;
+- la compatibilité F→Excavator et M→Grappler ;
+- le comportement de l'optimiseur sur les cartes de test ;
+- les clarifications AlgoMada sur hack/CUT/DIG et le Look Ahead second-week ;
+- les règles d'élévation héros/machines/coffres, hop/climb et falaise ;
+- la compatibilité `map.txt` seul avec grille d'élévation zéro ;
+- une carte mécanique 4x5 contenant tous les éléments ;
+- une carte 10x14 correspondant au double de la référence 5x7 ;
+- qu'un plan généré se rejoue avec exactement le même score ;
+- toutes les routes Swagger ;
+- que les multipart sont bien des paramètres `formData` sans `requestBody` dans `/swagger.json` ;
+- que `/openapi.json` reste le schéma FastAPI OpenAPI 3 canonique.
+
+## Documents
+
+- `docs/API_CONTRACT.md` : contrat Godot ↔ FastAPI.
+- `docs/GDD_INTERPRETATIONS.md` : ambiguïtés du GDD documentées explicitement.
+- `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md` : implémentation du second-week addendum et compatibilité legacy.
+- `docs/PORTFOLIO_V13.md` : architecture de la stratégie globale/prédictive.
+- `docs/VERIFICATION_V0.14.0.md` : matrice de tests et benchmark de cette version.
+- `docs/VERIFICATION_V0.13.0.md` : vérification historique V13.
+- `docs/VERIFICATION_V0.12.0.md` : historique de vérification de la version précédente.
+
+
+## Intégration Godot 2D
+
+Le frontend minimal utilise par défaut `http://127.0.0.1:8000/api/v1`.
+
+Routes utilisées directement par Godot :
+
+- `GET /health` : test de disponibilité du backend.
+- `POST /maps/upload` : validation multipart de `map.txt` et de `elevation.txt` lorsqu'il est fourni.
+- `POST /simulations` : calcul complet de la simulation et des ticks à jouer.
+- `GET /settings` : chargement des paramètres persistés.
+- `PUT /settings` : sauvegarde des paramètres.
+- `POST /settings/reset` : réinitialisation des paramètres.
+- `POST /simulations/replay-text` : vérification d'un `actions.txt` déjà calculé.
+
+Les paramètres sont sauvegardés dans `data/settings.json` par défaut.
