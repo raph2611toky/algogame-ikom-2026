@@ -52,4 +52,4 @@ class ContractResponse(APIModel):
     timing: TimingContractSchema
     resources: ResourcesContractSchema
     score_formula: str
-    default_strategy: str = 'portfolio_v13'
+    default_strategy: str = 'portfolio_v14'

@@ -193,35 +193,40 @@ Le moteur implémente notamment :
 - score, snapshots, replay et `actions.txt`.
 
 
-## IA : `portfolio_v13` par défaut
+## IA : `portfolio_v14` par défaut
 
-`portfolio_v13` **conserve les mécaniques déjà validées** et ajoute une couche de décision globale/prédictive au-dessus de V12. Le moteur de règles reste l'unique source de vérité; V13 améliore surtout le choix des objectifs, routes et machines.
+`portfolio_v14` conserve le moteur de règles Addendum et les protections V12/V13, mais ajoute la couche qui manquait pour raisonner **en missions globales** plutôt qu'en objectifs locaux. F et M évaluent ensemble les coffres directs, les coffres nécessitant une machine, les pierres et les pierres transportées par les machines.
 
 Principales améliorations :
 
-- comparaison des routes avec la vraie perte de score (`2 × ticks + stamina + batterie`) plutôt qu'avec Manhattan ou le temps seul;
-- graphe de déplacement naturellement dirigé par l'élévation : une descente possible ne suppose jamais que le retour soit possible;
-- estimation des tâches X/G avec `find_score_path` + le vrai planner machine, donc détours, rotations, batterie, élévation et Look Ahead sont intégrés;
-- analyse complète `déblocage -> route coffre -> cachette`, bonus pour obstacles partagés et pierres récoltées sur le chemin;
-- prévision des dangers autonomes par copie de l'état + **Simulator de production**, afin que les autres machines bougent aussi pendant le forecast;
-- validation temporelle des micro-plans d'une machine déjà hackée pour détecter un Look Ahead qui deviendrait bloquant au second tick;
-- plans directs V13 conservateurs vis-à-vis d'une machine actuellement derrière le coffre, sans changer le comportement des anciennes stratégies;
-- arrêt immédiat lorsque les objectifs sont terminés, même si un ancien micro-plan machine est encore mémorisé;
-- portfolio final borné sur les cartes d'évaluation : trois biais V13 (`score`, `balanced`, `time`) + V12 + V8, tous rejoués sous le **même simulateur**, puis sélection du meilleur résultat réel;
-- au-delà de 160 cellules, bascule vers `scalable_v1` pour éviter un emballement combinatoire sur des cartes utilisateur hors enveloppe d'évaluation.
+- `MachineChestPlanner` dédié : une machine hackée peut être volontairement placée derrière un coffre, orientée puis utilisée pour le pousser jusqu'à une cachette, y compris pour les montées de coffre autorisées aux machines mais interdites aux héros ;
+- recherche A* au niveau `(position machine, orientation, position coffre)` avec le planner machine existant pour les repositionnements ;
+- allocation conjointe F+M : les paires de missions sont comparées avec leur temps réellement parallèle, conflits de coffre/machine, chevauchement géographique et valeur de score ;
+- plus de phase forcée « beaucoup de pierres => pierres d'abord » : coffres, pierres et missions machines concourent toujours sur la même échelle de valeur ;
+- utilité en quarts de point de score : `coffre=600`, `pierre=100`, `tick=-2`, `stamina=-1`, `battery=-1`, plus une pénalité de réserve non linéaire lorsque la stamina devient critique ;
+- les pierres proches d'une trajectoire coffre deviennent des bonus opportunistes plutôt que des détours systématiques ;
+- poursuite/interception bornée d'une machine autonome avec rollout du vrai `Simulator` lorsque sa position actuelle ne suffit pas ;
+- chaque `HACK_MOVE` est revalidé juste avant exécution, et un MOVE annulé au deuxième tick par Look Ahead provoque un replan au lieu d'une dérive silencieuse ;
+- suivi de l'identité physique du coffre pendant ses déplacements afin qu'un héros ne vole pas la mission mobile de l'autre ;
+- réservation dynamique des coffres et machines entre F et M ;
+- release sûr d'une machine lorsqu'une mission est abandonnée, pour éviter qu'elle ne pousse ensuite automatiquement le coffre dans une position irrécupérable ;
+- utilisation volontaire de la batterie lorsque son coût est inférieur au gain attendu, avec récupération/préservation de stamina pendant le contrôle d'une machine ;
+- pour `161..400` cellules, V14 reste prédictif en mode borné au lieu de basculer brutalement vers `scalable_v1` ; au-delà, le fallback scalable conserve désormais lui aussi une comparaison coffres/pierres sans priorité rigide aux pierres ;
+- pour les cartes `<=160` cellules, le service compare V14 au résultat exact V13 et conserve le meilleur, ce qui préserve le meilleur comportement historique sous le même simulateur.
 
-La FAQ `DIG sur bush` est aussi prise en compte : le trou reste présent, mais le bush reste une cachette; seule une chute de coffre de 5 niveaux ou plus garde une priorité supérieure.
+La FAQ `DIG sur bush` reste respectée : le trou peut coexister avec la cachette, le bush reste valide pour sécuriser un coffre, sauf si le coffre subit une chute de 5 niveaux ou plus. Les protections Look Ahead, élévation, collisions et replay restent centralisées dans `Rules`/`Simulator`; V14 ne les duplique pas.
 
-Les stratégies V8 à V12 restent sélectionnables pour comparaison. Toutes utilisent toujours le même moteur de règles courant : choisir une ancienne stratégie ne désactive ni l'élévation ni le Look Ahead officiel.
+Une régression compétition `15x20` est fournie dans `maps/regression/`. Sur cette carte, l'ancien résultat observé avec le fallback V13 était `818`, `2/5` coffres, `10/10` pierres, stamina totale `7`, batterie `200`. Le benchmark V14 déterministe termine actuellement avec `5/5` coffres, `10/10` pierres, `0` coffre perdu, score local `1214`, `176` ticks, stamina totale `122` et batterie restante `86`. Exécuter `python scripts/benchmark_v14.py` pour le revérifier localement.
 
-Le catalogue dynamique reste disponible via `GET /api/v1/strategies`. Voir `docs/PORTFOLIO_V13.md`, `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md` et `docs/VERIFICATION_V0.13.0.md`.
+Le catalogue dynamique reste disponible via `GET /api/v1/strategies`. Voir `docs/PORTFOLIO_V14.md`, `docs/VERIFICATION_V0.14.0.md`, `docs/PORTFOLIO_V13.md` et `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md`.
 
 ## IA historique : `portfolio_v9`
 
 Le catalogue est dynamique via `GET /api/v1/strategies`. Le frontend 2D peut donc choisir une stratégie sans modification de code côté menu.
 
 ```text
-portfolio_v13  global/predictif, score+elevation-aware, portfolio vérifié
+portfolio_v14  missions globales F/M + coffres assistés par machines + prédiction
+portfolio_v13  global/predictif, score+elevation-aware, fallback historique
 portfolio_v12  second-week, cœur v11/v10 préservé + méta-règles Addendum
 portfolio_v11  parallélisme progressif par rôles
 portfolio_v10  opportunités + micro-plans + protection coffres
@@ -349,7 +354,8 @@ La suite vérifie notamment :
 - `docs/GDD_INTERPRETATIONS.md` : ambiguïtés du GDD documentées explicitement.
 - `docs/GDD_ADDENDUM_ELEVATION_LOOKAHEAD.md` : implémentation du second-week addendum et compatibilité legacy.
 - `docs/PORTFOLIO_V13.md` : architecture de la stratégie globale/prédictive.
-- `docs/VERIFICATION_V0.13.0.md` : matrice de tests et vérifications de cette version.
+- `docs/VERIFICATION_V0.14.0.md` : matrice de tests et benchmark de cette version.
+- `docs/VERIFICATION_V0.13.0.md` : vérification historique V13.
 - `docs/VERIFICATION_V0.12.0.md` : historique de vérification de la version précédente.
 
 

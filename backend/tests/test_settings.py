@@ -25,6 +25,6 @@ def test_settings_get_put_reset(tmp_path: Path):
         reset = client.post("/api/v1/settings/reset")
         assert reset.status_code == 200
         assert reset.json()["settings"]["sound"] == 80
-        assert reset.json()["settings"]["strategy"]["name"] == "portfolio_v13"
+        assert reset.json()["settings"]["strategy"]["name"] == "portfolio_v14"
     finally:
         settings_service._path = original

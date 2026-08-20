@@ -152,4 +152,4 @@ def test_service_portfolio_v4_is_fast_and_preserves_requested_priority_map() -> 
 
 
 def test_portfolio_v10_is_default_strategy_option() -> None:
-    assert StrategyOptions().name == "portfolio_v13"
+    assert StrategyOptions().name == "portfolio_v14"

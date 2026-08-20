@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict
 
-DEFAULT_STRATEGY = "portfolio_v13"
+DEFAULT_STRATEGY = "portfolio_v14"
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,11 +20,19 @@ class StrategyDescriptor:
 
 STRATEGIES: tuple[StrategyDescriptor, ...] = (
     StrategyDescriptor(
+        "portfolio_v14",
+        "Portfolio v14 — missions globales + coffres assistes par machines",
+        "portfolio",
+        "Strategie recommandee: conserve V13/V12 comme filet de securite et ajoute un MachineChestPlanner pour les pushes uphill, allocation conjointe F+M, cout reel temps/stamina/batterie, reserve de stamina non lineaire, poursuite/interception de machines et release securise avant abandon.",
+        True,
+        True,
+    ),
+    StrategyDescriptor(
         "portfolio_v13",
         "Portfolio v13 — IA globale predictive + elevation",
         "portfolio",
-        "Strategie recommandee: active V10/V11/V12 sur les cartes d evaluation, raisonne en cout de score reel (temps/stamina/batterie), estime les taches machines avec les vrais planners elevation/look-ahead, predit les risques machines dans le simulateur et compare plusieurs trajectoires completes avant de garder la meilleure.",
-        True,
+        "Fallback historique: active V10/V11/V12 sur les cartes d evaluation, raisonne en cout de score reel (temps/stamina/batterie), estime les taches machines avec les vrais planners elevation/look-ahead, predit les risques machines dans le simulateur et compare plusieurs trajectoires completes avant de garder la meilleure.",
+        False,
         True,
     ),
     StrategyDescriptor(

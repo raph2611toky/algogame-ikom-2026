@@ -55,7 +55,7 @@ async def create_job_upload(
     file: Annotated[UploadFile, File(..., description="Fichier map.txt UTF-8 à simuler.")],
     elevation_file: Annotated[UploadFile | None, File(description="Fichier elevation.txt UTF-8 optionnel.")] = None,
     name: Annotated[str, Form(description="Nom de mission.")] = "mission",
-    strategy_json: Annotated[str, Form(description="Options StrategyOptions en JSON.")] = '{"name":"portfolio_v13"}',
+    strategy_json: Annotated[str, Form(description="Options StrategyOptions en JSON.")] = '{"name":"portfolio_v14"}',
 ) -> SimulationJobStatus:
     map_text = await _read_utf8(file, label='map.txt')
     elevation_text = await _read_utf8(elevation_file, label='elevation.txt') if elevation_file is not None else None

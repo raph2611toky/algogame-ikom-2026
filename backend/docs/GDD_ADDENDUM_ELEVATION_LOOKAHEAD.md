@@ -1,6 +1,6 @@
 # AlgoGames 2 - GDD Addendum support
 
-Backend version: **0.13.0**
+Backend version: **0.14.0**
 
 This release adds the second-week `elevation.txt` and machine Look Ahead rules without removing the historical `map.txt` mode or the older strategies.
 
@@ -120,4 +120,4 @@ Clarification appliquée : si un Excavator déclenche DIG alors qu'il se trouve 
 3. perte dans un trou ;
 4. déplacement normal.
 
-La version 0.13.0 ajoute `portfolio_v13`, documenté dans `docs/PORTFOLIO_V13.md`. V12 et les stratégies historiques restent disponibles et utilisent toujours le même moteur de règles Addendum.
+La version 0.14.0 conserve `portfolio_v13` et ajoute `portfolio_v14`, documenté dans `docs/PORTFOLIO_V14.md`. V14 ajoute surtout la planification de missions et de coffres assistés par machines ; V13, V12 et les stratégies historiques restent disponibles et utilisent toujours le même moteur de règles Addendum.

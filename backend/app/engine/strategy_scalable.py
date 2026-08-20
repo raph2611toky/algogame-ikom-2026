@@ -122,18 +122,17 @@ class ScalableStrategy:
         return None
 
     def _candidate_plans(self, state: GameState, hero_id: HeroId) -> list[PlanCandidate]:
-        if len(state.stones) > 8:
-            resultat = self._stone_candidates(state, hero_id)
-            resultat.sort(key=lambda p: (-p.utility_units, p.description))
-            if resultat:
-                return resultat[:4]
+        # Never force a global ``stones first`` phase.  Even on very large maps a
+        # chest is worth six stones in the official score, so direct chests, loose
+        # stones and stones carried by machines must compete on the same utility
+        # scale.  This keeps the bounded fallback aligned with V14 without making
+        # its search combinatorial.
         resultat = self._chest_candidates(state, hero_id)
         resultat.extend(self._stone_candidates(state, hero_id))
-        if len(state.stones) <= 8:
-            resultat.extend(self._machine_stone_candidates(state, hero_id))
-        resultat.sort(key=lambda p: (-p.utility_units, p.description))
+        resultat.extend(self._machine_stone_candidates(state, hero_id))
+        resultat.sort(key=lambda p: (-p.utility_units, len(p.actions), p.description))
         if resultat:
-            return resultat[:6]
+            return resultat[:8]
         machine = self._compatible_machine_candidate(state, hero_id)
         return [machine] if machine is not None else []
 

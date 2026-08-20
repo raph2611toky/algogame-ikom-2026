@@ -2,8 +2,7 @@ from __future__ import annotations
 
 """Compare the local replay with an external official-runner adapter.
 
-The exact AlgoMada Java CLI/output contract was not available when v0.13.0 was
-built.  This script therefore uses a tiny stable adapter protocol: the external
+The exact AlgoMada Java CLI/output contract was not available when this helper was first added in v0.13.0. The v0.14.0 build keeps the same adapter protocol until the official CLI contract is available.  This script therefore uses a tiny stable adapter protocol: the external
 command receives paths through placeholders and must print a JSON object with
 any of the final fields listed in COMPARED_FIELDS.  Once the official Java
 repository is published, either call it directly if it can emit that JSON or

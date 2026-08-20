@@ -20,6 +20,7 @@ from app.engine.strategy_v10 import OpportunityCommittedPortfolioStrategy
 from app.engine.strategy_v11 import StrictPriorityPortfolioStrategy
 from app.engine.strategy_v12 import AddendumAwareParallelPortfolioStrategy
 from app.engine.strategy_v13 import PredictiveGlobalPortfolioStrategy
+from app.engine.strategy_v14 import GlobalMissionPortfolioStrategy
 from app.engine.result_optimizer import trim_to_best_score_prefix
 from app.schemas.simulation import SimulationResponse, StrategyOptions
 
@@ -204,8 +205,56 @@ class SimulationService:
         )
         return Simulator(etat).run_strategy(strategie)
 
+
+    def _run_portfolio_v14(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
+        """Global mission portfolio with machine-assisted chest planning.
+
+        <=160 cells: compare V14 with the proven V13 portfolio to make the new
+        default monotonic on the official evaluation envelope.
+        161..400 cells: use V14's bounded medium planner directly; this is the
+        range where V13 previously fell back to scalable_v1 and missed uphill
+        machine-chest missions.
+        >400/stress: keep the bounded scalable safety profile.
+        """
+        cells = game_map.height * game_map.width
+        if self._is_stress_map(game_map) or cells > 400:
+            state = MapParser.build_initial_state(game_map)
+            strategy = ScalableStrategy(
+                max_stones_per_hero=min(12, options.max_stones_per_hero),
+                max_chest_pairs_per_hero=min(6, options.max_chest_pairs_per_hero),
+                stuck_end_threshold=max(18, min(56, options.stuck_end_threshold * 5)),
+                max_ticks=min(game_map.time_limit, max(options.scalable_max_ticks, 600)),
+            )
+            return trim_to_best_score_prefix(
+                Simulator(state).run_strategy(strategy),
+                time_limit=game_map.time_limit,
+            )
+
+        unlock_checks = min(72, max(24, options.max_unlock_obstacles * 3)) if cells <= 160 else min(32, max(16, options.max_unlock_obstacles + 8))
+        common = dict(
+            max_stones_per_hero=options.max_stones_per_hero,
+            max_chest_pairs_per_hero=max(24, options.max_chest_pairs_per_hero),
+            stuck_end_threshold=max(40, options.stuck_end_threshold * 5),
+            max_unlock_checks=unlock_checks,
+        )
+        state = MapParser.build_initial_state(game_map)
+        v14 = Simulator(state).run_strategy(
+            GlobalMissionPortfolioStrategy(
+                planning_bias='score',
+                medium_mode=cells > 160,
+                **common,
+            )
+        )
+        v14 = trim_to_best_score_prefix(v14, time_limit=game_map.time_limit)
+
+        if cells <= 160:
+            # Preserve the strongest historical trajectory as a verified fallback.
+            v13 = self._run_portfolio_v13(game_map, options)
+            return max((v14, v13), key=self._result_rank)
+        return v14
+
     def _run_portfolio_v13(self, game_map: GameMap, options: StrategyOptions) -> SimulationResult:
-        """Predictive competition portfolio used as the default.
+        """Predictive V13 competition portfolio preserved as a historical fallback.
 
         Official evaluation maps are documented as at most roughly double the
         reference map (10x14 = 140 cells).  On that envelope we can afford a
@@ -401,7 +450,9 @@ class SimulationService:
 
     def simulate(self, *, map_text: str, elevation_text: str | None = None, mission_name: str, strategy_options: StrategyOptions) -> SimulationResponse:
         carte_jeu = MapParser.parse(map_text, elevation_text=elevation_text)
-        if strategy_options.name == 'portfolio_v13':
+        if strategy_options.name == 'portfolio_v14':
+            resultat = self._run_portfolio_v14(carte_jeu, strategy_options)
+        elif strategy_options.name == 'portfolio_v13':
             resultat = self._run_portfolio_v13(carte_jeu, strategy_options)
         elif strategy_options.name == 'portfolio_v12':
             resultat = self._run_portfolio_v12(carte_jeu, strategy_options)
