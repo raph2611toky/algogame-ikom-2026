@@ -88,14 +88,14 @@ theme_override_constants/separation = 11
 
 [node name="Title" type="Label" parent="Content/InfoPanel/Margin/VBox"]
 layout_mode = 2
-text = "MISSION / IMPORT MAP"
+text = "MISSION 3D / MAP + ÉLÉVATION"
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.96, 0.84, 0.64, 1)
 theme_override_font_sizes/font_size = 30
 
 [node name="Hint" type="Label" parent="Content/InfoPanel/Margin/VBox"]
 layout_mode = 2
-text = "Format : H W TEMPS puis H lignes de W caractères.\nOption 3D : ELEVATION puis H lignes de niveaux Z (0–9).\n. vide  F Ikotofosa  M Imahaki  # rocher  t arbre  o trou\nX excavateur  G grappler  * coffre  + pierre  @ cachette"
+text = "map.txt : H W TEMPS puis H lignes ASCII.\nelevation.txt : H lignes de W chiffres • 1..9 terrain • 0 rochers.\nLe relief est rendu par le plateau 3D avancé : niveaux, pentes et couches."
 autowrap_mode = 2
 theme_override_colors/font_color = Color(0.88, 0.82, 0.73, 1)
 theme_override_font_sizes/font_size = 15
@@ -111,6 +111,13 @@ layout_mode = 2
 text = "Fichier : -"
 autowrap_mode = 2
 theme_override_font_sizes/font_size = 17
+
+[node name="ElevationLabel" type="Label" parent="Content/InfoPanel/Margin/VBox"]
+layout_mode = 2
+text = "Élévation : -"
+autowrap_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.72, 0.46, 1)
+theme_override_font_sizes/font_size = 16
 
 [node name="SizeLabel" type="Label" parent="Content/InfoPanel/Margin/VBox"]
 layout_mode = 2
@@ -150,10 +157,15 @@ custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 text = "IMPORTER MAP.TXT"
 
+[node name="ElevationButton" type="Button" parent="Content/InfoPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+text = "CHOISIR ELEVATION.TXT"
+
 [node name="PlayButton" type="Button" parent="Content/InfoPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
-text = "LANCER EN MODE LOCAL"
+text = "LANCER LA SIMULATION"
 
 [node name="BackButton" type="Button" parent="Content/InfoPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 56)
@@ -166,3 +178,10 @@ size = Vector2i(1000, 700)
 access = 2
 file_mode = 0
 filters = PackedStringArray("*.txt ; Fichier carte AlgoGames")
+
+[node name="ElevationFileDialog" type="FileDialog" parent="."]
+title = "Choisir elevation.txt"
+size = Vector2i(1000, 700)
+access = 2
+file_mode = 0
+filters = PackedStringArray("*.txt ; Fichier elevation AlgoGames")

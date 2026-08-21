@@ -6,27 +6,42 @@ signal backend_status_changed(online: bool)
 
 var selected_map_path: String = "res://data/maps/demo_simulation/map.txt"
 var selected_map_text: String = ""
+var selected_elevation_path: String = ""
+var selected_elevation_text: String = ""
 var selected_map_data: Dictionary = {}
 var selected_map_response: Dictionary = {}
 var simulation: Dictionary = {}
 var last_summary: Dictionary = {}
 var last_actions_path: String = ""
-# Conservé uniquement pour compatibilité UI. Cette édition fonctionne volontairement hors-ligne.
 var backend_online: bool = false
+var available_strategies: Array[Dictionary] = []
+var default_strategy_name: String = "portfolio_v14"
 
 var settings: Dictionary = _default_settings()
+var _sync_in_flight: bool = false
+var _sync_pending: bool = false
 
 func _ready() -> void:
 	load_settings_local()
+	apply_backend_endpoint()
 	apply_settings()
-	backend_online = false
-	backend_status_changed.emit(false)
+	BackendAPI.connection_changed.connect(_on_backend_connection_changed)
+	call_deferred("_initialize_backend")
 
-func set_selected_map(path: String, data: Dictionary, map_text: String = "", backend_response: Dictionary = {}) -> void:
+func set_selected_map(
+	path: String,
+	data: Dictionary,
+	map_text: String = "",
+	backend_response: Dictionary = {},
+	elevation_path: String = "",
+	elevation_text: String = ""
+) -> void:
 	selected_map_path = path
 	selected_map_data = data
 	selected_map_text = map_text
 	selected_map_response = backend_response
+	selected_elevation_path = elevation_path
+	selected_elevation_text = elevation_text
 	simulation = {}
 	last_summary = {}
 	last_actions_path = ""
@@ -47,30 +62,106 @@ func get_strategy_options() -> Dictionary:
 		return value.duplicate(true)
 	return _default_settings()["strategy"].duplicate(true)
 
+func apply_backend_endpoint() -> void:
+	# En build packagé, l'endpoint fourni par le launcher est prioritaire.
+	# Il ne doit jamais être écrasé par user://settings.cfg.
+	if BackendAPI.endpoint_forced:
+		return
+	BackendAPI.configure_endpoint(
+		str(settings.get("backend_host", "127.0.0.1")),
+		int(settings.get("backend_port", 8000))
+	)
+
+
+func is_packaged_mode() -> bool:
+	return BackendAPI.packaged_mode
+
+
+func runtime_backend_endpoint() -> Dictionary:
+	return BackendAPI.runtime_endpoint()
+
+func refresh_strategy_catalog() -> bool:
+	apply_backend_endpoint()
+	var response: Dictionary = await BackendAPI.get_strategies()
+	if not bool(response.get("ok", false)):
+		return false
+	var payload: Dictionary = response.get("data", {})
+	default_strategy_name = str(payload.get("default_strategy", "portfolio_v14"))
+	available_strategies.clear()
+	var raw: Variant = payload.get("strategies", [])
+	if raw is Array:
+		for item in raw:
+			if item is Dictionary:
+				available_strategies.append((item as Dictionary).duplicate(true))
+	var available_names: Array[String] = []
+	for item in available_strategies:
+		available_names.append(str(item.get("name", "")))
+	var options := get_strategy_options()
+	if not available_names.has(str(options.get("name", ""))):
+		options["name"] = default_strategy_name
+		settings["strategy"] = options
+	return true
+
 func reset_settings() -> void:
+	var current_host := str(settings.get("backend_host", "127.0.0.1"))
+	var current_port := int(settings.get("backend_port", 8000))
 	settings = _default_settings()
+	# L'adresse backend est une configuration d'environnement, pas un réglage de jeu.
+	settings["backend_host"] = current_host
+	settings["backend_port"] = current_port
+	apply_backend_endpoint()
 	apply_settings()
-	save_settings_local()
+	save_settings()
 
 func reset_settings_remote() -> void:
-	# Alias hors-ligne pour ne pas casser l'écran paramètres existant.
+	var response: Dictionary = await BackendAPI.reset_settings()
+	if bool(response.get("ok", false)):
+		var payload: Dictionary = response.get("data", {})
+		var backend_settings: Variant = payload.get("settings", {})
+		if backend_settings is Dictionary:
+			_merge_settings(backend_settings)
+			save_settings_local()
+			apply_settings()
+			return
 	reset_settings()
 
 func save_settings() -> void:
 	save_settings_local()
+	if _sync_in_flight:
+		_sync_pending = true
+		return
+	call_deferred("_sync_settings_to_backend")
+
 
 func persist_settings_now() -> Dictionary:
-	await get_tree().process_frame
+	apply_backend_endpoint()
 	save_settings_local()
-	return {"ok": true, "status": 200, "error": "", "data": {"mode": "local"}}
+	while _sync_in_flight:
+		await get_tree().process_frame
+	_sync_in_flight = true
+	_sync_pending = false
+	var response: Dictionary = await BackendAPI.save_settings(_settings_payload())
+	_sync_in_flight = false
+	backend_online = bool(response.get("ok", false))
+	backend_status_changed.emit(backend_online)
+	if _sync_pending:
+		_sync_pending = false
+		call_deferred("_sync_settings_to_backend")
+	return response
 
 func preview_default_settings() -> void:
+	var current_host := str(settings.get("backend_host", "127.0.0.1"))
+	var current_port := int(settings.get("backend_port", 8000))
 	settings = _default_settings()
+	settings["backend_host"] = current_host
+	settings["backend_port"] = current_port
+	apply_backend_endpoint()
 	apply_settings()
 
 func replace_settings(value: Dictionary, apply_now: bool = true) -> void:
 	settings = _default_settings()
 	_merge_settings(value)
+	apply_backend_endpoint()
 	if apply_now:
 		apply_settings()
 
@@ -94,12 +185,20 @@ func load_settings_local() -> void:
 			settings[key] = cfg.get_value("settings", key, settings[key])
 
 func refresh_settings_from_backend() -> bool:
-	await get_tree().process_frame
-	# Plus aucun appel réseau : les préférences sont lues depuis user://settings.cfg.
-	load_settings_local()
-	apply_settings()
-	backend_online = false
-	backend_status_changed.emit(false)
+	apply_backend_endpoint()
+	var response: Dictionary = await BackendAPI.get_settings()
+	if not bool(response.get("ok", false)):
+		backend_online = false
+		backend_status_changed.emit(false)
+		return false
+	var payload: Dictionary = response.get("data", {})
+	var backend_settings: Variant = payload.get("settings", {})
+	if backend_settings is Dictionary:
+		_merge_settings(backend_settings)
+		save_settings_local()
+		apply_settings()
+	backend_online = true
+	backend_status_changed.emit(true)
 	return true
 
 func apply_settings() -> void:
@@ -142,10 +241,52 @@ func save_actions_text(actions_text: String) -> String:
 	file.close()
 	return ProjectSettings.globalize_path(path)
 
-func _merge_settings(saved_settings: Dictionary) -> void:
+func _initialize_backend() -> void:
+	apply_backend_endpoint()
+	var health_response: Dictionary = await BackendAPI.health()
+	backend_online = bool(health_response.get("ok", false))
+	backend_status_changed.emit(backend_online)
+	if backend_online:
+		await refresh_strategy_catalog()
+		await refresh_settings_from_backend()
+
+func _sync_settings_to_backend() -> void:
+	apply_backend_endpoint()
+	if _sync_in_flight:
+		_sync_pending = true
+		return
+	_sync_in_flight = true
+	_sync_pending = false
+	var response: Dictionary = await BackendAPI.save_settings(_settings_payload())
+	_sync_in_flight = false
+	backend_online = bool(response.get("ok", false))
+	backend_status_changed.emit(backend_online)
+	if _sync_pending:
+		_sync_pending = false
+		call_deferred("_sync_settings_to_backend")
+
+func _settings_payload() -> Dictionary:
+	return {
+		"sound": int(settings.get("sound", 80)),
+		"music": int(settings.get("music", 60)),
+		"effects": int(settings.get("effects", 80)),
+		"dialogue": int(settings.get("dialogue", 90)),
+		"quality": int(settings.get("quality", 2)),
+		"fullscreen": bool(settings.get("fullscreen", false)),
+		"language": int(settings.get("language", 0)),
+		"strategy": get_strategy_options(),
+	}
+
+func _merge_settings(backend_settings: Dictionary) -> void:
+	# backend_host/backend_port sont volontairement LOCAUX au frontend.
+	# Le backend distant ne doit jamais pouvoir remplacer son propre endpoint.
 	for key in ["sound", "music", "effects", "dialogue", "quality", "fullscreen", "language", "strategy"]:
-		if saved_settings.has(key):
-			settings[key] = saved_settings[key]
+		if backend_settings.has(key):
+			settings[key] = backend_settings[key]
+
+func _on_backend_connection_changed(value: bool) -> void:
+	backend_online = value
+	backend_status_changed.emit(value)
 
 func _ensure_audio_bus(name: String) -> void:
 	if AudioServer.get_bus_index(name) != -1:
@@ -169,8 +310,10 @@ static func _default_settings() -> Dictionary:
 		"quality": 2,
 		"fullscreen": false,
 		"language": 0,
+		"backend_host": "127.0.0.1",
+		"backend_port": 8000,
 		"strategy": {
-			"name": "local_demo",
+			"name": "portfolio_v14",
 			"max_stones_per_hero": 16,
 			"max_chest_pairs_per_hero": 12,
 			"max_unlock_obstacles": 20,

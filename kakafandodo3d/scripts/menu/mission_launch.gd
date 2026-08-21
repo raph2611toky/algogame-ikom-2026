@@ -1,7 +1,5 @@
 extends Control
 
-const STEP1_BOARD_CAMERA_ONLY := false
-
 @onready var game_session: GameSessionService = get_node("/root/GameSession") as GameSessionService
 @onready var preview: GameBoard = $Content/Panel/Margin/VBox/Preview
 @onready var map_label: Label = $Content/Panel/Margin/VBox/Header/MapLabel
@@ -29,32 +27,64 @@ func _ready() -> void:
 		str(game_session.selected_map_path).get_file(),
 		int(data["width"]), int(data["height"]), int(data["time_limit"])
 	]
-	var elevation_note := "Z1 • ponts/rampes prêts"
-	if bool(data.get("has_explicit_elevation", false)):
-		elevation_note = "Z1 → Z%d • élévation active • pont si ΔZ=1" % maxi(1, int(data.get("max_elevation", 1)))
-	objectives_label.text = "SIMULATION LOCALE DYNAMIQUE\nIA des héros + routines machines + élévation + score.\n\nMAP\n%d × %d • %d ticks maximum.\n\nRYTHME\n1 tick relatif = 0,2 s réel • %s" % [int(data["width"]), int(data["height"]), int(data["time_limit"]), elevation_note]
-	if STEP1_BOARD_CAMERA_ONLY:
-		countdown_label.text = "PLATEAU 3D"
-		countdown_label.add_theme_font_size_override("font_size", 54)
-		await get_tree().create_timer(0.20).timeout
-		if not _cancelled:
-			get_tree().change_scene_to_file("res://scenes/game/GameScreen.tscn")
-		return
-
-	countdown_label.text = "CALCUL LOCAL..."
-	countdown_label.add_theme_font_size_override("font_size", 54)
-	await get_tree().process_frame
-	var local_simulation: Dictionary = LocalSimulationRunner.run(
-		data,
-		str(game_session.selected_map_path).get_file().get_basename()
+	var elevation_status := "RELIEF 3D Z1–Z%d" % int(data.get("max_elevation", 0)) if bool(data.get("has_explicit_elevation", data.get("has_elevation", false))) else "MODE PLAT"
+	objectives_label.text = "OBJECTIF\nRécupérer un maximum de pierres précieuses et cacher un maximum de coffres.\n\nAGENTS\nIkotofosa [F] • Imahaki [M]\n\nCARTE\n%s • max %d\n\nMOTEUR\nFastAPI %s • stratégie %s • rendu 3D avancé" % [
+		elevation_status,
+		int(data.get("max_elevation", 0)),
+		BackendAPI.endpoint_label(),
+		str(game_session.get_strategy_options().get("name", "portfolio_v14"))
+	]
+	countdown_label.text = "CALCUL IA..."
+	countdown_label.add_theme_font_size_override("font_size", 46)
+	var strategy := game_session.get_strategy_options()
+	var mission_name := str(game_session.selected_map_path).get_file().get_basename()
+	var submit: Dictionary = await BackendAPI.submit_simulation_job(
+		game_session.selected_map_text,
+		mission_name,
+		strategy,
+		game_session.selected_elevation_text
 	)
 	if _cancelled:
 		return
-	if local_simulation.is_empty():
-		countdown_label.text = "ERREUR SIMULATION LOCALE"
-		countdown_label.add_theme_font_size_override("font_size", 30)
+	if not bool(submit.get("ok", false)):
+		countdown_label.text = "ERREUR BACKEND\n%s" % str(submit.get("error", "Impossible de démarrer le calcul"))
+		countdown_label.add_theme_font_size_override("font_size", 28)
 		return
-	game_session.set_simulation(local_simulation)
+	var job_payload: Dictionary = submit.get("data", {})
+	var job_id := str(job_payload.get("job_id", ""))
+	if job_id.is_empty():
+		countdown_label.text = "ERREUR BACKEND\njob_id manquant"
+		return
+	while not _cancelled:
+		var status_response: Dictionary = await BackendAPI.get_simulation_job(job_id)
+		if not bool(status_response.get("ok", false)):
+			countdown_label.text = "ERREUR BACKEND\n%s" % str(status_response.get("error", "Statut du calcul indisponible"))
+			countdown_label.add_theme_font_size_override("font_size", 28)
+			return
+		var job: Dictionary = status_response.get("data", {})
+		var job_status := str(job.get("status", ""))
+		var elapsed := float(job.get("elapsed_seconds", 0.0))
+		countdown_label.text = "CALCUL IA...\n%s • %.1f s" % [str(strategy.get("name", "portfolio_v14")), elapsed]
+		if job_status == "completed":
+			break
+		if job_status == "failed":
+			countdown_label.text = "ERREUR STRATÉGIE\n%s" % str(job.get("error", "Calcul impossible"))
+			countdown_label.add_theme_font_size_override("font_size", 26)
+			return
+		await get_tree().create_timer(0.35).timeout
+	if _cancelled:
+		return
+	var result_response: Dictionary = await BackendAPI.get_simulation_job_result(job_id)
+	if not bool(result_response.get("ok", false)):
+		countdown_label.text = "ERREUR BACKEND\n%s" % str(result_response.get("error", "Résultat de simulation indisponible"))
+		countdown_label.add_theme_font_size_override("font_size", 28)
+		return
+	var result_payload: Dictionary = result_response.get("data", {})
+	var simulation_data: Variant = result_payload.get("simulation", {})
+	if not (simulation_data is Dictionary):
+		countdown_label.text = "ERREUR BACKEND\nSimulation invalide"
+		return
+	game_session.set_simulation(simulation_data)
 	_audio.play_mission_start()
 	await get_tree().create_timer(0.25).timeout
 	_start_countdown()

@@ -10,12 +10,13 @@ config_version=5
 
 [application]
 
-config/name="Kakafandodo"
+config/name="Kakafandodo 3D Extended"
 run/main_scene="res://scenes/main/Main.tscn"
 config/features=PackedStringArray("4.7")
 
 [autoload]
 
+BackendAPI="*res://scripts/api/backend_api.gd"
 GameSession="*res://scripts/core/game_session.gd"
 
 [display]

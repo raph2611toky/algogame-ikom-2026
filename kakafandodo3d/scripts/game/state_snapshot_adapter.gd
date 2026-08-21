@@ -36,12 +36,21 @@ static func map_response_to_game_data(response: Dictionary, source_path: String,
 				_:
 					terrain_row.append(".")
 		terrain.append(terrain_row)
+	var elevation_rows: Array = response.get("elevation_rows", [])
+	var height_map: Array = _parse_elevation_rows(elevation_rows, width, height)
+	var has_elevation := bool(response.get("has_elevation", false))
 	return {
 		"source_path": source_path,
 		"height": height,
 		"width": width,
 		"time_limit": int(response.get("time_limit", 0)),
 		"terrain": terrain,
+		"height_map": height_map,
+		"elevations": height_map.duplicate(true),
+		"elevation_rows": elevation_rows.duplicate(true),
+		"has_explicit_elevation": has_elevation,
+		"has_elevation": has_elevation,
+		"max_elevation": _max_height(height_map),
 		"heroes": heroes,
 		"machines": machines,
 		"chests": chests,
@@ -57,8 +66,15 @@ static func create_state(simulation: Dictionary, snapshot: Dictionary, source_pa
 	state.height = int(map_data.get("height", 0))
 	state.time_limit = int(map_data.get("time_limit", 0))
 	state.source_path = source_path
-	state.height_map = simulation.get("height_map", map_data.get("height_map", [])).duplicate(true)
-	state.has_explicit_elevation = bool(simulation.get("has_explicit_elevation", false))
+	var elevation_rows: Array = map_data.get("elevation_rows", [])
+	if not elevation_rows.is_empty():
+		state.height_map = _parse_elevation_rows(elevation_rows, state.width, state.height)
+		state.has_explicit_elevation = bool(map_data.get("has_elevation", true))
+	else:
+		state.height_map = simulation.get("height_map", map_data.get("height_map", [])).duplicate(true)
+		state.has_explicit_elevation = bool(simulation.get("has_explicit_elevation", map_data.get("has_elevation", false)))
+	if state.height_map.is_empty():
+		state.height_map = _zero_height_map(state.width, state.height)
 	state.total_chests = _initial_symbol_count(map_data.get("rows", []), "*")
 	state.total_stones = _initial_symbol_count(map_data.get("rows", []), "+")
 	apply_snapshot(state, snapshot, {})
@@ -267,6 +283,39 @@ static func _normalized_map_text(response: Dictionary, fallback: String) -> Stri
 	for row in rows:
 		lines.append(str(row))
 	return "\n".join(lines)
+
+static func _parse_elevation_rows(rows: Array, width: int, height: int) -> Array:
+	if rows.is_empty():
+		return _zero_height_map(width, height)
+	var result: Array = []
+	for row_index in range(height):
+		var values: Array[int] = []
+		if row_index < rows.size():
+			var raw := str(rows[row_index]).strip_edges()
+			if raw.length() == width:
+				for col_index in range(width):
+					var digit := raw.substr(col_index, 1)
+					values.append(int(digit) if digit.is_valid_int() else 0)
+		while values.size() < width:
+			values.append(0)
+		result.append(values)
+	return result
+
+static func _zero_height_map(width: int, height: int) -> Array:
+	var result: Array = []
+	for _row in range(height):
+		var values: Array[int] = []
+		for _col in range(width):
+			values.append(0)
+		result.append(values)
+	return result
+
+static func _max_height(height_map: Array) -> int:
+	var maximum := 0
+	for row_value in height_map:
+		for value in row_value:
+			maximum = maxi(maximum, int(value))
+	return maximum
 
 static func _legacy_event_type(type_name: String) -> String:
 	match type_name:

@@ -105,7 +105,7 @@ func _ready() -> void:
 		return
 
 	if not game_session.has_simulation():
-		status_label.text = "ERREUR : aucune simulation locale calculée."
+		status_label.text = "ERREUR : aucune simulation FastAPI V14 calculée."
 		set_process(false)
 		return
 	simulation_data = game_session.simulation
@@ -118,7 +118,7 @@ func _ready() -> void:
 	)
 	board.set_state(playback_state, [], 0.0)
 	_update_hud({"F": "WAIT", "M": "WAIT"})
-	status_label.text = "MODE LOCAL • 3D RÉELLE • %s • %s • %d ticks • 0,2 s/tick" % [
+	status_label.text = "BACKEND V14 • 3D RÉELLE • %s • %s • %d ticks • 0,2 s/tick" % [
 		str(game_session.selected_map_path).get_file(),
 		board.get_render_summary(),
 		simulation_ticks.size(),
@@ -180,11 +180,13 @@ func _update_hud(actions: Dictionary) -> void:
 	var hack_m: String = str(hero_m.get("hacking_machine", ""))
 	var hack_text_f: String = " • HACK %s" % hack_f if not hack_f.is_empty() else ""
 	var hack_text_m: String = " • HACK %s" % hack_m if not hack_m.is_empty() else ""
-	f_info.text = "STA %d • BAT %d • (%d,%d) • %s%s" % [
-		int(hero_f["stamina"]), int(hero_f["battery"]), pos_f.y, pos_f.x, actions.get("F", "WAIT"), hack_text_f
+	var elevation_f := playback_state.elevation_at(pos_f)
+	var elevation_m := playback_state.elevation_at(pos_m)
+	f_info.text = "STA %d • BAT %d • (%d,%d) • Z%d • %s%s" % [
+		int(hero_f["stamina"]), int(hero_f["battery"]), pos_f.y, pos_f.x, elevation_f, actions.get("F", "WAIT"), hack_text_f
 	]
-	m_info.text = "STA %d • BAT %d • (%d,%d) • %s%s" % [
-		int(hero_m["stamina"]), int(hero_m["battery"]), pos_m.y, pos_m.x, actions.get("M", "WAIT"), hack_text_m
+	m_info.text = "STA %d • BAT %d • (%d,%d) • Z%d • %s%s" % [
+		int(hero_m["stamina"]), int(hero_m["battery"]), pos_m.y, pos_m.x, elevation_m, actions.get("M", "WAIT"), hack_text_m
 	]
 	time_label.text = "◷ %d" % playback_state.remaining_time
 	score_label.text = "★ %d" % playback_state.score()
